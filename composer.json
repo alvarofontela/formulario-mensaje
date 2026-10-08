@@ -1,0 +1,10 @@
+{
+    "name": "local/formulario-mensaje",
+    "description": "Plugin de formularios para WordPress",
+    "type": "wordpress-plugin",
+    "require-dev": {
+        "phpunit/phpunit": "^9.6",
+        "wp-phpunit/wp-phpunit": "^7.1",
+        "yoast/phpunit-polyfills": "^4.0"
+    }
+}

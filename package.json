@@ -1,0 +1,12 @@
+{
+  "name": "formulario-mensaje",
+  "private": true,
+  "scripts": {
+    "test:e2e": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/rt.ps1 e2e",
+    "test:php": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/rt.ps1 phpunit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^26.6.4"
+  }
+}

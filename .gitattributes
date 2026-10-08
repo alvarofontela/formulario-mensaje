@@ -1,0 +1,4 @@
+# Git para Windows convierte a CRLF al hacer checkout; un rt.sh con CRLF deja de ejecutarse.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf

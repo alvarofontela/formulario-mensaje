@@ -1,0 +1,62 @@
+# ── Entorno local ────────────────────────────────────────────────────────────
+# Binarios portables, WordPress, base de datos, claves, logs y navegador de Playwright.
+# Se regenera entero con `rt setup`.
+/.runtime/
+
+# ── Dependencias (se instalan a partir de composer.lock y package-lock.json) ─
+vendor/
+node_modules/
+/composer.phar
+/wp-cli.phar
+
+# ── Resultados de tests ──────────────────────────────────────────────────────
+# Hoy van a .runtime/tmp; estas rutas cubren las ubicaciones por defecto de cada herramienta.
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+.phpunit.result.cache
+.phpunit.cache/
+/coverage/
+/clover.xml
+
+# ── Configuración personal que sustituye a la versionada ─────────────────────
+/phpunit.xml
+/wp-cli.local.yml
+.env
+.env.*
+!.env.example
+
+# ── Paquetes del plugin para distribuir ──────────────────────────────────────
+/build/
+/dist/
+/*.zip
+
+# ── Claude Code y herramientas de análisis ───────────────────────────────────
+# CLAUDE.md y .claude/settings.json sí se versionan; lo de abajo es de cada máquina.
+/.claude/settings.local.json
+/CLAUDE.local.md
+/graphify-out/
+
+# ── Editores ─────────────────────────────────────────────────────────────────
+/.vscode/*
+!/.vscode/extensions.json
+!/.vscode/launch.json
+/.idea/
+*.code-workspace
+*.swp
+*~
+
+# ── Sistema operativo ────────────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# ── Logs y temporales ────────────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
+*.orig
