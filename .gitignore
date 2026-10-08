@@ -35,6 +35,8 @@ node_modules/
 
 # ── Claude Code y herramientas de análisis ───────────────────────────────────
 # CLAUDE.md y .claude/settings.json sí se versionan; lo de abajo es de cada máquina.
+# .mcp.json lleva la clave de Context7 en claro: cada persona crea el suyo.
+/.mcp.json
 /.claude/settings.local.json
 /CLAUDE.local.md
 /graphify-out/
