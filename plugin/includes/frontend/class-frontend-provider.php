@@ -12,6 +12,7 @@ use Formulario_Mensaje\Fields\Field_Markup;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Service_Provider;
+use Formulario_Mensaje\Settings\Settings_Repository;
 use Formulario_Mensaje\Submissions\Confirmation_Builder;
 use Formulario_Mensaje\Submissions\Redirect_Policy;
 use Formulario_Mensaje\Submissions\Submission_Handler;
@@ -64,7 +65,8 @@ final class Frontend_Provider implements Service_Provider {
 				$c->get( Submission_Handler::class ),
 				$c->get( Submission_Request_Factory::class ),
 				$c->get( Form_Repository::class ),
-				$c->get( Redirect_Policy::class )
+				$c->get( Redirect_Policy::class ),
+				$c->get( Settings_Repository::class )
 			)
 		);
 

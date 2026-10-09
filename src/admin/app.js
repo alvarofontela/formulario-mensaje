@@ -3,35 +3,69 @@ import { useCallback, useEffect, useState } from '@wordpress/element';
 import FormEditor from './form-editor';
 import FormsList from './forms-list';
 import SettingsPage from './settings-page';
+import SubmissionDetail from './submission-detail';
+import SubmissionsPage from './submissions-page';
 import { getQueryParam, setQueryParam } from './utils';
 
 /**
- * Raíz de la aplicación. La pantalla de ajustes es fija; la de formularios alterna entre el listado
- * y el constructor según el parámetro `form` de la URL (`new` o el identificador del formulario).
+ * Lee de la URL y mantiene en ella un parámetro que decide qué se muestra, para que el botón de
+ * volver del navegador funcione dentro de la aplicación.
  *
- * @param {Object} props
- * @param {string} props.initialView Vista que indica el servidor: `forms` o `settings`.
+ * @param {string} name Nombre del parámetro.
+ * @return {[?string, Function]} Valor actual y función para cambiarlo (null lo quita).
  */
-export default function App( { initialView } ) {
-	const [ formParam, setFormParam ] = useState( () =>
-		getQueryParam( 'form' )
-	);
+function useUrlParam( name ) {
+	const [ value, setValue ] = useState( () => getQueryParam( name ) );
 
 	useEffect( () => {
-		const onPopState = () => setFormParam( getQueryParam( 'form' ) );
+		const onPopState = () => setValue( getQueryParam( name ) );
 
 		window.addEventListener( 'popstate', onPopState );
 
 		return () => window.removeEventListener( 'popstate', onPopState );
-	}, [] );
+	}, [ name ] );
 
-	const openForm = useCallback( ( id ) => {
-		setQueryParam( 'form', id === null ? null : String( id ) );
-		setFormParam( id === null ? null : String( id ) );
-	}, [] );
+	const change = useCallback(
+		( next ) => {
+			const text = next === null ? null : String( next );
+
+			setQueryParam( name, text );
+			setValue( text );
+		},
+		[ name ]
+	);
+
+	return [ value, change ];
+}
+
+/**
+ * Raíz de la aplicación. El servidor indica la pantalla (`forms`, `submissions` o `settings`); dentro
+ * de cada una, un parámetro de la URL decide si se ve el listado o un elemento concreto.
+ *
+ * @param {Object} props
+ * @param {string} props.initialView Vista que indica el servidor.
+ */
+export default function App( { initialView } ) {
+	const [ formParam, openForm ] = useUrlParam( 'form' );
+	const [ submissionParam, openSubmission ] = useUrlParam( 'submission' );
 
 	if ( initialView === 'settings' ) {
 		return <SettingsPage />;
+	}
+
+	if ( initialView === 'submissions' ) {
+		return submissionParam ? (
+			<SubmissionDetail
+				submissionId={ Number( submissionParam ) }
+				onClose={ () => openSubmission( null ) }
+			/>
+		) : (
+			<SubmissionsPage
+				// En esta pantalla, `form` es el filtro del listado.
+				initialFormId={ Number( formParam ) || 0 }
+				onOpen={ openSubmission }
+			/>
+		);
 	}
 
 	if ( formParam ) {

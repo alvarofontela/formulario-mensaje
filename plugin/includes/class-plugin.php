@@ -37,6 +37,7 @@ final class Plugin {
 	 */
 	private function providers(): array {
 		return array(
+			new Database\Database_Provider(),
 			new Lifecycle\Lifecycle_Provider(),
 			new Settings\Settings_Provider(),
 			new Fields\Fields_Provider(),
@@ -44,6 +45,7 @@ final class Plugin {
 			new Forms\Forms_Provider(),
 			new Antispam\Antispam_Provider(),
 			new Mail\Mail_Provider(),
+			new Storage\Storage_Provider(),
 			new Submissions\Submissions_Provider(),
 			new Frontend\Frontend_Provider(),
 			new Blocks\Blocks_Provider(),

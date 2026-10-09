@@ -8,12 +8,14 @@
 namespace Formulario_Mensaje\Antispam;
 
 use Formulario_Mensaje\Container;
+use Formulario_Mensaje\Database\Schema;
 use Formulario_Mensaje\Service_Provider;
 use Formulario_Mensaje\Settings\Settings_Repository;
 use Formulario_Mensaje\Support\Clock;
 use Formulario_Mensaje\Support\Php_Server_Vars;
 use Formulario_Mensaje\Support\Server_Vars;
 use Formulario_Mensaje\Support\System_Clock;
+use wpdb;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -33,7 +35,11 @@ final class Antispam_Provider implements Service_Provider {
 		$container->set( Ip_Matcher::class, static fn (): Ip_Matcher => new Ip_Matcher() );
 		$container->set( Cloudflare_Ranges::class, static fn (): Cloudflare_Ranges => new Cloudflare_Ranges() );
 		$container->set( Token_Service::class, static fn ( Container $c ): Token_Service => new Token_Service( $c->get( Clock::class ) ) );
-		$container->set( Rate_Limiter::class, static fn ( Container $c ): Rate_Limiter => new Transient_Rate_Limiter( $c->get( Clock::class ) ) );
+
+		$container->set(
+			Rate_Limiter::class,
+			static fn ( Container $c ): Rate_Limiter => new Wpdb_Rate_Limiter( $c->get( wpdb::class ), $c->get( Schema::class ), $c->get( Clock::class ) )
+		);
 
 		$container->set(
 			Client_Ip_Resolver::class,
@@ -47,15 +53,15 @@ final class Antispam_Provider implements Service_Provider {
 
 		$container->set(
 			Spam_Guard::class,
-			static function ( Container $c ): Spam_Guard {
-				$rate_limit = new Rate_Limit_Check( $c->get( Rate_Limiter::class ) );
-
-				// De la más barata a la más cara: el límite por IP es la única que consulta el almacenamiento.
-				return new Spam_Guard(
-					array( new Honeypot_Check(), new Token_Check( $c->get( Token_Service::class ) ), $rate_limit ),
-					array( $rate_limit )
-				);
-			}
+			// De la más barata a la más cara. El límite por IP va al final: reserva un hueco y no debe
+			// hacerlo por un envío que otra comprobación va a rechazar.
+			static fn ( Container $c ): Spam_Guard => new Spam_Guard(
+				array(
+					new Honeypot_Check(),
+					new Token_Check( $c->get( Token_Service::class ) ),
+					new Rate_Limit_Check( $c->get( Rate_Limiter::class ) ),
+				)
+			)
 		);
 	}
 }

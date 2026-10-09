@@ -10,6 +10,7 @@ namespace Formulario_Mensaje\Frontend;
 use Formulario_Mensaje\Antispam\Honeypot_Check;
 use Formulario_Mensaje\Fields\Render_Context;
 use Formulario_Mensaje\Forms\Form_Repository;
+use Formulario_Mensaje\Settings\Settings_Repository;
 use Formulario_Mensaje\Submissions\Redirect_Policy;
 use Formulario_Mensaje\Submissions\Submission_Channel;
 use Formulario_Mensaje\Submissions\Submission_Handler;
@@ -34,18 +35,32 @@ final class Fallback_Controller {
 	 * @param Submission_Request_Factory $requests Construcción de peticiones de envío.
 	 * @param Form_Repository            $forms    Almacén de formularios.
 	 * @param Redirect_Policy            $policy   Destinos de redirección permitidos.
+	 * @param Settings_Repository        $settings Ajustes del plugin.
 	 */
 	public function __construct(
 		private readonly Submission_Handler $handler,
 		private readonly Submission_Request_Factory $requests,
 		private readonly Form_Repository $forms,
-		private readonly Redirect_Policy $policy
+		private readonly Redirect_Policy $policy,
+		private readonly Settings_Repository $settings
 	) {}
 
 	/**
 	 * Atiende el envío y termina la petición con una redirección o con una página de error.
 	 */
 	public function handle(): void {
+		// Esta vía no puede traer token antispam: quien no quiera aceptarla la desactiva en los ajustes.
+		if ( ! $this->settings->get()->accept_no_js ) {
+			wp_die(
+				esc_html__( 'This form needs JavaScript to be sent. Enable it in your browser and try again.', 'formulario-mensaje' ),
+				esc_html__( 'The form could not be sent', 'formulario-mensaje' ),
+				array(
+					'response'  => 403,
+					'back_link' => true,
+				)
+			);
+		}
+
 		$request = $this->read_request();
 		$result  = $this->handler->handle( $request );
 

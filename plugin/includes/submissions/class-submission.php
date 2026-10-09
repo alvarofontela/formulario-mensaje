@@ -22,13 +22,17 @@ final class Submission {
 	 * @param int                             $created_at Marca de tiempo Unix en que se recibió.
 	 * @param string                          $page_url   Dirección de la página desde la que se envió, o cadena vacía.
 	 * @param array<string, Submission_Entry> $entries    Datos recibidos, por identificador de campo y en el orden del formulario.
+	 * @param string                          $client_ip  IP del visitante, o cadena vacía si no se conoce. Solo se guarda si el formulario lo pide.
+	 * @param string                          $user_agent Navegador del visitante, o cadena vacía. Solo se guarda si el formulario lo pide.
 	 */
 	public function __construct(
 		public readonly int $form_id,
 		public readonly string $reference,
 		public readonly int $created_at,
 		public readonly string $page_url,
-		public readonly array $entries
+		public readonly array $entries,
+		public readonly string $client_ip = '',
+		public readonly string $user_agent = ''
 	) {}
 
 	/**

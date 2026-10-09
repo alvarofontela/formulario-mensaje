@@ -8,6 +8,7 @@
 namespace Formulario_Mensaje\Lifecycle;
 
 use Formulario_Mensaje\Container;
+use Formulario_Mensaje\Database\Schema;
 use Formulario_Mensaje\Service_Provider;
 
 defined( 'ABSPATH' ) || exit;
@@ -25,9 +26,16 @@ final class Lifecycle_Provider implements Service_Provider {
 	public function register( Container $container ): void {
 		$container->set( Capabilities::class, static fn (): Capabilities => new Capabilities() );
 
+		$container->set( Maintenance_Schedule::class, static fn (): Maintenance_Schedule => new Maintenance_Schedule() );
+
 		$container->set(
 			Installer::class,
-			static fn ( Container $c ): Installer => new Installer( $c->get( Capabilities::class ), FORMULARIO_MENSAJE_VERSION )
+			static fn ( Container $c ): Installer => new Installer(
+				$c->get( Capabilities::class ),
+				$c->get( Schema::class ),
+				$c->get( Maintenance_Schedule::class ),
+				FORMULARIO_MENSAJE_VERSION
+			)
 		);
 
 		$container->set(

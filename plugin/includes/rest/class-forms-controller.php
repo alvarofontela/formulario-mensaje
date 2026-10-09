@@ -13,6 +13,7 @@ use Formulario_Mensaje\Frontend\Form_Renderer;
 use Formulario_Mensaje\Frontend\Frontend_Assets;
 use Formulario_Mensaje\Frontend\Shortcode;
 use Formulario_Mensaje\Lifecycle\Capabilities;
+use Formulario_Mensaje\Storage\Submission_Service;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -32,14 +33,16 @@ final class Forms_Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param Form_Service    $forms    Servicio de formularios.
-	 * @param Form_Renderer   $renderer HTML del formulario.
-	 * @param Frontend_Assets $assets   Estilos del formulario.
+	 * @param Form_Service       $forms       Servicio de formularios.
+	 * @param Form_Renderer      $renderer    HTML del formulario.
+	 * @param Frontend_Assets    $assets      Estilos del formulario.
+	 * @param Submission_Service $submissions Servicio de envíos guardados.
 	 */
 	public function __construct(
 		private readonly Form_Service $forms,
 		private readonly Form_Renderer $renderer,
-		private readonly Frontend_Assets $assets
+		private readonly Frontend_Assets $assets,
+		private readonly Submission_Service $submissions
 	) {}
 
 	/**
@@ -126,8 +129,13 @@ final class Forms_Controller {
 					'callback'            => array( $this, 'delete_item' ),
 					'permission_callback' => array( $this, 'can_manage' ),
 					'args'                => $id_arg + array(
-						'force' => array(
+						'force'              => array(
 							'description' => __( 'Delete permanently instead of moving to the trash.', 'formulario-mensaje' ),
+							'type'        => 'boolean',
+							'default'     => false,
+						),
+						'delete_submissions' => array(
+							'description' => __( 'When deleting permanently, delete the stored submissions of the form too.', 'formulario-mensaje' ),
 							'type'        => 'boolean',
 							'default'     => false,
 						),
@@ -184,11 +192,12 @@ final class Forms_Controller {
 
 		// Quien solo edita contenidos ve los publicados, y de ellos solo lo necesario para elegirlos.
 		$status = $is_manager ? (string) $request['status'] : Form::STATUS_PUBLISHED;
+		$counts = $this->submission_counts();
 
 		return new WP_REST_Response(
 			array_map(
 				fn ( Form $form ): array => $is_manager
-					? $this->summary( $form )
+					? $this->summary( $form, $counts )
 					: array(
 						'id'    => $form->id,
 						'title' => $form->title,
@@ -253,6 +262,11 @@ final class Forms_Controller {
 			return $result;
 		}
 
+		// Borrar los envíos es borrar datos personales: exige además la capability de verlos.
+		if ( $force && $request['delete_submissions'] && current_user_can( Capabilities::VIEW_SUBMISSIONS ) ) {
+			$this->submissions->delete_for_form( $id );
+		}
+
 		return new WP_REST_Response(
 			array(
 				'id'      => $id,
@@ -277,7 +291,7 @@ final class Forms_Controller {
 
 		$form = $this->forms->get( (int) $request['id'] );
 
-		return new WP_REST_Response( null === $form ? array() : $this->summary( $form ) );
+		return new WP_REST_Response( null === $form ? array() : $this->summary( $form, $this->submission_counts() ) );
 	}
 
 	/**
@@ -301,10 +315,11 @@ final class Forms_Controller {
 	/**
 	 * Datos de un formulario para los listados.
 	 *
-	 * @param Form $form Formulario.
+	 * @param Form                 $form   Formulario.
+	 * @param array<int, int>|null $counts Envíos guardados por formulario, o null si el usuario no puede verlos.
 	 * @return array<string, mixed>
 	 */
-	private function summary( Form $form ): array {
+	private function summary( Form $form, ?array $counts ): array {
 		return array(
 			'id'          => $form->id,
 			'title'       => $form->title,
@@ -312,7 +327,16 @@ final class Forms_Controller {
 			'modified'    => '' === $form->modified ? '' : mysql_to_rfc3339( $form->modified ),
 			'field_count' => count( $form->definition->fields ),
 			'shortcode'   => sprintf( '[%s id="%d"]', Shortcode::TAG, $form->id ),
-		);
+		) + ( null === $counts ? array() : array( 'submission_count' => $counts[ $form->id ] ?? 0 ) );
+	}
+
+	/**
+	 * Número de envíos guardados de cada formulario, solo para quien puede ver los envíos.
+	 *
+	 * @return array<int, int>|null Null si el usuario no puede verlos.
+	 */
+	private function submission_counts(): ?array {
+		return current_user_can( Capabilities::VIEW_SUBMISSIONS ) ? $this->submissions->counts_by_form() : null;
 	}
 
 	/**
@@ -322,6 +346,6 @@ final class Forms_Controller {
 	 * @return array<string, mixed>
 	 */
 	private function detail( Form $form ): array {
-		return $this->summary( $form ) + array( 'definition' => $form->definition->to_array() );
+		return $this->summary( $form, $this->submission_counts() ) + array( 'definition' => $form->definition->to_array() );
 	}
 }

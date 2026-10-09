@@ -65,14 +65,24 @@ final class Settings_Controller {
 					'callback'            => array( $this, 'update_settings' ),
 					'permission_callback' => array( $this, 'can_manage' ),
 					'args'                => array(
-						'trusted_proxy_mode'     => array(
+						'trusted_proxy_mode'       => array(
 							'description' => __( 'Where the visitor IP address is taken from.', 'formulario-mensaje' ),
 							'type'        => 'string',
 							'enum'        => array_column( Trusted_Proxy_Mode::cases(), 'value' ),
 							'default'     => Trusted_Proxy_Mode::None->value,
 						),
-						'trusted_proxies'        => array( 'description' => __( 'IP addresses or CIDR ranges of your own proxy.', 'formulario-mensaje' ) ) + $list,
-						'allowed_redirect_hosts' => array( 'description' => __( 'External domains that forms may redirect to.', 'formulario-mensaje' ) ) + $list,
+						'trusted_proxies'          => array( 'description' => __( 'IP addresses or CIDR ranges of your own proxy.', 'formulario-mensaje' ) ) + $list,
+						'allowed_redirect_hosts'   => array( 'description' => __( 'External domains that forms may redirect to.', 'formulario-mensaje' ) ) + $list,
+						'accept_no_js'             => array(
+							'description' => __( 'Accept submissions sent without JavaScript.', 'formulario-mensaje' ),
+							'type'        => 'boolean',
+							'default'     => true,
+						),
+						'delete_data_on_uninstall' => array(
+							'description' => __( 'Delete forms, submissions and settings when the plugin is uninstalled.', 'formulario-mensaje' ),
+							'type'        => 'boolean',
+							'default'     => false,
+						),
 					),
 				),
 			)
@@ -111,9 +121,11 @@ final class Settings_Controller {
 	public function update_settings( WP_REST_Request $request ): WP_REST_Response {
 		$settings = $this->sanitizer->sanitize(
 			array(
-				'trusted_proxy_mode'     => $request['trusted_proxy_mode'],
-				'trusted_proxies'        => $request['trusted_proxies'],
-				'allowed_redirect_hosts' => $request['allowed_redirect_hosts'],
+				'trusted_proxy_mode'       => $request['trusted_proxy_mode'],
+				'trusted_proxies'          => $request['trusted_proxies'],
+				'allowed_redirect_hosts'   => $request['allowed_redirect_hosts'],
+				'accept_no_js'             => $request['accept_no_js'],
+				'delete_data_on_uninstall' => $request['delete_data_on_uninstall'],
 			)
 		);
 

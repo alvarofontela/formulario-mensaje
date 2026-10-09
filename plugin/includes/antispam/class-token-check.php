@@ -17,8 +17,10 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Exige a los envíos por REST un token válido y emitido con la antelación mínima.
  *
- * El envío como POST normal (sin JavaScript) no puede traer token: ahí solo actúan el campo trampa y
- * el límite por IP.
+ * El envío como POST normal (sin JavaScript) no puede traer token: es una decisión de producto que el
+ * formulario funcione sin JavaScript, y esa vía queda protegida por el campo trampa y por un límite por
+ * IP más estricto que el de REST (ver Rate_Limit_Check). Quien prefiera no aceptarla la desactiva en los
+ * ajustes del plugin, y entonces todo envío necesita token.
  */
 final class Token_Check implements Spam_Check {
 

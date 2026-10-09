@@ -10,6 +10,7 @@ namespace Formulario_Mensaje\Forms;
 use Formulario_Mensaje\Actions\Action_Type_Registry;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Fields\Settings_Schema_Sanitizer;
+use Formulario_Mensaje\Storage\Submission_Journal;
 use Formulario_Mensaje\Submissions\Submission_Result;
 use Formulario_Mensaje\Support\Inline_Html;
 
@@ -108,6 +109,11 @@ final class Form_Definition_Sanitizer {
 			'redirect_url'     => is_scalar( $raw['redirect_url'] ?? null ) ? $this->sanitize_redirect_url( (string) $raw['redirect_url'] ) : '',
 			'redirect_fields'  => $this->sanitize_redirect_fields( $raw['redirect_fields'] ?? array(), $fields ),
 			'tracking_enabled' => ! array_key_exists( 'tracking_enabled', $raw ) || ! empty( $raw['tracking_enabled'] ),
+			// Los envíos se guardan salvo que se desactive expresamente; IP y navegador, solo si se piden.
+			'store_enabled'    => ! array_key_exists( 'store_enabled', $raw ) || ! empty( $raw['store_enabled'] ),
+			'store_ip'         => in_array( $raw['store_ip'] ?? null, array( Submission_Journal::IP_ANONYMIZED, Submission_Journal::IP_FULL ), true ) ? $raw['store_ip'] : Submission_Journal::IP_NONE,
+			'store_user_agent' => ! empty( $raw['store_user_agent'] ),
+			'retention_days'   => is_numeric( $raw['retention_days'] ?? null ) ? max( 0, min( 3650, (int) $raw['retention_days'] ) ) : 0,
 		);
 	}
 

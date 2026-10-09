@@ -49,7 +49,8 @@ class NucleoTest extends Caso_Formulario {
 		$capabilities = new Capabilities();
 		$capabilities->remove_from_all_roles();
 
-		( new Installer( $capabilities, '9.9.9' ) )->install();
+		wp_clear_scheduled_hook( 'formulario_mensaje_daily_maintenance' );
+		$this->instalador( '9.9.9' )->install();
 
 		foreach ( $capabilities->all() as $capability ) {
 			$this->assertTrue( get_role( 'administrator' )->has_cap( $capability ), $capability );
@@ -57,18 +58,31 @@ class NucleoTest extends Caso_Formulario {
 		}
 
 		$this->assertSame( '9.9.9', get_option( Installer::VERSION_OPTION ) );
+		$this->assertNotFalse( wp_next_scheduled( 'formulario_mensaje_daily_maintenance' ), 'La tarea diaria queda programada.' );
+		$this->assertFalse( $this->esquema()->needs_install() );
+	}
+
+	public function test_las_tablas_del_plugin_existen_con_el_prefijo_del_sitio() {
+		global $wpdb;
+
+		$esquema = $this->esquema();
+
+		foreach ( array( $esquema->submissions_table(), $esquema->deliveries_table(), $esquema->rate_limits_table() ) as $tabla ) {
+			$this->assertStringStartsWith( $wpdb->prefix . 'formulario_mensaje_', $tabla );
+			$this->assertSame( $tabla, $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $tabla ) ) );
+		}
 	}
 
 	public function test_la_actualizacion_solo_se_ejecuta_cuando_cambia_la_version() {
 		$capabilities = new Capabilities();
-		$instalador   = new Installer( $capabilities, '1.0.0' );
+		$instalador   = $this->instalador( '1.0.0' );
 		$instalador->install();
 		$capabilities->remove_from_all_roles();
 
 		$instalador->maybe_upgrade();
 		$this->assertFalse( get_role( 'administrator' )->has_cap( Capabilities::MANAGE_FORMS ), 'Misma versión: no hace nada.' );
 
-		( new Installer( $capabilities, '1.1.0' ) )->maybe_upgrade();
+		$this->instalador( '1.1.0' )->maybe_upgrade();
 		$this->assertTrue( get_role( 'administrator' )->has_cap( Capabilities::MANAGE_FORMS ) );
 	}
 
@@ -77,7 +91,7 @@ class NucleoTest extends Caso_Formulario {
 		$capabilities->remove_from_all_roles();
 
 		try {
-			( new Activator( new Installer( $capabilities, '1.0.0' ) ) )->activate( true );
+			( new Activator( $this->instalador( '1.0.0' ) ) )->activate( true );
 			$this->fail( 'La activación en red debería detener la ejecución.' );
 		} catch ( WPDieException $e ) {
 			$this->assertStringContainsString( 'network', $e->getMessage() );

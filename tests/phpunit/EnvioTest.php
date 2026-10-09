@@ -108,8 +108,9 @@ class EnvioTest extends Caso_Formulario {
 		$this->assertFalse( tests_retrieve_phpmailer_instance()->get_sent() );
 	}
 
-	public function test_si_la_unica_accion_falla_el_visitante_recibe_un_error() {
-		$formulario = $this->crear_formulario();
+	public function test_si_no_se_guarda_y_la_unica_accion_falla_el_visitante_recibe_un_error() {
+		// Sin guardado, aceptar el envío sería perderlo.
+		$formulario = $this->crear_formulario( array( 'settings' => array( 'store_enabled' => false ) ) );
 
 		// Un correo sin destinatarios válidos en el momento del envío: la acción falla.
 		add_filter( 'pre_wp_mail', '__return_false' );

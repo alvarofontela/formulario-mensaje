@@ -182,7 +182,7 @@ Hace falta Windows con PowerShell 7, Node.js, git y Python 3.10 o posterior (el 
 
 Límites que conviene conocer al tocar esos ficheros:
 
-- Las reglas comparten un máximo de 8192 caracteres con las de usuario (`~/.claude/claude-security-guidance.md`), que van delante: lo que sobra se corta por el final. Hoy ocupan unos 6700. Se envían al modelo en cada revisión, así que no llevan secretos.
+- Las reglas comparten un máximo de 8192 caracteres con las de usuario (`~/.claude/claude-security-guidance.md`), que van delante: lo que sobra se corta por el final. Hoy ocupan unos 7600. Se envían al modelo en cada revisión, así que no llevan secretos.
 - Como mucho 50 patrones, con avisos de hasta 1024 caracteres. Un patrón mal formado o con una expresión regular que el plugin considere lenta se descarta sin avisar: tras cambiarlos, mira `~/.claude/security/log.txt`. Cada aviso sale una vez por fichero y sesión, y solo mira el texto que se escribe en esa edición.
 - La revisión de commits no lee las reglas del proyecto; tiene las suyas y puede leer otros ficheros del repositorio para seguir el flujo de los datos.
 - Las revisiones con modelo no miran nada dentro de `vendor/`, `node_modules/`, `build/` ni `dist/`, ni los ficheros `.min.js`: se revisan los fuentes, no lo compilado. Tampoco miran los ficheros que git ignora.
@@ -250,7 +250,9 @@ Para añadir un tipo de campo: una clase en `plugin/includes/fields/types/` que 
 - Los datos del entorno (URL, credenciales, rutas) se leen de `.runtime/conf/env.json`; no se escriben a mano en los tests.
 - Los tests de PHPUnit del plugin extienden `Caso_Formulario` (`tests/phpunit/support/dobles.php`), que trae los dobles de prueba (reloj, variables del servidor, transporte de correo) y utilidades para crear formularios y enviarlos por REST.
 - En Playwright, `tests/e2e/support/forms.ts` crea formularios y páginas por REST como administrador (`AdminApi`) y abre contextos de visitante anónimo, también sin JavaScript.
-- El tiempo mínimo de relleno (3 s) es real en Playwright: cada envío tarda al menos eso. En PHPUnit lo anula `Caso_Formulario`.
+- El tiempo mínimo de relleno (3 s) es real en Playwright: cada envío tarda al menos eso. En PHPUnit lo anula `Caso_Formulario`. Para crear envíos rápido en los tests de administración, `submitWithoutJs()` (dos por formulario cada diez minutos, que es el límite de esa vía).
+- Las tablas del plugin se crean una vez en `tests/phpunit/bootstrap.php`. Dentro de un test WordPress convierte `CREATE TABLE` y `DROP TABLE` en operaciones sobre tablas temporales, así que el borrado de tablas al desinstalar no se puede comprobar con PHPUnit.
+- Los controladores y servicios viven todo el proceso de PHPUnit: no guardes en ellos nada que dependa de la petición (un recuento, el usuario), o un test verá datos de otro.
 - `tests/phpunit/EntornoTest.php` y `tests/e2e/entorno.spec.ts` solo comprueban el entorno; sirven de plantilla.
 
 ## A tener en cuenta

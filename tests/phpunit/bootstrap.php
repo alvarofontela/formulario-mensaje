@@ -34,6 +34,20 @@ tests_add_filter(
 	}
 );
 
+// Las tablas del plugin se crean una vez, antes de los tests: dentro de un test WordPress convierte
+// los CREATE TABLE en tablas temporales y cada test se deshace con una transacción.
+tests_add_filter(
+	'init',
+	static function () {
+		global $wpdb;
+
+		if ( class_exists( Formulario_Mensaje\Database\Schema::class ) ) {
+			( new Formulario_Mensaje\Database\Schema( $wpdb ) )->install();
+		}
+	},
+	20
+);
+
 require $tests_dir . '/includes/bootstrap.php';
 
 // Dobles de prueba y caso base de los tests del plugin; necesitan WP_UnitTestCase ya cargado.

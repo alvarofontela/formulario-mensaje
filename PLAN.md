@@ -225,7 +225,7 @@ Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fa
 | Fase | Estado |
 | --- | --- |
 | 1. Núcleo | Hecha |
-| 2. Envíos y privacidad | Pendiente |
+| 2. Envíos y privacidad | Hecha |
 | 3. Correo avanzado | Pendiente |
 | 4. Webhooks | Pendiente |
 | 5. Captchas | Pendiente |
@@ -254,3 +254,22 @@ Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fa
 Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel del constructor distinguen los tipos de control (`text`, `toggle`, `select`…) con un `switch`. Es el vocabulario cerrado del propio esquema, no un punto de extensión; lo que sí crece (tipos de campo y de acción) va por registro.
 
 - **Estilos**: si el contenido de la entrada o página lleva el shortcode o el bloque, el CSS se encola en la cabecera; si el formulario llega por otra vía (una plantilla, un widget), se encola al pintarlo.
+
+### Fase 2: lo que se decidió al hacerla
+
+- **El guardado no es una acción más, sino un paso propio del envío** (`Submission_Journal`). Se guarda antes de ejecutar las acciones, y el identificador del envío guardado es lo que permite anotar el resultado de cada acción y reintentarla. Se configura por formulario en la pestaña «Guardado» y está activado por defecto.
+- **Tres tablas propias**, con esquema versionado (`Schema`, opción `formulario_mensaje_db_version`): `…_submissions` (envíos, con sus datos en JSON y un texto de búsqueda), `…_deliveries` (registro de entregas: una fila por acción ejecutada sobre un envío, con estado, intentos y error) y `…_rate_limits` (contadores del límite por IP).
+- **Si el envío se guarda, el fallo de una notificación ya no es un error para el visitante**: queda como entrega fallida, se cuenta en el menú y se puede reintentar. Solo recibe un error si ni se guardó ni se entregó nada.
+- **Entregas fallidas de formularios que no guardan sus envíos**: se anotan (sin datos del envío) para que el aviso del menú funcione; no se pueden reintentar y se purgan a los 30 días.
+- **Reintentar usa la configuración actual de la acción**, no la que había cuando falló: corregir un destinatario y reintentar entrega el envío.
+- **Exportación a CSV**: de un formulario cada vez, con rango de fechas opcional. Las columnas son la unión de los campos de los envíos exportados. Se descarga por `admin-post.php` con capability y nonce, escribiendo fila a fila.
+- **Retención**: tarea diaria de WP-Cron (`formulario_mensaje_daily_maintenance`), con botón «Ejecutar la limpieza ahora» en los ajustes. Un formulario en la papelera mantiene su retención.
+- **Borrar un formulario definitivamente** conserva sus envíos salvo que se marque la casilla para borrarlos; quedan en la pantalla de envíos como «(formulario borrado)».
+- **Desinstalar** borra formularios, tablas y opciones solo con el ajuste activado; si no, retira capabilities y la tarea programada.
+- **Pantallas y permisos**: «Envíos» exige `formulario_mensaje_view_submissions`, que es independiente de gestionar formularios. El menú aparece para quien tenga cualquiera de las tres capabilities.
+- **Hooks nuevos**: acción `formulario_mensaje_submissions_deleted` (identificadores borrados) y `formulario_mensaje_daily_maintenance`; el filtro `formulario_mensaje_rate_limit` recibe además la vía del envío.
+
+Cambios sobre la fase 1, a raíz de la revisión de seguridad de su commit:
+
+- **Límite por IP atómico.** Antes se comprobaba al principio y se contaba al final, con un transient: envíos simultáneos podían pasar todos la comprobación. Ahora el hueco se reserva al comprobar con una sola sentencia SQL y se devuelve si el envío no se acepta (errores de validación, fallo total).
+- **Envío sin JavaScript.** Sigue sin token, como se decidió, pero con un límite propio más estricto (2 cada 10 minutos frente a 5) y un ajuste para desactivarlo («Aceptar envíos sin JavaScript»).

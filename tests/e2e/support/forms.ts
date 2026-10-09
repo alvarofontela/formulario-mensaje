@@ -66,6 +66,11 @@ export class AdminApi {
     return (await this.send<{ id: number }>('post', '/formulario-mensaje/v1/forms', { title, definition })).id;
   }
 
+  /** Sustituye el nombre y la definición de un formulario. */
+  async updateForm(id: number, title: string, definition: FormDefinition): Promise<void> {
+    await this.send('put', `/formulario-mensaje/v1/forms/${id}`, { title, definition });
+  }
+
   /** Crea una página publicada con el contenido indicado y devuelve su dirección. */
   async createPage(title: string, content: string): Promise<{ id: number; link: string }> {
     return this.send('post', '/wp/v2/pages', { title, content, status: 'publish' });
@@ -85,6 +90,27 @@ export class AdminApi {
 
   async dispose(): Promise<void> {
     await this.context.dispose();
+  }
+}
+
+/**
+ * Envía un formulario como lo haría un navegador sin JavaScript, sin sesión. Es la forma rápida de
+ * crear envíos para los tests de administración: no espera el tiempo mínimo de relleno.
+ * Esta vía admite dos envíos por formulario e IP cada diez minutos.
+ */
+export async function submitWithoutJs(formId: number, values: Record<string, string>): Promise<void> {
+  const context = await playwrightRequest.newContext({ baseURL: env.baseUrl });
+  const form: Record<string, string> = { action: 'formulario_mensaje_submit', fm_form_id: String(formId) };
+
+  for (const [field, value] of Object.entries(values)) {
+    form[`fm[${field}]`] = value;
+  }
+
+  const response = await context.post('/wp-admin/admin-post.php', { form, maxRedirects: 0 });
+  await context.dispose();
+
+  if (response.status() !== 303) {
+    throw new Error(`El envío sin JavaScript devolvió ${response.status()}: ${await response.text()}`);
   }
 }
 

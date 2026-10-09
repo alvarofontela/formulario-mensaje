@@ -51,7 +51,8 @@ final class Submission_Request_Factory {
 			is_scalar( $token ) ? mb_substr( (string) $token, 0, self::MAX_LENGTH ) : '',
 			$channel,
 			$this->ip_resolver->resolve(),
-			$this->page_url()
+			$this->page_url(),
+			mb_substr( $this->server->get( 'HTTP_USER_AGENT' ), 0, 255 )
 		);
 	}
 

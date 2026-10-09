@@ -6,6 +6,8 @@
 
 	<!-- Resultado de compilar src/ con @wordpress/scripts: se revisan los fuentes, no lo generado. -->
 	<exclude-pattern>plugin/build/*</exclude-pattern>
+	<!-- Traducciones generadas por `rt i18n`. -->
+	<exclude-pattern>plugin/languages/*</exclude-pattern>
 
 	<arg name="extensions" value="php"/>
 	<arg name="basepath" value="."/>

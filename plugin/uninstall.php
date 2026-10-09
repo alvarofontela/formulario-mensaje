@@ -14,10 +14,10 @@ require_once __DIR__ . '/includes/class-autoloader.php';
 
 ( new Formulario_Mensaje\Autoloader( __DIR__ . '/includes' ) )->register();
 
-/*
- * Se retiran las capabilities y la marca de versión. Los formularios y los ajustes se conservan: su
- * borrado será opcional y se decidirá con un ajuste del plugin.
- */
-( new Formulario_Mensaje\Lifecycle\Capabilities() )->remove_from_all_roles();
+global $wpdb;
 
-delete_option( Formulario_Mensaje\Lifecycle\Installer::VERSION_OPTION );
+( new Formulario_Mensaje\Lifecycle\Uninstaller(
+	new Formulario_Mensaje\Lifecycle\Capabilities(),
+	new Formulario_Mensaje\Database\Schema( $wpdb ),
+	new Formulario_Mensaje\Lifecycle\Maintenance_Schedule()
+) )->uninstall();

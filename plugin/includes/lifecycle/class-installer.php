@@ -7,6 +7,8 @@
 
 namespace Formulario_Mensaje\Lifecycle;
 
+use Formulario_Mensaje\Database\Schema;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -24,11 +26,15 @@ final class Installer {
 	/**
 	 * Constructor.
 	 *
-	 * @param Capabilities $capabilities Capabilities del plugin.
-	 * @param string       $version      Versión del código.
+	 * @param Capabilities         $capabilities Capabilities del plugin.
+	 * @param Schema               $schema       Esquema de las tablas del plugin.
+	 * @param Maintenance_Schedule $maintenance  Programación del mantenimiento diario.
+	 * @param string               $version      Versión del código.
 	 */
 	public function __construct(
 		private readonly Capabilities $capabilities,
+		private readonly Schema $schema,
+		private readonly Maintenance_Schedule $maintenance,
 		private readonly string $version
 	) {}
 
@@ -37,6 +43,8 @@ final class Installer {
 	 */
 	public function install(): void {
 		$this->capabilities->grant_to_administrator();
+		$this->schema->install();
+		$this->maintenance->ensure();
 
 		update_option( self::VERSION_OPTION, $this->version );
 	}
@@ -45,7 +53,7 @@ final class Installer {
 	 * Ejecuta la instalación si los datos guardados son de otra versión del código.
 	 */
 	public function maybe_upgrade(): void {
-		if ( get_option( self::VERSION_OPTION ) !== $this->version ) {
+		if ( get_option( self::VERSION_OPTION ) !== $this->version || $this->schema->needs_install() ) {
 			$this->install();
 		}
 	}

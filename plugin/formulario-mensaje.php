@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Formulario Mensaje
  * Description:       Lightweight, auditable form builder: forms with their own fields, email notifications, webhooks and built-in spam protection.
- * Version:           0.1.0
+ * Version:           0.2.0
  * Requires at least: 7.0
  * Requires PHP:      8.1
  * Author:            Álvaro Fontela
@@ -16,7 +16,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FORMULARIO_MENSAJE_VERSION', '0.1.0' );
+define( 'FORMULARIO_MENSAJE_VERSION', '0.2.0' );
 define( 'FORMULARIO_MENSAJE_FILE', __FILE__ );
 define( 'FORMULARIO_MENSAJE_DIR', __DIR__ );
 
@@ -31,9 +31,24 @@ require_once __DIR__ . '/includes/class-autoloader.php';
 register_activation_hook(
 	__FILE__,
 	static function ( bool $network_wide = false ): void {
-		$installer = new Formulario_Mensaje\Lifecycle\Installer( new Formulario_Mensaje\Lifecycle\Capabilities(), FORMULARIO_MENSAJE_VERSION );
+		global $wpdb;
+
+		$installer = new Formulario_Mensaje\Lifecycle\Installer(
+			new Formulario_Mensaje\Lifecycle\Capabilities(),
+			new Formulario_Mensaje\Database\Schema( $wpdb ),
+			new Formulario_Mensaje\Lifecycle\Maintenance_Schedule(),
+			FORMULARIO_MENSAJE_VERSION
+		);
 
 		( new Formulario_Mensaje\Lifecycle\Activator( $installer ) )->activate( $network_wide );
+	}
+);
+
+// Desactivación: la tarea diaria deja de programarse. Los datos no se tocan.
+register_deactivation_hook(
+	__FILE__,
+	static function (): void {
+		( new Formulario_Mensaje\Lifecycle\Maintenance_Schedule() )->clear();
 	}
 );
 

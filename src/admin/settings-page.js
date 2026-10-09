@@ -4,11 +4,12 @@ import {
 	RadioControl,
 	Spinner,
 	TextareaControl,
+	ToggleControl,
 } from '@wordpress/components';
 import { useEffect, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
-import { getSettings, saveSettings } from './api';
+import { getSettings, runMaintenance, saveSettings } from './api';
 import { siteHost } from './config';
 
 const toLines = ( list ) => ( Array.isArray( list ) ? list.join( '\n' ) : '' );
@@ -19,13 +20,14 @@ const toList = ( text ) =>
 		.filter( Boolean );
 
 /**
- * Pantalla de ajustes generales: proxy de confianza y dominios de redirección permitidos.
+ * Pantalla de ajustes generales: antispam, proxy de confianza, dominios de redirección y datos.
  */
 export default function SettingsPage() {
 	const [ settings, setSettings ] = useState( null );
 	const [ proxies, setProxies ] = useState( '' );
 	const [ hosts, setHosts ] = useState( '' );
 	const [ saving, setSaving ] = useState( false );
+	const [ cleaning, setCleaning ] = useState( false );
 	const [ notice, setNotice ] = useState( null );
 
 	const apply = ( response ) => {
@@ -42,6 +44,9 @@ export default function SettingsPage() {
 			);
 	}, [] );
 
+	const set = ( key, value ) =>
+		setSettings( { ...settings, [ key ]: value } );
+
 	const save = ( event ) => {
 		event.preventDefault();
 		setSaving( true );
@@ -51,6 +56,8 @@ export default function SettingsPage() {
 			trusted_proxy_mode: settings.trusted_proxy_mode,
 			trusted_proxies: toList( proxies ),
 			allowed_redirect_hosts: toList( hosts ),
+			accept_no_js: settings.accept_no_js,
+			delete_data_on_uninstall: settings.delete_data_on_uninstall,
 		} )
 			.then( ( response ) => {
 				apply( response );
@@ -62,7 +69,30 @@ export default function SettingsPage() {
 			.catch( ( error ) =>
 				setNotice( { status: 'error', message: error.message } )
 			)
-			.finally( () => setSaving( false ) );
+			.finally( () => {
+				setSaving( false );
+				window.scrollTo( { top: 0 } );
+			} );
+	};
+
+	const clean = () => {
+		setCleaning( true );
+		setNotice( null );
+
+		runMaintenance()
+			.then( () =>
+				setNotice( {
+					status: 'success',
+					message: __( 'Cleanup done.', 'formulario-mensaje' ),
+				} )
+			)
+			.catch( ( error ) =>
+				setNotice( { status: 'error', message: error.message } )
+			)
+			.finally( () => {
+				setCleaning( false );
+				window.scrollTo( { top: 0 } );
+			} );
 	};
 
 	return (
@@ -90,6 +120,33 @@ export default function SettingsPage() {
 
 			{ settings && (
 				<form className="fm-settings-page__form" onSubmit={ save }>
+					<section className="fm-card">
+						<h2>
+							{ __( 'Spam protection', 'formulario-mensaje' ) }
+						</h2>
+						<p>
+							{ __(
+								'Every form is protected by a hidden trap field, a minimum time to fill it in and a limit of submissions per IP address. None of them needs configuration.',
+								'formulario-mensaje'
+							) }
+						</p>
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={ __(
+								'Accept submissions without JavaScript',
+								'formulario-mensaje'
+							) }
+							help={ __(
+								'Forms keep working in browsers without JavaScript, but those submissions cannot prove a minimum filling time, so they only have the trap field and a stricter limit per IP address. Turn it off if you receive spam through this path.',
+								'formulario-mensaje'
+							) }
+							checked={ !! settings.accept_no_js }
+							onChange={ ( value ) =>
+								set( 'accept_no_js', value )
+							}
+						/>
+					</section>
+
 					<section className="fm-card">
 						<h2>
 							{ __( 'Visitor IP address', 'formulario-mensaje' ) }
@@ -130,10 +187,7 @@ export default function SettingsPage() {
 								},
 							] }
 							onChange={ ( value ) =>
-								setSettings( {
-									...settings,
-									trusted_proxy_mode: value,
-								} )
+								set( 'trusted_proxy_mode', value )
 							}
 						/>
 						{ settings.trusted_proxy_mode === 'custom' && (
@@ -192,6 +246,44 @@ export default function SettingsPage() {
 							rows={ 4 }
 							value={ hosts }
 							onChange={ setHosts }
+						/>
+					</section>
+
+					<section className="fm-card">
+						<h2>{ __( 'Data', 'formulario-mensaje' ) }</h2>
+						<p>
+							{ __(
+								'Once a day the plugin deletes the submissions that have exceeded the retention period of their form. You can run that cleanup now.',
+								'formulario-mensaje'
+							) }
+						</p>
+						<p>
+							<Button
+								variant="secondary"
+								isBusy={ cleaning }
+								disabled={ cleaning }
+								onClick={ clean }
+							>
+								{ __(
+									'Run cleanup now',
+									'formulario-mensaje'
+								) }
+							</Button>
+						</p>
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={ __(
+								'Delete all data when the plugin is uninstalled',
+								'formulario-mensaje'
+							) }
+							help={ __(
+								'Forms, submissions and settings are deleted when the plugin is deleted from the Plugins screen. Deactivating it never deletes anything.',
+								'formulario-mensaje'
+							) }
+							checked={ !! settings.delete_data_on_uninstall }
+							onChange={ ( value ) =>
+								set( 'delete_data_on_uninstall', value )
+							}
 						/>
 					</section>
 

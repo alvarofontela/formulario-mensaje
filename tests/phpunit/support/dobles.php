@@ -90,6 +90,23 @@ abstract class Caso_Formulario extends WP_UnitTestCase {
 		reset_phpmailer_instance();
 	}
 
+	/** Esquema de las tablas del plugin sobre la base de datos de tests. */
+	protected function esquema(): Formulario_Mensaje\Database\Schema {
+		global $wpdb;
+
+		return new Formulario_Mensaje\Database\Schema( $wpdb );
+	}
+
+	/** Instalador del plugin con una versión dada. */
+	protected function instalador( string $version ): Formulario_Mensaje\Lifecycle\Installer {
+		return new Formulario_Mensaje\Lifecycle\Installer(
+			new Formulario_Mensaje\Lifecycle\Capabilities(),
+			$this->esquema(),
+			new Formulario_Mensaje\Lifecycle\Maintenance_Schedule(),
+			$version
+		);
+	}
+
 	/** Inicia sesión como un administrador, que tiene todas las capabilities del plugin. */
 	protected function como_administrador(): int {
 		// El rol las recibe al activar el plugin; en los tests se conceden aquí.

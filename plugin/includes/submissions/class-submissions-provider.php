@@ -15,6 +15,7 @@ use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Service_Provider;
 use Formulario_Mensaje\Settings\Settings_Repository;
+use Formulario_Mensaje\Storage\Submission_Journal;
 use Formulario_Mensaje\Support\Clock;
 use Formulario_Mensaje\Support\Inline_Html;
 use Formulario_Mensaje\Support\Server_Vars;
@@ -73,6 +74,7 @@ final class Submissions_Provider implements Service_Provider {
 				$c->get( Form_Repository::class ),
 				$c->get( Spam_Guard::class ),
 				$c->get( Submission_Validator::class ),
+				$c->get( Submission_Journal::class ),
 				$c->get( Action_Runner::class ),
 				$c->get( Confirmation_Builder::class ),
 				$c->get( Reference_Generator::class ),

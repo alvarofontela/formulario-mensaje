@@ -8,7 +8,7 @@ use Formulario_Mensaje\Antispam\Cloudflare_Ranges;
 use Formulario_Mensaje\Antispam\Ip_Matcher;
 use Formulario_Mensaje\Antispam\Rate_Limit_Check;
 use Formulario_Mensaje\Antispam\Token_Service;
-use Formulario_Mensaje\Antispam\Transient_Rate_Limiter;
+use Formulario_Mensaje\Antispam\Wpdb_Rate_Limiter;
 use Formulario_Mensaje\Forms\Form;
 use Formulario_Mensaje\Forms\Form_Definition;
 use Formulario_Mensaje\Settings\Settings;
@@ -115,40 +115,115 @@ class AntispamTest extends Caso_Formulario {
 		$this->assertSame( 'formulario_mensaje_token_expired', $tokens->verify( $token, 12 )->get_error_code() );
 	}
 
+	private function limite( Reloj_Falso $reloj ): Rate_Limit_Check {
+		global $wpdb;
+
+		return new Rate_Limit_Check( new Wpdb_Rate_Limiter( $wpdb, $this->esquema(), $reloj ) );
+	}
+
+	private function peticion( string $ip, Submission_Channel $via = Submission_Channel::Rest ): Submission_Request {
+		return new Submission_Request( 7, array(), '', '', $via, $ip );
+	}
+
 	public function test_el_limite_por_ip_bloquea_al_superarlo_y_se_levanta_al_pasar_la_ventana() {
 		$reloj      = new Reloj_Falso();
-		$limite     = new Rate_Limit_Check( new Transient_Rate_Limiter( $reloj ) );
+		$limite     = $this->limite( $reloj );
 		$formulario = new Form( 7, 'Contacto', Form::STATUS_PUBLISHED, new Form_Definition() );
-		$peticion   = new Submission_Request( 7, array(), '', '', Submission_Channel::Rest, '203.0.113.9' );
-		$otra_ip    = new Submission_Request( 7, array(), '', '', Submission_Channel::Rest, '203.0.113.10' );
+		$peticion   = $this->peticion( '203.0.113.9' );
 
+		// Cada comprobación superada reserva un hueco: no hace falta contar después.
 		for ( $i = 0; $i < 5; $i++ ) {
 			$this->assertNull( $limite->check( $peticion, $formulario ), "Envío $i" );
-			$limite->record( $peticion, $formulario );
 		}
 
 		$error = $limite->check( $peticion, $formulario );
 
 		$this->assertSame( 'formulario_mensaje_rate_limited', $error->get_error_code() );
 		$this->assertSame( 429, $error->get_error_data()['status'] );
-		$this->assertNull( $limite->check( $otra_ip, $formulario ), 'El límite es por IP.' );
+		$this->assertNotNull( $limite->check( $peticion, $formulario ), 'Insistir no abre hueco.' );
+		$this->assertNull( $limite->check( $this->peticion( '203.0.113.10' ), $formulario ), 'El límite es por IP.' );
 
 		$reloj->avanzar( 601 );
 
 		$this->assertNull( $limite->check( $peticion, $formulario ) );
 	}
 
+	public function test_un_envio_que_no_se_acepta_devuelve_su_hueco_del_limite() {
+		$limite     = $this->limite( new Reloj_Falso() );
+		$formulario = new Form( 7, 'Contacto', Form::STATUS_PUBLISHED, new Form_Definition() );
+		$peticion   = $this->peticion( '203.0.113.9' );
+
+		for ( $i = 0; $i < 5; $i++ ) {
+			$limite->check( $peticion, $formulario );
+		}
+
+		$this->assertNotNull( $limite->check( $peticion, $formulario ) );
+
+		// Un envío con errores de validación no cuenta: el servicio devuelve su reserva.
+		$limite->release( $peticion, $formulario );
+
+		$this->assertNull( $limite->check( $peticion, $formulario ) );
+	}
+
+	public function test_el_contador_del_limite_es_atomico_y_no_se_puede_saltar_en_paralelo() {
+		global $wpdb;
+
+		$reloj    = new Reloj_Falso();
+		$contador = new Wpdb_Rate_Limiter( $wpdb, $this->esquema(), $reloj );
+
+		// Cada llamada devuelve su propio total: dos peticiones nunca ven el mismo número.
+		$this->assertSame( array( 1, 2, 3 ), array( $contador->hit( 'clave', 60 ), $contador->hit( 'clave', 60 ), $contador->hit( 'clave', 60 ) ) );
+		$this->assertSame( 1, $contador->hit( 'otra', 60 ) );
+
+		$contador->release( 'clave' );
+		$this->assertSame( 3, $contador->hit( 'clave', 60 ) );
+
+		$reloj->avanzar( 61 );
+		$this->assertSame( 1, $contador->hit( 'clave', 60 ), 'Pasada la ventana, el contador empieza de nuevo.' );
+		$this->assertSame( 1, $contador->purge_expired(), 'Solo se borra el contador caducado.' );
+	}
+
+	public function test_el_envio_sin_javascript_tiene_un_limite_mas_estricto() {
+		$limite     = $this->limite( new Reloj_Falso() );
+		$formulario = new Form( 7, 'Contacto', Form::STATUS_PUBLISHED, new Form_Definition() );
+		$sin_js     = $this->peticion( '203.0.113.9', Submission_Channel::Fallback );
+
+		$this->assertNull( $limite->check( $sin_js, $formulario ) );
+		$this->assertNull( $limite->check( $sin_js, $formulario ) );
+		$this->assertSame( 'formulario_mensaje_rate_limited', $limite->check( $sin_js, $formulario )->get_error_code() );
+	}
+
 	public function test_el_contador_del_limite_no_guarda_la_ip() {
 		global $wpdb;
 
-		$limite     = new Rate_Limit_Check( new Transient_Rate_Limiter( new Reloj_Falso( time() ) ) );
+		$limite     = $this->limite( new Reloj_Falso( time() ) );
 		$formulario = new Form( 7, 'Contacto', Form::STATUS_PUBLISHED, new Form_Definition() );
 
-		$limite->record( new Submission_Request( 7, array(), '', '', Submission_Channel::Rest, '203.0.113.77' ), $formulario );
+		$limite->check( $this->peticion( '203.0.113.77' ), $formulario );
 
-		$guardado = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->options WHERE option_name LIKE '%203.0.113.77%' OR option_value LIKE '%203.0.113.77%'" );
+		$claves = $wpdb->get_col( $wpdb->prepare( 'SELECT bucket FROM %i', $this->esquema()->rate_limits_table() ) );
 
-		$this->assertSame( '0', $guardado );
+		$this->assertCount( 1, $claves );
+		$this->assertMatchesRegularExpression( '/^[a-f0-9]{40}$/', $claves[0] );
+		$this->assertStringNotContainsString( '203.0.113.77', $claves[0] );
+	}
+
+	public function test_un_envio_con_errores_de_validacion_no_gasta_el_limite() {
+		$formulario = $this->crear_formulario();
+
+		$_SERVER['REMOTE_ADDR'] = '203.0.113.200';
+
+		for ( $i = 0; $i < 8; $i++ ) {
+			$this->assertSame( 422, $this->enviar( $formulario, array( 'nombre' => '', 'correo' => 'mal' ) )->get_status(), "Intento $i" );
+		}
+
+		for ( $i = 0; $i < 5; $i++ ) {
+			$this->assertSame( 200, $this->enviar( $formulario, array( 'nombre' => 'Ana', 'correo' => 'ana@example.org' ) )->get_status(), "Envío $i" );
+		}
+
+		$this->assertSame( 429, $this->enviar( $formulario, array( 'nombre' => 'Ana', 'correo' => 'ana@example.org' ) )->get_status() );
+
+		$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 	}
 
 	public function test_un_envio_con_el_campo_trampa_relleno_se_rechaza_sin_enviar_correo() {

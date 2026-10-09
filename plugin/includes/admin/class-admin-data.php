@@ -76,12 +76,26 @@ final class Admin_Data {
 			),
 			'defaultDefinition' => $this->default_definition->create()->to_array(),
 			'can'               => array(
-				'manageForms'    => current_user_can( Capabilities::MANAGE_FORMS ),
-				'manageSettings' => current_user_can( Capabilities::MANAGE_SETTINGS ),
+				'manageForms'     => current_user_can( Capabilities::MANAGE_FORMS ),
+				'viewSubmissions' => current_user_can( Capabilities::VIEW_SUBMISSIONS ),
+				'manageSettings'  => current_user_can( Capabilities::MANAGE_SETTINGS ),
 			),
 			'urls'              => array(
-				'forms'    => admin_url( 'admin.php?page=' . Admin_Menu::FORMS_PAGE ),
-				'settings' => admin_url( 'admin.php?page=' . Admin_Menu::SETTINGS_PAGE ),
+				'forms'       => admin_url( 'admin.php?page=' . Admin_Menu::FORMS_PAGE ),
+				'submissions' => admin_url( 'admin.php?page=' . Admin_Menu::SUBMISSIONS_PAGE ),
+				'settings'    => admin_url( 'admin.php?page=' . Admin_Menu::SETTINGS_PAGE ),
+				// La descarga lleva su nonce: solo sirve a quien tiene la sesión y la capability de ver envíos.
+				// Se compone con add_query_arg() y no con wp_nonce_url(), que devuelve la dirección escapada
+				// para HTML: aquí va a JavaScript como dato.
+				'export'      => current_user_can( Capabilities::VIEW_SUBMISSIONS )
+					? add_query_arg(
+						array(
+							'action'   => Export_Controller::ACTION,
+							'_wpnonce' => wp_create_nonce( Export_Controller::ACTION ),
+						),
+						admin_url( 'admin-post.php' )
+					)
+					: '',
 			),
 			'siteHost'          => (string) wp_parse_url( home_url(), PHP_URL_HOST ),
 		);

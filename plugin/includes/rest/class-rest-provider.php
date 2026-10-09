@@ -7,6 +7,7 @@
 
 namespace Formulario_Mensaje\Rest;
 
+use Formulario_Mensaje\Actions\Action_Type_Registry;
 use Formulario_Mensaje\Antispam\Client_Ip_Resolver;
 use Formulario_Mensaje\Antispam\Token_Service;
 use Formulario_Mensaje\Container;
@@ -17,6 +18,8 @@ use Formulario_Mensaje\Frontend\Frontend_Assets;
 use Formulario_Mensaje\Service_Provider;
 use Formulario_Mensaje\Settings\Settings_Repository;
 use Formulario_Mensaje\Settings\Settings_Sanitizer;
+use Formulario_Mensaje\Storage\Action_Retrier;
+use Formulario_Mensaje\Storage\Submission_Service;
 use Formulario_Mensaje\Submissions\Submission_Handler;
 use Formulario_Mensaje\Submissions\Submission_Request_Factory;
 use Formulario_Mensaje\Support\Server_Vars;
@@ -54,9 +57,22 @@ final class Rest_Provider implements Service_Provider {
 			static fn ( Container $c ): Forms_Controller => new Forms_Controller(
 				$c->get( Form_Service::class ),
 				$c->get( Form_Renderer::class ),
-				$c->get( Frontend_Assets::class )
+				$c->get( Frontend_Assets::class ),
+				$c->get( Submission_Service::class )
 			)
 		);
+
+		$container->set(
+			Submission_Records_Controller::class,
+			static fn ( Container $c ): Submission_Records_Controller => new Submission_Records_Controller(
+				$c->get( Submission_Service::class ),
+				$c->get( Action_Retrier::class ),
+				$c->get( Form_Service::class ),
+				$c->get( Action_Type_Registry::class )
+			)
+		);
+
+		$container->set( Maintenance_Controller::class, static fn (): Maintenance_Controller => new Maintenance_Controller() );
 
 		$container->set(
 			Settings_Controller::class,
@@ -74,6 +90,8 @@ final class Rest_Provider implements Service_Provider {
 				$container->get( Submissions_Controller::class )->register_routes();
 				$container->get( Forms_Controller::class )->register_routes();
 				$container->get( Settings_Controller::class )->register_routes();
+				$container->get( Submission_Records_Controller::class )->register_routes();
+				$container->get( Maintenance_Controller::class )->register_routes();
 			}
 		);
 	}

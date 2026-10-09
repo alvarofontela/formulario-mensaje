@@ -40,7 +40,10 @@ final class Settings_Sanitizer {
 		return new Settings(
 			$mode,
 			$this->sanitize_list( $raw['trusted_proxies'] ?? array(), array( $this->ip_matcher, 'normalize_range' ) ),
-			$this->sanitize_list( $raw['allowed_redirect_hosts'] ?? array(), array( $this, 'normalize_host' ) )
+			$this->sanitize_list( $raw['allowed_redirect_hosts'] ?? array(), array( $this, 'normalize_host' ) ),
+			// Activado salvo que se haya desactivado expresamente: es el comportamiento acordado.
+			! array_key_exists( 'accept_no_js', $raw ) || ! empty( $raw['accept_no_js'] ),
+			! empty( $raw['delete_data_on_uninstall'] )
 		);
 	}
 

@@ -453,3 +453,177 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		}
 	}
 }
+
+// Envíos
+
+.fm-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 12px;
+
+	> .components-base-control {
+		min-width: 220px;
+	}
+
+	.components-search-control {
+		min-width: 280px;
+	}
+
+	&__actions {
+		display: flex;
+		gap: 8px;
+		margin-inline-start: auto;
+	}
+}
+
+.fm-admin {
+	&__check {
+		width: 40px;
+		padding: 8px 10px !important;
+		vertical-align: middle;
+	}
+
+	&__col-reference {
+		width: 170px;
+	}
+
+	&__summary {
+		overflow-wrap: anywhere;
+	}
+
+	&__muted {
+		color: $muted;
+		font-size: 12px;
+	}
+
+	&__cell-actions {
+		white-space: nowrap;
+
+		.components-button + .components-button {
+			margin-inline-start: 4px;
+		}
+	}
+}
+
+.fm-badge {
+	display: inline-block;
+	margin-inline-start: 8px;
+	padding: 1px 8px;
+	border-radius: 9px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.6;
+
+	&--error {
+		background: #fcf0f1;
+		color: #8a2424;
+	}
+
+	&--ok {
+		background: #edfaef;
+		color: #005c12;
+	}
+}
+
+.fm-pagination {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 12px;
+	margin-top: 12px;
+}
+
+.fm-detail {
+	&__delete {
+		margin-inline-start: auto;
+	}
+
+	&__body {
+		display: grid;
+		grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr);
+		align-items: start;
+		gap: 16px;
+
+		@media (max-width: 960px) {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+
+	&__fields {
+		margin: 0;
+
+		> div {
+			padding: 12px 0;
+			border-top: 1px solid $border;
+
+			&:first-child {
+				padding-top: 4px;
+				border-top: 0;
+			}
+		}
+
+		dt {
+			margin-bottom: 4px;
+			color: $muted;
+			font-size: 12px;
+			font-weight: 600;
+		}
+
+		dd {
+			margin: 0;
+			overflow-wrap: anywhere;
+			white-space: pre-wrap;
+		}
+	}
+
+	&__meta {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 8px 16px;
+		margin: 0;
+
+		dt {
+			color: $muted;
+		}
+
+		dd {
+			margin: 0;
+		}
+	}
+
+	&__break {
+		overflow-wrap: anywhere;
+	}
+
+	&__deliveries {
+		margin: 0;
+
+		li {
+			margin: 0;
+			padding: 12px 0;
+			border-top: 1px solid $border;
+
+			&:first-child {
+				padding-top: 4px;
+				border-top: 0;
+			}
+		}
+
+		p {
+			margin: 6px 0 0;
+		}
+	}
+
+	&__error {
+		color: #8a2424;
+		overflow-wrap: anywhere;
+	}
+
+	&__delivery-actions {
+		display: flex;
+		gap: 8px;
+		margin-top: 8px;
+	}
+}

@@ -1,9 +1,18 @@
-import { Button, Modal, Notice, Spinner } from '@wordpress/components';
+import {
+	Button,
+	CheckboxControl,
+	Modal,
+	Notice,
+	Spinner,
+} from '@wordpress/components';
 import { dateI18n, getSettings as getDateSettings } from '@wordpress/date';
 import { useCallback, useEffect, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
+import { addQueryArgs } from '@wordpress/url';
 
 import { deleteForm, listForms, restoreForm, trashForm } from './api';
+import { can, urls } from './config';
+import { useLatest, useReload } from './hooks';
 
 const STATUSES = [
 	{ name: 'publish', title: __( 'Published', 'formulario-mensaje' ) },
@@ -21,20 +30,26 @@ export default function FormsList( { onOpen } ) {
 	const [ forms, setForms ] = useState( null );
 	const [ notice, setNotice ] = useState( null );
 	const [ pendingDelete, setPendingDelete ] = useState( null );
+	const [ deleteSubmissions, setDeleteSubmissions ] = useState( false );
 	const [ copied, setCopied ] = useState( 0 );
+
+	const latest = useLatest();
+	const [ version, reload ] = useReload();
 
 	const load = useCallback( () => {
 		setForms( null );
 
-		listForms( status )
+		latest( listForms( status ) )
 			.then( setForms )
 			.catch( ( error ) => {
 				setForms( [] );
 				setNotice( { status: 'error', message: error.message } );
 			} );
-	}, [ status ] );
+	}, [ status, latest ] );
 
-	useEffect( load, [ load ] );
+	useEffect( () => {
+		load();
+	}, [ load, version ] );
 
 	const run = ( action, message ) => {
 		setNotice( null );
@@ -42,7 +57,7 @@ export default function FormsList( { onOpen } ) {
 		action()
 			.then( () => {
 				setNotice( { status: 'success', message } );
-				load();
+				reload();
 			} )
 			.catch( ( error ) =>
 				setNotice( { status: 'error', message: error.message } )
@@ -156,6 +171,14 @@ export default function FormsList( { onOpen } ) {
 							<th scope="col">
 								{ __( 'Fields', 'formulario-mensaje' ) }
 							</th>
+							{ can.viewSubmissions && (
+								<th scope="col">
+									{ __(
+										'Submissions',
+										'formulario-mensaje'
+									) }
+								</th>
+							) }
 							<th scope="col">
 								{ __( 'Last modified', 'formulario-mensaje' ) }
 							</th>
@@ -321,6 +344,22 @@ export default function FormsList( { onOpen } ) {
 										form.field_count
 									) }
 								</td>
+								{ can.viewSubmissions && (
+									<td>
+										{ form.submission_count > 0 ? (
+											<a
+												href={ addQueryArgs(
+													urls.submissions,
+													{ form: form.id }
+												) }
+											>
+												{ form.submission_count }
+											</a>
+										) : (
+											0
+										) }
+									</td>
+								) }
 								<td>
 									{ form.modified
 										? dateI18n( dateFormat, form.modified )
@@ -351,6 +390,28 @@ export default function FormsList( { onOpen } ) {
 							pendingDelete.title
 						) }
 					</p>
+					{ can.viewSubmissions &&
+						pendingDelete.submission_count > 0 && (
+							<CheckboxControl
+								__nextHasNoMarginBottom
+								label={ sprintf(
+									/* translators: %d: number of stored submissions of the form. */
+									_n(
+										'Delete also its %d stored submission',
+										'Delete also its %d stored submissions',
+										pendingDelete.submission_count,
+										'formulario-mensaje'
+									),
+									pendingDelete.submission_count
+								) }
+								help={ __(
+									'If you keep them, they stay in the Submissions screen without a form.',
+									'formulario-mensaje'
+								) }
+								checked={ deleteSubmissions }
+								onChange={ setDeleteSubmissions }
+							/>
+						) }
 					<div className="fm-admin__modal-actions">
 						<Button
 							__next40pxDefaultSize
@@ -365,10 +426,12 @@ export default function FormsList( { onOpen } ) {
 							isDestructive
 							onClick={ () => {
 								const id = pendingDelete.id;
+								const withSubmissions = deleteSubmissions;
 
 								setPendingDelete( null );
+								setDeleteSubmissions( false );
 								run(
-									() => deleteForm( id ),
+									() => deleteForm( id, withSubmissions ),
 									__( 'Form deleted.', 'formulario-mensaje' )
 								);
 							} }
