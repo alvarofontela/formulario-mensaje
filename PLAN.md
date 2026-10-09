@@ -2,7 +2,7 @@
 
 Fichero de contexto con las decisiones de producto y técnicas tomadas con el usuario el 2026-10-08 (tres tandas de preguntas) y el reparto en fases. Las reglas de trabajo (tests, lint, seguridad, idioma, git, SOLID y buenas prácticas de WordPress) están en `CLAUDE.md`; aquí solo se desarrolla la última, por su peso en la arquitectura.
 
-**Estado: plan acordado, desarrollo sin empezar.** `plugin/` está vacío. No se empieza ninguna fase hasta que el usuario lo indique expresamente.
+**Estado: en desarrollo.** El 2026-10-09 el usuario pidió desarrollar las 11 fases de principio a fin y de forma desatendida, con un commit local por fase. El avance y lo decidido en cada fase está en «Estado del desarrollo», al final.
 
 ## Qué es
 
@@ -215,5 +215,42 @@ El orden pone antes lo que da valor en una web real (núcleo, envíos, correo, w
 
 - El usuario ha dado libertad total para adaptar el WordPress de `.runtime` e instalar en él los plugins que hagan falta.
 - Elementor 4.3.4 (gratuito) está instalado e inactivo desde el 2026-10-08, y la instalación con `rt wp plugin install` funciona pese al límite de rutas de Windows. No se ha comprobado si sobrevive a `rt reset` o a `rt setup`; si no, se incorporará a la instalación del entorno en la fase 7.
-- El constructor en React necesitará un paso de compilación (`@wordpress/scripts`), que hoy el entorno no tiene; se añade en la fase 1.
+- El constructor en React se compila con `@wordpress/scripts` (`rt build`), añadido en la fase 1.
 - Para ver el plugin en el navegador se cuenta con los tests de Playwright (`rt e2e`) y con la extensión de Chrome de Claude. El usuario mencionó un MCP de Playwright: en la sesión del 2026-10-08 no había ninguno conectado.
+
+## Estado del desarrollo
+
+Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fase (sin push); verificación en navegador con el Playwright del proyecto y Claude for Chrome; servicios externos con dobles locales; `plugin/build/` versionado; estilo base neutro que hereda del tema; si una pieza se resiste, se acota, se anota aquí y se sigue. Las actualizaciones del plugin siguen aplazadas.
+
+| Fase | Estado |
+| --- | --- |
+| 1. Núcleo | Hecha |
+| 2. Envíos y privacidad | Pendiente |
+| 3. Correo avanzado | Pendiente |
+| 4. Webhooks | Pendiente |
+| 5. Captchas | Pendiente |
+| 6. Constructor avanzado | Pendiente |
+| 7. Estilo, bloque y Elementor | Pendiente |
+| 8. Lógica condicional en campos | Pendiente |
+| 9. Formularios por pasos | Pendiente |
+| 10. Ficheros | Pendiente |
+| 11. Extensión | Pendiente |
+
+### Fase 1: lo que se decidió al hacerla
+
+- **Definición del formulario**: JSON en el metadato `_formulario_mensaje_definition` del tipo de contenido `formulario_mensaje` (el nombre admite 20 caracteres como máximo). No en el contenido, que WordPress filtra con kses según quién guarde. Forma: `{ version, fields: [{ id, type, settings }], settings, actions: [{ id, type, enabled, settings }] }`. Las acciones son una lista desde el principio; el constructor edita de momento la primera notificación.
+- **Opciones de los campos por esquema**: cada tipo declara sus opciones (`get_settings_schema()`); con ese esquema se sanean al guardar y se pinta el panel del constructor. Un tipo de campo nuevo, propio o de terceros, no necesita JavaScript.
+- **Etiquetas** en asunto, cuerpo y mensaje de éxito: `{field:ID}`, `{all_fields}`, `{reference}`, `{form_title}`, `{site_name}`, `{page_url}` y `{date}`. Se sustituyen en una sola pasada.
+- **Número de referencia**: aleatorio, con el formato `XXXX-XXXX`. Se genera ya en esta fase y va en la respuesta y en el correo; la fase 2 lo guarda con el envío.
+- **Sin JavaScript**: el POST va a `admin-post.php`. Si es correcto, se redirige de vuelta a la página con el identificador del formulario y la referencia en la URL (nunca datos del envío, así que las etiquetas de campos quedan vacías en ese mensaje). Si no, una página de error con los fallos y un enlace para volver, que conserva lo escrito en el navegador. No se guarda nada en sesión ni en transients.
+- **Con JavaScript** el formulario lleva `novalidate`: valida el servidor y los errores se muestran junto a cada campo, con el foco en el primero. Sin JavaScript actúa la validación nativa del navegador.
+- **Si todas las acciones de un formulario fallan**, el visitante recibe un error: mientras no se guarden los envíos (fase 2), aceptar el envío sería perderlo.
+- **Límite por IP**: 5 envíos aceptados cada 10 minutos por formulario e IP (filtro `formulario_mensaje_rate_limit`). **Tiempo mínimo de relleno**: 3 segundos desde la primera interacción (filtro `formulario_mensaje_min_fill_seconds`); el script espera lo que falte antes de enviar.
+- **Bloque**: quien edita contenidos sin la capability de gestionar formularios puede listar los publicados (solo nombre e identificador) para elegirlos.
+- **Papelera**: WordPress vacía la papelera de cualquier tipo de contenido a los 30 días (`EMPTY_TRASH_DAYS`); los formularios siguen esa regla.
+- **Desinstalar** retira las capabilities y la marca de versión; formularios y ajustes se conservan hasta que la fase 2 añada el ajuste de borrado.
+- **Hooks disponibles**: acciones `formulario_mensaje_register_field_types`, `formulario_mensaje_register_action_types`, `formulario_mensaje_before_actions` y `formulario_mensaje_submission_completed`; filtros `formulario_mensaje_validation_errors`, `formulario_mensaje_email_message`, `formulario_mensaje_rate_limit`, `formulario_mensaje_min_fill_seconds`, `formulario_mensaje_token_max_age` y `formulario_mensaje_cloudflare_ip_ranges`.
+
+Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel del constructor distinguen los tipos de control (`text`, `toggle`, `select`…) con un `switch`. Es el vocabulario cerrado del propio esquema, no un punto de extensión; lo que sí crece (tipos de campo y de acción) va por registro.
+
+- **Estilos**: si el contenido de la entrada o página lleva el shortcode o el bloque, el CSS se encola en la cabecera; si el formulario llega por otra vía (una plantilla, un widget), se encola al pintarlo.

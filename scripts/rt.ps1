@@ -605,6 +605,32 @@ switch ($Command) {
         exit $LASTEXITCODE
     }
     'playwright' { In-Root { & npx.cmd playwright @Rest }; exit $LASTEXITCODE }
+    'build' {
+        # Compila src/ (constructor en React y bloque) a plugin/build con @wordpress/scripts.
+        In-Root { & npm.cmd run build @Rest }
+        exit $LASTEXITCODE
+    }
+    'shot' {
+        # Captura de pantalla con el Chromium de .runtime; las opciones están en scripts/shot.mjs.
+        Start-All
+        In-Root { & node scripts/shot.mjs @Rest }
+        exit $LASTEXITCODE
+    }
+    'i18n' {
+        # Regenera la plantilla de traducción y, a partir de scripts/i18n/<locale>.json, los .po, .mo y .json
+        # de plugin/languages. Falla si algún texto de la interfaz se ha quedado sin traducir.
+        $languages = Join-Path $Dir.Plugin 'languages'
+        New-Item -ItemType Directory -Force $languages | Out-Null
+        Run $Exe.Php $Exe.WpCli i18n make-pot $Dir.Plugin "$languages\$($Cfg.Slug).pot" "--slug=$($Cfg.Slug)" "--domain=$($Cfg.Slug)" --skip-audit
+        In-Root { & node scripts/i18n-build.mjs $Cfg.Slug }
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        Get-ChildItem $languages -Include *.json, *.l10n.php -File -Recurse | Remove-Item
+        Run $Exe.Php $Exe.WpCli i18n make-mo $languages
+        # WordPress carga antes el .l10n.php que el .mo: es un include de PHP, mucho más rápido.
+        Run $Exe.Php $Exe.WpCli i18n make-php $languages
+        Run $Exe.Php $Exe.WpCli i18n make-json $languages --no-purge
+        exit 0
+    }
 
     'snapshot' { Save-Snapshot ($Rest[0] ?? 'manual') }
     'restore' { Restore-Snapshot ($Rest[0] ?? 'manual') }
@@ -689,6 +715,9 @@ Entorno local de WordPress en .runtime/   ->   $BaseUrl
   rt phpunit [args]        Tests de integración (usa --coverage-text o similar para cobertura)
   rt lint [fix] [args]     PHPCS sobre plugin/: estándares de WordPress y compatibilidad con PHP 8.1+
   rt e2e [args]            Tests de Playwright      rt playwright <args>   Resto de comandos de Playwright
+  rt build                 Compila src/ (React y bloque) a plugin/build
+  rt i18n                  Regenera el .pot y las traducciones de plugin/languages desde scripts/i18n/*.json
+  rt shot <ruta> <png> [opciones]   Captura de pantalla (opciones en scripts/shot.mjs)
   rt mail [n|clear] [--json]   Correos capturados por Mailpit
   rt logs [wp|php|apache|access|mariadb|mailpit|xdebug|clear] [líneas]
   rt xdebug [off|debug|develop,debug|coverage]

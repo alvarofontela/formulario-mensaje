@@ -1,11 +1,24 @@
 import { env } from './env';
 
+interface Address {
+  Name: string;
+  Address: string;
+}
+
 export interface MailSummary {
   ID: string;
   Subject: string;
-  From: { Name: string; Address: string };
-  To: { Name: string; Address: string }[];
+  From: Address;
+  To: Address[];
   Snippet: string;
+}
+
+export interface MailDetail {
+  Subject: string;
+  To: Address[];
+  ReplyTo: Address[];
+  Text: string;
+  HTML: string;
 }
 
 const api = `${env.mailpit.url}/api/v1`;
@@ -19,8 +32,8 @@ export async function listMail(): Promise<MailSummary[]> {
   return (await response.json()).messages;
 }
 
-/** Cuerpo completo del mensaje (campos Text y HTML, entre otros). */
-export async function getMail(id: string): Promise<{ Text: string; HTML: string }> {
+/** Mensaje completo: destinatarios, dirección de respuesta y cuerpo en texto y en HTML. */
+export async function getMail(id: string): Promise<MailDetail> {
   return (await fetch(`${api}/message/${id}`)).json();
 }
 
@@ -36,4 +49,10 @@ export async function waitForMail(
     if (Date.now() > deadline) throw new Error('No ha llegado ningún correo que cumpla la condición.');
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
+}
+
+/** Correos capturados que cumplen la condición, tras dar un margen para que lleguen. */
+export async function mailMatching(matches: (mail: MailSummary) => boolean, settleMs = 1_000): Promise<MailSummary[]> {
+  await new Promise((resolve) => setTimeout(resolve, settleMs));
+  return (await listMail()).filter(matches);
 }

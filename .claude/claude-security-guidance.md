@@ -7,6 +7,14 @@ Plugin de formularios para WordPress (PHP 8.1+, WordPress 7.0+) que se instala e
 - `plugin/` es el código que llega a producción y se revisa con todo el rigor.
 - `scripts/`, `tests/`, `rt.cmd`, `rt.sh`, `phpunit.xml.dist` y `playwright.config.ts` son el entorno local de desarrollo. Sus credenciales (`admin`/`admin`, `wp`/`wp`, `root`/`root`) y su `WP_DEBUG` activo pertenecen a un WordPress desechable que solo escucha en `127.0.0.1` y están ahí a propósito. Señala esas mismas cosas si aparecen dentro de `plugin/`.
 
+## Superficies que ya existen
+
+- **Envío público.** `POST formulario-mensaje/v1/forms/<id>/token` y `.../submissions`, y el POST sin JavaScript `admin_post(_nopriv)_formulario_mensaje_submit`, son públicos y sin nonce a propósito (caché de página). Su defensa es `Spam_Guard`: campo trampa, token firmado con tiempo mínimo y límite por IP. Cualquier otra ruta o acción pública es un hallazgo.
+- **Gestión.** `/forms`, `/forms/<id>`, `/forms/preview` y `/settings` exigen `formulario_mensaje_manage_forms` o `formulario_mensaje_manage_settings`. El listado admite además `edit_posts`, pero entonces solo devuelve id y título de los publicados.
+- **Valores de los campos.** Llegan sin sanear al servicio de envío: solo se leen las claves de los campos del formulario y cada valor lo sanea su `Input_Field_Type`. Las etiquetas (`{field:…}`) se sustituyen en una sola pasada y, en HTML, escapadas.
+- **Redirección tras el envío.** El destino sale de la definición guardada y pasa por `Redirect_Policy` (host del sitio o lista de los ajustes) al guardar y en cada envío. Un destino tomado de la petición es un hallazgo.
+- **Mensaje de éxito.** Lo compone el servidor (plantilla por `Inline_Html::filter()`, datos por `esc_html()`) y el script lo inserta con `innerHTML`. Cualquier otro uso de `innerHTML` con datos es un hallazgo.
+
 ## Reglas del plugin
 
 1. **Autorización además de nonce.** Un nonce solo protege de CSRF. Toda acción que no sea el envío público del formulario (ajustes, acciones `admin_post_*` y `wp_ajax_*`, rutas REST, cualquier lectura o borrado de envíos) comprueba una capability con `current_user_can()`. `is_admin()` no es una comprobación de permisos.

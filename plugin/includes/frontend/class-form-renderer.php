@@ -1,0 +1,168 @@
+<?php
+/**
+ * HTML de un formulario.
+ *
+ * @package Formulario_Mensaje
+ */
+
+namespace Formulario_Mensaje\Frontend;
+
+use Formulario_Mensaje\Antispam\Honeypot_Check;
+use Formulario_Mensaje\Fields\Field_Markup;
+use Formulario_Mensaje\Fields\Field_Type_Registry;
+use Formulario_Mensaje\Fields\Render_Context;
+use Formulario_Mensaje\Forms\Form;
+use Formulario_Mensaje\Rest\Rest_Provider;
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Genera el HTML accesible de un formulario. Es el mismo para el shortcode, el bloque y la vista previa.
+ *
+ * El HTML no contiene nada que caduque (ni nonce ni token), así que una caché de página completa puede
+ * servirlo sin que el formulario deje de funcionar.
+ */
+final class Form_Renderer {
+
+	/**
+	 * Valor del campo `action` del POST sin JavaScript, y nombre de su hook en `admin-post.php`.
+	 */
+	public const FALLBACK_ACTION = 'formulario_mensaje_submit';
+
+	/**
+	 * Nombre del campo que lleva el identificador del formulario en el POST sin JavaScript.
+	 */
+	public const FORM_ID_FIELD = 'fm_form_id';
+
+	/**
+	 * Veces que se ha pintado un formulario en esta petición, para que los `id` no se repitan.
+	 *
+	 * @var int
+	 */
+	private int $instances = 0;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param Field_Type_Registry $field_types Tipos de campo.
+	 * @param Field_Markup        $markup      HTML común de los campos.
+	 */
+	public function __construct(
+		private readonly Field_Type_Registry $field_types,
+		private readonly Field_Markup $markup
+	) {}
+
+	/**
+	 * Devuelve el HTML de un formulario, con todos los valores escapados.
+	 *
+	 * @param Form   $form         Formulario.
+	 * @param string $confirmation Mensaje de éxito en HTML ya escapado, si se acaba de completar un envío sin JavaScript.
+	 * @param bool   $show_form    Si se pinta el formulario además del mensaje de éxito.
+	 * @param bool   $interactive  Si el formulario puede enviarse; la vista previa del constructor lo pinta inerte.
+	 */
+	public function render( Form $form, string $confirmation = '', bool $show_form = true, bool $interactive = true ): string {
+		++$this->instances;
+
+		$instance = $form->id . '-' . $this->instances;
+
+		return sprintf(
+			'<div class="formulario-mensaje" id="%1$s">%2$s<div class="fm-success" role="status" tabindex="-1"%3$s>%4$s</div></div>',
+			esc_attr( 'formulario-mensaje-' . $instance ),
+			$show_form ? $this->form( $form, new Render_Context( $form->id, $instance ), $interactive ) : '',
+			'' === $confirmation ? ' hidden' : '',
+			$confirmation
+		);
+	}
+
+	/**
+	 * Etiqueta `<form>` con sus campos.
+	 *
+	 * @param Form           $form        Formulario.
+	 * @param Render_Context $context     Contexto de pintado.
+	 * @param bool           $interactive Si el formulario puede enviarse.
+	 */
+	private function form( Form $form, Render_Context $context, bool $interactive ): string {
+		$fields       = '';
+		$has_required = false;
+
+		foreach ( $form->definition->fields as $field ) {
+			$type = $this->field_types->get( $field->type );
+
+			// Un campo de un tipo que ya no está registrado no se pinta.
+			if ( null === $type ) {
+				continue;
+			}
+
+			$fields      .= $type->render( $field, $context );
+			$has_required = $has_required || $field->is_required();
+		}
+
+		$attributes = array(
+			'class'      => 'fm-form',
+			'method'     => 'post',
+			'aria-label' => $form->title,
+		);
+
+		if ( $interactive ) {
+			$attributes['action']                = admin_url( 'admin-post.php' );
+			$attributes['data-fm-form']          = $form->id;
+			$attributes['data-fm-endpoint']      = rest_url( Rest_Provider::ROUTE_NAMESPACE . '/forms/' . $form->id );
+			$attributes['data-fm-error-message'] = __( 'Your message could not be sent. Check your connection and try again.', 'formulario-mensaje' );
+		}
+
+		return sprintf(
+			'<form%1$s><div class="fm-status" role="alert" tabindex="-1" hidden></div>%2$s%3$s%4$s%5$s<div class="fm-actions"><button type="submit" class="fm-submit wp-element-button">%6$s</button></div></form>',
+			$this->markup->attributes( $attributes ),
+			$has_required ? $this->required_note() : '',
+			$fields,
+			$this->honeypot( $context ),
+			$interactive ? $this->fallback_fields( $form ) : '',
+			esc_html( (string) $form->definition->setting( 'submit_label', __( 'Send', 'formulario-mensaje' ) ) )
+		);
+	}
+
+	/**
+	 * Aviso de qué significa el asterisco de los campos obligatorios.
+	 */
+	private function required_note(): string {
+		return sprintf(
+			'<p class="fm-required-note">%s</p>',
+			sprintf(
+				/* translators: %s: the asterisk that marks required fields. */
+				esc_html__( 'Fields marked with %s are required.', 'formulario-mensaje' ),
+				// Aquí el asterisco sí se lee en voz alta: es justo lo que el aviso explica.
+				'<span class="fm-required-mark">*</span>'
+			)
+		);
+	}
+
+	/**
+	 * Campo trampa: fuera de la vista y del orden de tabulación, con una etiqueta por si alguien llega a verlo.
+	 *
+	 * @param Render_Context $context Contexto de pintado.
+	 */
+	private function honeypot( Render_Context $context ): string {
+		$id = 'fm-' . $context->instance_id . '-website';
+
+		return sprintf(
+			'<div class="fm-hp" aria-hidden="true"><label for="%1$s">%2$s</label><input type="text" id="%1$s" name="%3$s" value="" tabindex="-1" autocomplete="off"></div>',
+			esc_attr( $id ),
+			esc_html__( 'Leave this field empty', 'formulario-mensaje' ),
+			esc_attr( Honeypot_Check::FIELD_NAME )
+		);
+	}
+
+	/**
+	 * Campos que necesita el envío como POST normal, cuando no hay JavaScript.
+	 *
+	 * @param Form $form Formulario.
+	 */
+	private function fallback_fields( Form $form ): string {
+		return sprintf(
+			'<input type="hidden" name="action" value="%1$s"><input type="hidden" name="%2$s" value="%3$d">',
+			esc_attr( self::FALLBACK_ACTION ),
+			esc_attr( self::FORM_ID_FIELD ),
+			$form->id
+		);
+	}
+}

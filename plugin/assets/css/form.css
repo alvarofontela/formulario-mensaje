@@ -1,0 +1,212 @@
+/*
+ * Formulario Mensaje: estilos del formulario en el frontend.
+ *
+ * Estilo neutro: la tipografía y los colores se heredan del tema. Aquí solo hay estructura, espaciado
+ * y los estados de foco y de error. Todo cuelga de `.formulario-mensaje` y se ajusta con las
+ * propiedades personalizadas de abajo.
+ */
+
+.formulario-mensaje {
+	--fm-gap: 1.25rem;
+	--fm-label-gap: 0.375rem;
+	--fm-control-padding: 0.625em 0.75em;
+	--fm-border-width: 1px;
+	--fm-border-color: rgba(128, 128, 128, 0.7);
+	--fm-border-radius: 4px;
+	--fm-focus-color: currentColor;
+	--fm-error-color: #b32d2e;
+	--fm-success-color: #1a7f37;
+
+	box-sizing: border-box;
+	max-width: 100%;
+}
+
+.formulario-mensaje *,
+.formulario-mensaje *::before,
+.formulario-mensaje *::after {
+	box-sizing: inherit;
+}
+
+.formulario-mensaje [hidden] {
+	display: none !important;
+}
+
+.formulario-mensaje .fm-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--fm-gap);
+	margin: 0;
+}
+
+.formulario-mensaje .fm-required-note {
+	margin: 0;
+	font-size: 0.875em;
+	opacity: 0.8;
+}
+
+/* Campos */
+
+.formulario-mensaje .fm-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--fm-label-gap);
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.formulario-mensaje .fm-label {
+	display: block;
+	padding: 0;
+	font-weight: 600;
+}
+
+.formulario-mensaje .fm-required-mark {
+	color: var(--fm-error-color);
+}
+
+.formulario-mensaje .fm-control {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	margin: 0;
+	padding: var(--fm-control-padding);
+	border: var(--fm-border-width) solid var(--fm-border-color);
+	border-radius: var(--fm-border-radius);
+	background-color: transparent;
+	color: inherit;
+	font: inherit;
+	line-height: 1.4;
+}
+
+.formulario-mensaje textarea.fm-control {
+	min-height: 8em;
+	resize: vertical;
+}
+
+.formulario-mensaje select.fm-control {
+	/* El desplegable nativo conserva su flecha y su comportamiento en móviles. */
+	appearance: auto;
+}
+
+.formulario-mensaje .fm-control:focus-visible,
+.formulario-mensaje .fm-choice input:focus-visible,
+.formulario-mensaje .fm-submit:focus-visible,
+.formulario-mensaje .fm-status:focus-visible,
+.formulario-mensaje .fm-success:focus-visible {
+	outline: 2px solid var(--fm-focus-color);
+	outline-offset: 2px;
+}
+
+.formulario-mensaje .fm-help {
+	margin: 0;
+	font-size: 0.875em;
+	opacity: 0.8;
+}
+
+/* Radios, casillas y consentimiento */
+
+.formulario-mensaje .fm-choices {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+}
+
+.formulario-mensaje .fm-choice {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5em;
+}
+
+.formulario-mensaje .fm-choice input {
+	flex: none;
+	width: auto;
+	margin: 0.25em 0 0;
+}
+
+.formulario-mensaje .fm-choice label {
+	font-weight: inherit;
+}
+
+/* Elementos de presentación */
+
+.formulario-mensaje .fm-heading,
+.formulario-mensaje .fm-paragraph {
+	margin: 0;
+}
+
+.formulario-mensaje .fm-divider {
+	width: 100%;
+	margin: 0;
+	border: 0;
+	border-top: var(--fm-border-width) solid var(--fm-border-color);
+}
+
+/* Errores */
+
+.formulario-mensaje .fm-error {
+	margin: 0;
+	color: var(--fm-error-color);
+	font-size: 0.875em;
+	font-weight: 600;
+}
+
+.formulario-mensaje .fm-control[aria-invalid="true"] {
+	border-color: var(--fm-error-color);
+	box-shadow: 0 0 0 1px var(--fm-error-color);
+}
+
+.formulario-mensaje .fm-status,
+.formulario-mensaje .fm-success {
+	margin: 0;
+	padding: 0.875em 1em;
+	border-inline-start: 4px solid var(--fm-error-color);
+	border-radius: var(--fm-border-radius);
+	background-color: rgba(179, 45, 46, 0.08);
+}
+
+.formulario-mensaje .fm-success {
+	border-inline-start-color: var(--fm-success-color);
+	background-color: rgba(26, 127, 55, 0.08);
+}
+
+.formulario-mensaje .fm-form + .fm-success {
+	margin-top: var(--fm-gap);
+}
+
+/* Envío */
+
+.formulario-mensaje .fm-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75em;
+}
+
+.formulario-mensaje .fm-submit {
+	cursor: pointer;
+	font: inherit;
+}
+
+.formulario-mensaje .fm-form[aria-busy="true"] .fm-submit {
+	cursor: progress;
+	opacity: 0.6;
+}
+
+/*
+ * Campo trampa antispam: fuera de la vista, pero no con display:none, que algunos bots detectan.
+ */
+.formulario-mensaje .fm-hp {
+	position: absolute !important;
+	left: -9999px !important;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
+
+/* Aviso para quien gestiona formularios cuando el formulario insertado no existe. */
+.fm-unavailable {
+	padding: 0.75em 1em;
+	border: 1px dashed rgba(128, 128, 128, 0.7);
+}

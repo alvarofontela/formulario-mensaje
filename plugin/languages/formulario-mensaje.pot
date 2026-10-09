@@ -1,0 +1,1022 @@
+# Copyright (C) 2026 Álvaro Fontela
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Formulario Mensaje 0.1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/formulario-mensaje\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-10-09T11:24:40+02:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: formulario-mensaje\n"
+
+#. Plugin Name of the plugin
+#: formulario-mensaje.php
+msgid "Formulario Mensaje"
+msgstr ""
+
+#. Description of the plugin
+#: formulario-mensaje.php
+msgid "Lightweight, auditable form builder: forms with their own fields, email notifications, webhooks and built-in spam protection."
+msgstr ""
+
+#. Author of the plugin
+#: formulario-mensaje.php
+msgid "Álvaro Fontela"
+msgstr ""
+
+#: includes/admin/class-admin-data.php:64
+msgid "Basic fields"
+msgstr ""
+
+#: includes/admin/class-admin-data.php:65
+msgid "Choice fields"
+msgstr ""
+
+#: includes/admin/class-admin-data.php:66
+msgid "Advanced fields"
+msgstr ""
+
+#: includes/admin/class-admin-data.php:67
+msgid "Layout"
+msgstr ""
+
+#: includes/admin/class-admin-menu.php:43
+#: includes/admin/class-admin-menu.php:44
+#: includes/admin/class-admin-menu.php:54
+#: build/admin/index.js:6
+msgid "Forms"
+msgstr ""
+
+#: includes/admin/class-admin-menu.php:55
+msgid "All forms"
+msgstr ""
+
+#: includes/admin/class-admin-menu.php:62
+#: build/admin/index.js:12
+msgid "Forms settings"
+msgstr ""
+
+#: includes/admin/class-admin-menu.php:63
+msgid "Settings"
+msgstr ""
+
+#: includes/admin/class-admin-menu.php:101
+msgid "This screen needs JavaScript."
+msgstr ""
+
+#: includes/antispam/class-honeypot-check.php:39
+#: includes/antispam/class-token-check.php:52
+msgid "Your message could not be sent. Please reload the page and try again."
+msgstr ""
+
+#: includes/antispam/class-rate-limit-check.php:53
+msgid "You have sent too many messages. Please try again in a few minutes."
+msgstr ""
+
+#: includes/fields/class-common-settings.php:27
+msgid "Label"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:42
+#: build/admin/index.js:2
+msgid "Required"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:56
+msgid "Placeholder"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:70
+msgid "Help text"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:84
+msgid "CSS class"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:99
+msgid "Browser autocomplete"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:102
+msgid "Browser default"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:103
+msgid "Off"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:104
+msgid "Full name"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:105
+#: includes/fields/class-common-settings.php:155
+msgid "First name"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:106
+#: includes/fields/class-common-settings.php:156
+msgid "Last name"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:107
+#: includes/fields/class-common-settings.php:157
+#: includes/fields/types/class-email-field-type.php:30
+#: includes/forms/class-default-definition.php:53
+msgid "Email"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:108
+#: includes/fields/types/class-tel-field-type.php:30
+msgid "Phone"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:109
+msgid "Company"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:110
+msgid "Street address"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:111
+msgid "Postal code"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:112
+msgid "City"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:113
+msgid "Country"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:114
+#: includes/fields/types/class-url-field-type.php:30
+msgid "Website"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:129
+msgid "Prefill"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:132
+msgid "None"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:133
+#: includes/fields/types/class-hidden-field-type.php:70
+#: includes/fields/types/class-hidden-field-type.php:98
+msgid "Fixed value"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:134
+msgid "URL parameter"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:135
+msgid "Logged-in user data"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:141
+msgid "Value or parameter name"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:151
+msgid "User data"
+msgstr ""
+
+#: includes/fields/class-common-settings.php:154
+msgid "Display name"
+msgstr ""
+
+#: includes/fields/types/class-abstract-choice-field-type.php:51
+msgid "Options"
+msgstr ""
+
+#: includes/fields/types/class-abstract-choice-field-type.php:54
+#: includes/fields/types/class-abstract-choice-field-type.php:55
+msgid "Option 1"
+msgstr ""
+
+#: includes/fields/types/class-abstract-choice-field-type.php:58
+#: includes/fields/types/class-abstract-choice-field-type.php:59
+msgid "Option 2"
+msgstr ""
+
+#: includes/fields/types/class-abstract-choice-field-type.php:105
+msgid "Choose one of the available options."
+msgstr ""
+
+#: includes/fields/types/class-checkboxes-field-type.php:31
+msgid "Checkboxes"
+msgstr ""
+
+#: includes/fields/types/class-consent-field-type.php:53
+msgid "Consent"
+msgstr ""
+
+#: includes/fields/types/class-consent-field-type.php:69
+msgid "Privacy consent"
+msgstr ""
+
+#: includes/fields/types/class-consent-field-type.php:70
+msgid "Name of the field in notifications and in the list of submissions."
+msgstr ""
+
+#: includes/fields/types/class-consent-field-type.php:77
+msgid "Consent text"
+msgstr ""
+
+#: includes/fields/types/class-consent-field-type.php:78
+msgid "You can use basic HTML, for example a link to the privacy policy."
+msgstr ""
+
+#: includes/fields/types/class-consent-field-type.php:79
+msgid "I have read and accept the privacy policy."
+msgstr ""
+
+#: includes/fields/types/class-consent-field-type.php:146
+msgid "Not accepted"
+msgstr ""
+
+#. translators: %s: text of the consent that the visitor accepted.
+#: includes/fields/types/class-consent-field-type.php:151
+#, php-format
+msgid "Accepted: %s"
+msgstr ""
+
+#: includes/fields/types/class-date-field-type.php:30
+msgid "Date"
+msgstr ""
+
+#: includes/fields/types/class-date-field-type.php:65
+msgid "Enter a valid date."
+msgstr ""
+
+#: includes/fields/types/class-divider-field-type.php:45
+msgid "Divider"
+msgstr ""
+
+#: includes/fields/types/class-email-field-type.php:63
+msgid "Enter a valid email address."
+msgstr ""
+
+#: includes/fields/types/class-heading-field-type.php:50
+msgid "Section title"
+msgstr ""
+
+#: includes/fields/types/class-heading-field-type.php:67
+#: includes/fields/types/class-paragraph-field-type.php:68
+#: includes/fields/types/class-text-field-type.php:28
+msgid "Text"
+msgstr ""
+
+#: includes/fields/types/class-heading-field-type.php:74
+msgid "Heading level"
+msgstr ""
+
+#. translators: %s: heading level, a number from 2 to 4.
+#: includes/fields/types/class-heading-field-type.php:78
+#, php-format
+msgid "Heading %s"
+msgstr ""
+
+#: includes/fields/types/class-hidden-field-type.php:53
+msgid "Hidden field"
+msgstr ""
+
+#: includes/fields/types/class-hidden-field-type.php:71
+msgid "Page address"
+msgstr ""
+
+#: includes/fields/types/class-hidden-field-type.php:72
+msgid "Page title"
+msgstr ""
+
+#: includes/fields/types/class-hidden-field-type.php:73
+msgid "Referring page"
+msgstr ""
+
+#. translators: %s: name of a URL parameter such as utm_source.
+#: includes/fields/types/class-hidden-field-type.php:80
+#, php-format
+msgid "URL parameter: %s"
+msgstr ""
+
+#: includes/fields/types/class-hidden-field-type.php:84
+msgid "Other URL parameter"
+msgstr ""
+
+#: includes/fields/types/class-hidden-field-type.php:91
+msgid "Value"
+msgstr ""
+
+#: includes/fields/types/class-hidden-field-type.php:108
+#: build/admin/index.js:6
+msgid "Parameter name"
+msgstr ""
+
+#: includes/fields/types/class-number-field-type.php:30
+msgid "Number"
+msgstr ""
+
+#: includes/fields/types/class-number-field-type.php:88
+msgid "Enter a valid number."
+msgstr ""
+
+#: includes/fields/types/class-paragraph-field-type.php:48
+msgid "Paragraph"
+msgstr ""
+
+#: includes/fields/types/class-paragraph-field-type.php:69
+msgid "You can use basic HTML: bold, italics and links."
+msgstr ""
+
+#: includes/fields/types/class-radio-field-type.php:31
+msgid "Radio buttons"
+msgstr ""
+
+#: includes/fields/types/class-select-field-type.php:31
+msgid "Dropdown"
+msgstr ""
+
+#: includes/fields/types/class-select-field-type.php:41
+msgid "Empty option text"
+msgstr ""
+
+#: includes/fields/types/class-select-field-type.php:65
+msgid "Select an option"
+msgstr ""
+
+#: includes/fields/types/class-tel-field-type.php:67
+msgid "Enter a valid phone number."
+msgstr ""
+
+#: includes/fields/types/class-textarea-field-type.php:53
+msgid "Text area"
+msgstr ""
+
+#: includes/fields/types/class-url-field-type.php:97
+msgid "Enter a valid web address."
+msgstr ""
+
+#: includes/forms/class-default-definition.php:44
+#: build/admin/index.js:6
+msgid "Name"
+msgstr ""
+
+#: includes/forms/class-default-definition.php:62
+#: build/admin/index.js:6
+msgid "Message"
+msgstr ""
+
+#: includes/forms/class-form-definition-sanitizer.php:102
+#: includes/frontend/class-form-renderer.php:120
+msgid "Send"
+msgstr ""
+
+#: includes/forms/class-form-definition-sanitizer.php:105
+#: includes/submissions/class-confirmation-builder.php:62
+msgid "Thank you. Your message has been sent."
+msgstr ""
+
+#: includes/forms/class-form-service.php:141
+msgid "The redirect address is not allowed. Use an address of this site, or add its domain to the allowed domains in the plugin settings."
+msgstr ""
+
+#: includes/forms/class-form-service.php:170
+msgid "The form could not be updated."
+msgstr ""
+
+#: includes/forms/class-form-service.php:186
+msgid "Untitled form"
+msgstr ""
+
+#: includes/forms/class-form-service.php:193
+#: includes/forms/class-post-form-repository.php:86
+#: includes/rest/class-forms-controller.php:211
+msgid "The form does not exist."
+msgstr ""
+
+#: includes/frontend/class-fallback-controller.php:147
+msgid "The form could not be sent"
+msgstr ""
+
+#: includes/frontend/class-form-embed.php:68
+msgid "This form does not exist or is in the trash."
+msgstr ""
+
+#: includes/frontend/class-form-renderer.php:110
+msgid "Your message could not be sent. Check your connection and try again."
+msgstr ""
+
+#. translators: %s: the asterisk that marks required fields.
+#: includes/frontend/class-form-renderer.php:132
+#, php-format
+msgid "Fields marked with %s are required."
+msgstr ""
+
+#: includes/frontend/class-form-renderer.php:150
+msgid "Leave this field empty"
+msgstr ""
+
+#: includes/lifecycle/class-activator.php:35
+msgid "Formulario Mensaje cannot be network activated. Activate it on each site instead."
+msgstr ""
+
+#: includes/lifecycle/class-activator.php:36
+msgid "Plugin activation error"
+msgstr ""
+
+#: includes/mail/class-email-action.php:59
+msgid "Email notification"
+msgstr ""
+
+#. translators: {form_title} is a tag replaced by the name of the form; keep it as is.
+#: includes/mail/class-email-action.php:71
+msgid "New submission: {form_title}"
+msgstr ""
+
+#. translators: {all_fields}, {reference}, {page_url} and {date} are tags replaced by data of the submission; keep them as they are.
+#: includes/mail/class-email-action.php:73
+msgid ""
+"{all_fields}\n"
+"\n"
+"--\n"
+"Reference: {reference}\n"
+"Page: {page_url}\n"
+"Date: {date}"
+msgstr ""
+
+#: includes/mail/class-email-action.php:109
+msgid "The notification has no valid recipients."
+msgstr ""
+
+#: includes/mail/class-wp-mail-transport.php:60
+msgid "The email could not be sent."
+msgstr ""
+
+#: includes/rest/class-forms-controller.php:51
+msgid "Form name."
+msgstr ""
+
+#: includes/rest/class-forms-controller.php:56
+msgid "Fields, settings and actions of the form."
+msgstr ""
+
+#: includes/rest/class-forms-controller.php:64
+#: includes/rest/class-submissions-controller.php:52
+msgid "Form identifier."
+msgstr ""
+
+#: includes/rest/class-forms-controller.php:81
+msgid "Status of the forms to list."
+msgstr ""
+
+#: includes/rest/class-forms-controller.php:130
+msgid "Delete permanently instead of moving to the trash."
+msgstr ""
+
+#: includes/rest/class-forms-controller.php:163
+msgid "Sorry, you are not allowed to manage forms."
+msgstr ""
+
+#: includes/rest/class-settings-controller.php:69
+msgid "Where the visitor IP address is taken from."
+msgstr ""
+
+#: includes/rest/class-settings-controller.php:74
+msgid "IP addresses or CIDR ranges of your own proxy."
+msgstr ""
+
+#: includes/rest/class-settings-controller.php:75
+msgid "External domains that forms may redirect to."
+msgstr ""
+
+#: includes/rest/class-settings-controller.php:94
+msgid "Sorry, you are not allowed to manage the plugin settings."
+msgstr ""
+
+#: includes/rest/class-submissions-controller.php:84
+msgid "Field values, by field identifier."
+msgstr ""
+
+#: includes/rest/class-submissions-controller.php:89
+msgid "Anti-spam token issued for this form."
+msgstr ""
+
+#: includes/rest/class-submissions-controller.php:94
+msgid "Must be empty."
+msgstr ""
+
+#: includes/rest/class-submissions-controller.php:113
+#: includes/submissions/class-submission-handler.php:63
+msgid "This form is no longer available."
+msgstr ""
+
+#: includes/submissions/class-submission-handler.php:79
+msgid "Please review the highlighted fields."
+msgstr ""
+
+#: includes/submissions/class-submission-handler.php:110
+msgid "Your message could not be sent. Please try again later."
+msgstr ""
+
+#: includes/submissions/class-submission-validator.php:52
+msgid "This field is required."
+msgstr ""
+
+#. translators: %d: position of an option in a list, starting at 1.
+#: build/admin/index.js:2
+#, js-format
+msgid "Option %d"
+msgstr ""
+
+#: build/admin/index.js:2
+msgid "Move option up"
+msgstr ""
+
+#: build/admin/index.js:2
+msgid "Move option down"
+msgstr ""
+
+#: build/admin/index.js:2
+msgid "Remove option"
+msgstr ""
+
+#: build/admin/index.js:2
+msgid "Add option"
+msgstr ""
+
+#: build/admin/index.js:2
+#: build/admin/index.js:6
+msgid "Add field"
+msgstr ""
+
+#: build/admin/index.js:2
+msgid "This form has no fields yet."
+msgstr ""
+
+#: build/admin/index.js:2
+msgid "Drag to reorder"
+msgstr ""
+
+#: build/admin/index.js:2
+msgid "Unknown type"
+msgstr ""
+
+#. translators: %s: name of a field.
+#: build/admin/index.js:3
+#, js-format
+msgid "Move “%s” up"
+msgstr ""
+
+#. translators: %s: name of a field.
+#: build/admin/index.js:4
+#, js-format
+msgid "Move “%s” down"
+msgstr ""
+
+#. translators: %s: name of a field.
+#: build/admin/index.js:5
+#, js-format
+msgid "Duplicate “%s”"
+msgstr ""
+
+#. translators: %s: name of a field.
+#: build/admin/index.js:6
+#, js-format
+msgid "Delete “%s”"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Tag for emails and messages:"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "All the fields that were filled in"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Reference number of the submission"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Name of the form"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Name of the site"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Page the form was sent from"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Date and time of the submission"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Available tags"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Tags are replaced by data of each submission. Click one to add it at the end of the text."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Button text"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "After a successful submission"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Success message"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "You can use basic HTML (bold, italics and links) and tags."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "What happens to the form"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Hide it and show only the message"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Empty it to allow another submission"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Redirect to another page"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "The visitor is taken to this address instead of seeing the message."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Address"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Any address of this site is valid. Other domains must be in the list of allowed domains."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Manage allowed domains"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Fields added to the address"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Their values travel in the address and may end up in browser history and server logs. Add only what the destination page needs."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Field"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Select a field"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Remove field"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Report the submission for conversion tracking"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Fires a JavaScript event and pushes “formulario_mensaje_submit” to dataLayer (Google Tag Manager). No personal data is included."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Email notifications are not available."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "This form does not send any notification."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Add email notification"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Send an email with each submission"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Send to"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "One or more email addresses, separated by commas."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Subject"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Reply to"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Replying to the notification writes to the address the visitor entered in this field."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Nobody"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "The preview could not be loaded."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Preview"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Form preview"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Fields"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Notification"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "After sending"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Back to forms"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "You have unsaved changes. Leave without saving?"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Edit form"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "New form"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Form name"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Form saved."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Save"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Create form"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Published"
+msgstr ""
+
+#: build/admin/index.js:6
+#: build/admin/index.js:10
+msgid "Trash"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Add form"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "The trash is empty."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Create your first form"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "A new form starts as a contact form with name, email and message. You can change everything."
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Shortcode"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Last modified"
+msgstr ""
+
+#. translators: %s: name of a form.
+#: build/admin/index.js:7
+#, js-format
+msgid "Restore “%s”"
+msgstr ""
+
+#: build/admin/index.js:7
+msgid "Form restored."
+msgstr ""
+
+#: build/admin/index.js:7
+msgid "Restore"
+msgstr ""
+
+#. translators: %s: name of a form.
+#: build/admin/index.js:8
+#, js-format
+msgid "Delete “%s” permanently"
+msgstr ""
+
+#: build/admin/index.js:8
+#: build/admin/index.js:12
+msgid "Delete permanently"
+msgstr ""
+
+#. translators: %s: name of a form.
+#: build/admin/index.js:9
+#, js-format
+msgid "Edit “%s”"
+msgstr ""
+
+#: build/admin/index.js:9
+msgid "Edit"
+msgstr ""
+
+#. translators: %s: name of a form.
+#: build/admin/index.js:10
+#, js-format
+msgid "Move “%s” to the trash"
+msgstr ""
+
+#: build/admin/index.js:10
+msgid "Form moved to the trash."
+msgstr ""
+
+#: build/admin/index.js:10
+msgid "Copied"
+msgstr ""
+
+#: build/admin/index.js:10
+msgid "Copy"
+msgstr ""
+
+#. translators: %d: number of fields in a form.
+#: build/admin/index.js:11
+#, js-format
+msgid "%d field"
+msgid_plural "%d fields"
+msgstr[0] ""
+msgstr[1] ""
+
+#: build/admin/index.js:11
+msgid "Delete form permanently?"
+msgstr ""
+
+#. translators: %s: name of a form.
+#: build/admin/index.js:12
+#, js-format
+msgid "“%s” will be deleted and cannot be recovered."
+msgstr ""
+
+#: build/admin/index.js:12
+msgid "Cancel"
+msgstr ""
+
+#: build/admin/index.js:12
+msgid "Form deleted."
+msgstr ""
+
+#: build/admin/index.js:12
+msgid "Settings saved."
+msgstr ""
+
+#: build/admin/index.js:12
+msgid "Visitor IP address"
+msgstr ""
+
+#: build/admin/index.js:12
+msgid "The plugin limits how many submissions an IP address can send. If the site is behind a proxy or CDN, every visitor seems to come from the proxy unless you say which one it is."
+msgstr ""
+
+#: build/admin/index.js:12
+msgid "The site is behind"
+msgstr ""
+
+#: build/admin/index.js:12
+msgid "Nothing: visitors connect directly to the server"
+msgstr ""
+
+#: build/admin/index.js:12
+msgid "Cloudflare"
+msgstr ""
+
+#: build/admin/index.js:12
+msgid "My own proxy or load balancer"
+msgstr ""
+
+#: build/admin/index.js:12
+msgid "IP addresses of the proxy"
+msgstr ""
+
+#: build/admin/index.js:12
+msgid "One per line. IPv4, IPv6 and CIDR ranges such as 10.0.0.0/8. The X-Forwarded-For header is only trusted when the connection comes from one of them."
+msgstr ""
+
+#. translators: 1: IP address the plugin detects for the current user, 2: IP address of the connection to the server.
+#: build/admin/index.js:13
+#, js-format
+msgid "Your IP address as the plugin sees it: %1$s (connection: %2$s)."
+msgstr ""
+
+#: build/admin/index.js:13
+msgid "Allowed redirect domains"
+msgstr ""
+
+#. translators: %s: domain of the site.
+#: build/admin/index.js:14
+#, js-format
+msgid "After a submission, a form can redirect to any address of this site (%s). To redirect to another site, add its domain here."
+msgstr ""
+
+#: build/admin/index.js:14
+msgid "Domains"
+msgstr ""
+
+#: build/admin/index.js:14
+msgid "One per line, without https://. For example: pay.example.com"
+msgstr ""
+
+#: build/admin/index.js:14
+msgid "Save settings"
+msgstr ""
+
+#: build/blocks/form/index.js:1
+msgid "The forms could not be loaded."
+msgstr ""
+
+#: build/blocks/form/index.js:1
+msgid "Select a form"
+msgstr ""
+
+#: build/blocks/form/index.js:1
+msgid "Form"
+msgstr ""
+
+#: build/blocks/form/index.js:1
+msgid "Choose the form to show. Forms are created in the Forms menu."
+msgstr ""
+
+#: build/blocks/form/block.json
+msgctxt "block title"
+msgid "Form"
+msgstr ""
+
+#: build/blocks/form/block.json
+msgctxt "block description"
+msgid "Insert a form created with Formulario Mensaje."
+msgstr ""
+
+#: build/blocks/form/block.json
+msgctxt "block keyword"
+msgid "form"
+msgstr ""
+
+#: build/blocks/form/block.json
+msgctxt "block keyword"
+msgid "contact"
+msgstr ""
+
+#: build/blocks/form/block.json
+msgctxt "block keyword"
+msgid "formulario"
+msgstr ""

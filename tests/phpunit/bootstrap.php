@@ -22,10 +22,19 @@ require_once $tests_dir . '/includes/functions.php';
 tests_add_filter(
 	'muplugins_loaded',
 	static function () use ( $rt_env ) {
-		if ( is_file( $rt_env['paths']['pluginMain'] ) ) {
-			require_once $rt_env['paths']['pluginMain'];
+		// Se carga por su ruta dentro de wp-content/plugins, que es un enlace al código del proyecto,
+		// y se registra su ruta real como hace WordPress con los plugins activos: así plugins_url()
+		// y plugin_basename() devuelven lo mismo que en el sitio.
+		$plugin_main = $rt_env['paths']['www'] . '/wp-content/plugins/' . $rt_env['slug'] . '/' . $rt_env['slug'] . '.php';
+
+		if ( is_file( $plugin_main ) ) {
+			wp_register_plugin_realpath( $plugin_main );
+			require_once $plugin_main;
 		}
 	}
 );
 
 require $tests_dir . '/includes/bootstrap.php';
+
+// Dobles de prueba y caso base de los tests del plugin; necesitan WP_UnitTestCase ya cargado.
+require_once __DIR__ . '/support/dobles.php';

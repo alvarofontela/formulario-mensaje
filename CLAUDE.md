@@ -29,6 +29,7 @@ Para que la consulta sea eficiente:
 | Estándares de código de WordPress (PHPCS) | `/wordpress/wordpress-coding-standards` |
 | PHPCompatibilityWP | `/phpcompatibility/phpcompatibilitywp` |
 | Elementor: addons y widgets clásicos | `/elementor/elementor-developers-docs` |
+| Gutenberg: `@wordpress/components`, `api-fetch`, `scripts`, bloques | `/wordpress/gutenberg` |
 
 ### 2. Skills de WordPress para desarrollar el plugin
 
@@ -61,6 +62,7 @@ Al seguirlas en este proyecto:
 
 - Cada cambio de comportamiento lleva su test: PHPUnit para la lógica y Playwright cuando cambia algo visible (el formulario, una pantalla de administración, un correo).
 - Una tarea está terminada cuando se cumplen las cuatro cosas: `rt lint` sin errores, `rt phpunit` en verde, `rt e2e` en verde y `rt logs wp` sin avisos ni errores nuevos (ejecuta `rt logs clear` antes de probar para distinguirlos).
+- Antes de verificar: si has tocado `src/`, `rt build`; si has añadido o cambiado textos de interfaz, tradúcelos en `scripts/i18n/es_ES.json` y ejecuta `rt i18n` (falla si falta alguno). Los tests usan lo compilado. Para el JavaScript, además, `npm run lint:js` sin errores.
 - Además, no puede quedar ningún hallazgo de la revisión de seguridad sin corregir o justificar (regla 7).
 - Y el código cumple los principios SOLID y las buenas prácticas de WordPress (regla 8): que funcione y pase los tests no basta.
 - Si algo no se ha podido verificar, se dice expresamente al informar; no se da por bueno.
@@ -165,6 +167,8 @@ Hace falta Windows con PowerShell 7, Node.js, git y Python 3.10 o posterior (el 
 - `.runtime/`: se regenera con `rt setup`. Su configuración sale de `scripts/runtime.config.psd1`.
 - `.claude/skills/`: copia de [WordPress/agent-skills](https://github.com/WordPress/agent-skills) (commit `3cf7f6f`). Para actualizarlas, clona ese repositorio y ejecuta en él `node shared/scripts/skillpack-build.mjs --clean --targets=claude` y `node shared/scripts/skillpack-install.mjs --dest=<ruta de este proyecto> --targets=claude`.
 - `vendor/` y `node_modules/`: salen de `composer.lock` y `package-lock.json`.
+- `plugin/build/`: resultado de compilar `src/` con `rt build`. Se versiona para que `plugin/` sea instalable tal cual.
+- `plugin/languages/`: lo genera `rt i18n` a partir del código y de `scripts/i18n/es_ES.json`, que es donde se escriben las traducciones.
 - El mu-plugin del entorno se edita en `scripts/templates/rt-environment.php` y se aplica con `rt setup`, no en `.runtime/www`.
 
 ## Revisión de seguridad (`security-guidance`)
@@ -178,7 +182,7 @@ Hace falta Windows con PowerShell 7, Node.js, git y Python 3.10 o posterior (el 
 
 Límites que conviene conocer al tocar esos ficheros:
 
-- Las reglas comparten un máximo de 8192 caracteres con las de usuario (`~/.claude/claude-security-guidance.md`), que van delante: lo que sobra se corta por el final. Hoy ocupan unos 5300. Se envían al modelo en cada revisión, así que no llevan secretos.
+- Las reglas comparten un máximo de 8192 caracteres con las de usuario (`~/.claude/claude-security-guidance.md`), que van delante: lo que sobra se corta por el final. Hoy ocupan unos 6700. Se envían al modelo en cada revisión, así que no llevan secretos.
 - Como mucho 50 patrones, con avisos de hasta 1024 caracteres. Un patrón mal formado o con una expresión regular que el plugin considere lenta se descarta sin avisar: tras cambiarlos, mira `~/.claude/security/log.txt`. Cada aviso sale una vez por fichero y sesión, y solo mira el texto que se escribe en esa edición.
 - La revisión de commits no lee las reglas del proyecto; tiene las suyas y puede leer otros ficheros del repositorio para seguir el flujo de los datos.
 - Las revisiones con modelo no miran nada dentro de `vendor/`, `node_modules/`, `build/` ni `dist/`, ni los ficheros `.min.js`: se revisan los fuentes, no lo compilado. Tampoco miran los ficheros que git ignora.
@@ -209,6 +213,10 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 | `rt lint [args]` / `rt lint fix` | PHPCS sobre `plugin/`: estándares de WordPress y compatibilidad con PHP 8.1+ |
 | `rt phpunit [args]` | Tests de integración (`tests/phpunit/*Test.php`) |
 | `rt e2e [args]` | Tests de Playwright (`tests/e2e/*.spec.ts`) |
+| `rt build` | Compila `src/` (constructor en React y bloque) a `plugin/build/` con `@wordpress/scripts` |
+| `rt i18n` | Regenera el `.pot` y, desde `scripts/i18n/*.json`, los `.po`, `.mo`, `.l10n.php` y `.json` de `plugin/languages/` |
+| `rt shot <ruta> <png> [opciones]` | Captura de pantalla con el Chromium del entorno; imprime los errores de consola. Opciones en `scripts/shot.mjs` (`--admin`, `--full`, `--no-js`, `--click=`, `--wait=`) |
+| `npm run lint:js` | ESLint con las reglas de WordPress sobre `src/` y `plugin/assets/js/` (`-- --fix` corrige el formato) |
 | `rt mail [--json]` / `rt mail clear` | Correos que ha enviado WordPress |
 | `rt logs wp\|php\|apache\|access\|mariadb\|mailpit [n]` / `rt logs clear` | Logs; `wp` es el `debug.log` de WordPress |
 | `rt xdebug debug\|off` | Depuración paso a paso (puerto 9003) |
@@ -223,11 +231,26 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 5. Si el estado de WordPress queda sucio, `rt reset`.
 6. Informa de lo hecho y de lo verificado, y deja los cambios sin commit (regla 6).
 
+## Dónde está cada cosa
+
+| Ruta | Qué hay |
+| --- | --- |
+| `plugin/formulario-mensaje.php` | Constantes, autoloader, hook de activación y arranque |
+| `plugin/includes/` | Clases PHP, una carpeta por módulo (subnamespace): cada una tiene su proveedor (`class-…-provider.php`), que declara sus servicios y registra sus hooks |
+| `plugin/assets/` | CSS y JavaScript del formulario en el frontend. No se compilan: el script es un módulo sin dependencias |
+| `src/` | Fuentes de lo que sí se compila: la aplicación de administración (`src/admin/`) y el bloque (`src/blocks/form/`) |
+| `plugin/build/`, `plugin/languages/` | Generados (ver «Qué no se edita a mano») |
+
+Para añadir un tipo de campo: una clase en `plugin/includes/fields/types/` que implemente `Field_Type` (o `Input_Field_Type` si recoge datos) y una línea en `Fields_Provider`. El constructor pinta sus ajustes a partir del esquema que declara, sin tocar el JavaScript. Un tipo de acción se añade igual, con `Action_Type` y su proveedor.
+
 ## Tests
 
 - PHPUnit usa `wp-phpunit` con su propia base de datos; `tests/phpunit/bootstrap.php` carga el plugin si existe su fichero principal. El correo se inspecciona con `tests_retrieve_phpmailer_instance()`.
 - Playwright corre con un solo worker porque todos los tests comparten el mismo WordPress. La sesión de administrador la crea `tests/e2e/auth.setup.ts`; los helpers de correo están en `tests/e2e/support/mailpit.ts`.
 - Los datos del entorno (URL, credenciales, rutas) se leen de `.runtime/conf/env.json`; no se escriben a mano en los tests.
+- Los tests de PHPUnit del plugin extienden `Caso_Formulario` (`tests/phpunit/support/dobles.php`), que trae los dobles de prueba (reloj, variables del servidor, transporte de correo) y utilidades para crear formularios y enviarlos por REST.
+- En Playwright, `tests/e2e/support/forms.ts` crea formularios y páginas por REST como administrador (`AdminApi`) y abre contextos de visitante anónimo, también sin JavaScript.
+- El tiempo mínimo de relleno (3 s) es real en Playwright: cada envío tarda al menos eso. En PHPUnit lo anula `Caso_Formulario`.
 - `tests/phpunit/EntornoTest.php` y `tests/e2e/entorno.spec.ts` solo comprueban el entorno; sirven de plantilla.
 
 ## A tener en cuenta
