@@ -1,0 +1,152 @@
+{
+  "_comment": "Patrones propios del plugin security-guidance para PHP de WordPress. Se suman a los integrados y avisan al editar, sin llamar a ningún modelo. Máximo 50 reglas; cada aviso, 1024 caracteres. Una regla mal formada se descarta en silencio: revisa ~/.claude/security/log.txt tras cambiarlas.",
+  "patterns": [
+    {
+      "rule_name": "wp_superglobal",
+      "regex": "\\$_(?:GET|POST|REQUEST|COOKIE)\\b",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (WordPress): entrada de la petición. Lee claves concretas, nunca el array entero; aplica wp_unslash() y después la función sanitize_* del tipo de dato, y valida contra la lista si es de valores cerrados. Antes de procesar nada: nonce y, salvo en el envío público del formulario, current_user_can()."
+    },
+    {
+      "rule_name": "wp_sql_sin_prepare",
+      "regex": "\\$wpdb->(?:query|get_results|get_row|get_var|get_col)\\(\\s*(?:\"(?:[^\"$]|\\$wpdb->)*(?:\\$(?!wpdb->)|\"\\s*\\.)|'[^']*'\\s*\\.)",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (WordPress): consulta SQL con variables interpoladas o concatenadas. Pásala por $wpdb->prepare() con %s, %d o %f; usa %i para nombres de tabla o columna variables y $wpdb->esc_like() para LIKE. Tampoco se interpola en ORDER BY ni en LIMIT: valida contra una lista cerrada."
+    },
+    {
+      "rule_name": "wp_handler_ajax_admin_post",
+      "regex": "['\"](?:wp_ajax_|admin_post_)",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (WordPress): manejador de admin-ajax o admin-post. Debe verificar el nonce (check_ajax_referer() o check_admin_referer()) y además la capability con current_user_can(): el nonce no autoriza. Las variantes nopriv reciben tráfico anónimo: valida toda la entrada y no devuelvas datos privados."
+    },
+    {
+      "rule_name": "wp_rest_permission_callback",
+      "substrings": ["register_rest_route"],
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (WordPress): ruta REST. Declara siempre permission_callback; __return_true solo en la ruta pública de envío del formulario, y cualquier ruta que lea, liste, modifique o borre envíos o ajustes exige current_user_can(). Valida los argumentos con args o un schema y comprueba el acceso al objeto concreto cuando llegue un id (IDOR)."
+    },
+    {
+      "rule_name": "wp_is_admin_no_autoriza",
+      "regex": "(?<![\\w>:$])is_admin\\s*\\(\\s*\\)",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (WordPress): is_admin() solo indica que la petición va a wp-admin, y eso incluye admin-ajax.php llamado por visitantes anónimos. Sirve para decidir qué cargar, no para autorizar: los permisos se comprueban con current_user_can()."
+    },
+    {
+      "rule_name": "php_unserialize",
+      "regex": "(?<![\\w>:$])(?:maybe_)?unserialize\\s*\\(",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (PHP): deserializar datos que vengan de una petición, de un envío del formulario o de cualquier fuente editable por un usuario permite inyección de objetos. Usa JSON (wp_json_encode() y json_decode()). Si los datos son propios y de confianza, déjalo dicho en un comentario."
+    },
+    {
+      "rule_name": "php_shell",
+      "regex": "(?<![\\w>:$])(?:shell_exec|passthru|proc_open|popen|pcntl_exec|system|exec)\\s*\\(",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (PHP): ejecución de comandos del sistema. Un plugin de formularios no debería necesitarla, y muchos alojamientos la tienen desactivada. Si es imprescindible, ningún dato externo llega al comando sin escapeshellarg() y la razón queda en un comentario."
+    },
+    {
+      "rule_name": "php_codigo_dinamico",
+      "regex": "(?<![\\w>:$])(?:extract|assert|create_function)\\s*\\(",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (PHP): extract() sobre datos externos sobrescribe variables locales, y assert() con cadenas o create_function() ejecutan código. Lee las claves que necesites de forma explícita y usa funciones anónimas."
+    },
+    {
+      "rule_name": "php_include_variable",
+      "regex": "\\b(?:include|require)(?:_once)?\\s*\\(?\\s*\\$",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (PHP): include o require con una ruta variable. Si alguna parte de la ruta depende de datos externos es inclusión de ficheros arbitrarios: elige el fichero de una lista cerrada y construye la ruta desde una constante del plugin."
+    },
+    {
+      "rule_name": "php_fichero_ruta_variable",
+      "regex": "(?<![\\w>:$])(?:unlink|readfile|file_put_contents|file_get_contents|fopen|rmdir|copy|rename)\\s*\\(\\s*\\$",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (PHP): operación de ficheros con una ruta variable. Si la ruta depende de datos externos, valida contra la travesía de directorios (validate_file() y realpath() dentro del directorio esperado) y no aceptes URLs donde se espera una ruta local (SSRF con file_get_contents())."
+    },
+    {
+      "rule_name": "php_subida_ficheros",
+      "regex": "\\$_FILES\\b|(?<![\\w>:$])move_uploaded_file\\s*\\(",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (WordPress): subida de ficheros. Usa wp_handle_upload() con una lista cerrada de tipos MIME (parámetro mimes) y no move_uploaded_file(). No uses el nombre original como ruta, limita el tamaño y guarda los ficheros donde no sean ejecutables ni adivinables por URL."
+    },
+    {
+      "rule_name": "wp_mail_cabeceras",
+      "regex": "(?<![\\w>:$])wp_mail\\s*\\(",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (WordPress): envío de correo. Ningún dato del formulario llega a las cabeceras (From, Reply-To, Cc, Bcc, asunto) sin validarse con is_email() y sin quitar los saltos de línea: es inyección de cabeceras. El destinatario sale de la configuración, no de la petición; el remitente no se toma del visitante, cuya dirección va como mucho en Reply-To. En correos HTML, escapa los datos del envío."
+    },
+    {
+      "rule_name": "wp_redirect_abierto",
+      "regex": "(?<![\\w>:$])wp_redirect\\s*\\(",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (WordPress): wp_redirect() no valida el destino. Si la URL depende de datos externos (parámetro de retorno, referer, ajuste editable) usa wp_safe_redirect(), que solo admite hosts permitidos. En ambos casos, exit justo después."
+    },
+    {
+      "rule_name": "wp_http_ssrf",
+      "regex": "(?<![\\w>:$])wp_remote_(?:get|post|head|request)\\s*\\(",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (WordPress): petición HTTP saliente. Si la URL la puede fijar un usuario (webhook, integración, dato del formulario) usa wp_safe_remote_get(), wp_safe_remote_post() o wp_safe_remote_request(): validan la URL y sus redirecciones y rechazan direcciones internas (SSRF). Pon timeout y no envíes más datos del envío que los necesarios."
+    },
+    {
+      "rule_name": "php_tls_desactivado",
+      "regex": "['\"]sslverify['\"]\\s*=>\\s*(?:false|0)\\b|CURLOPT_SSL_VERIFY(?:PEER|HOST)\\s*(?:,|=>)\\s*(?:false|0)\\b",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (PHP): verificación TLS desactivada. Permite interceptar y alterar la conexión; no se desactiva ni de forma temporal ni mediante un ajuste del plugin."
+    },
+    {
+      "rule_name": "php_ip_falsificable",
+      "substrings": ["HTTP_X_FORWARDED_FOR", "HTTP_CLIENT_IP", "HTTP_X_REAL_IP", "HTTP_CF_CONNECTING_IP"],
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (PHP): estas cabeceras las escribe el cliente. Si la IP se usa para limitar envíos, bloquear o auditar, un atacante la falsifica con una cabecera. Usa REMOTE_ADDR por defecto y confía en la cabecera del proxy solo con una opción explícita; valida siempre con filter_var( ..., FILTER_VALIDATE_IP )."
+    },
+    {
+      "rule_name": "php_token_debil",
+      "regex": "(?<![\\w>:$])(?:md5|sha1|uniqid|mt_rand|rand|lcg_value)\\s*\\(",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (PHP): si este valor debe ser impredecible (token, enlace privado, nombre de fichero subido, clave), estas funciones no sirven: genera con wp_generate_password() o random_bytes() y compara con hash_equals(). Para claves de caché o sumas de comprobación no hay problema."
+    },
+    {
+      "rule_name": "php_cabecera_http",
+      "regex": "(?<![\\w>:$])header\\s*\\(",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (PHP): cabecera HTTP escrita a mano. Ningún dato externo entra en ella sin sanear: los nombres de fichero de Content-Disposition, con sanitize_file_name(); las redirecciones, con wp_safe_redirect(). Las descargas de datos exigen capability y nonce antes de emitir nada."
+    },
+    {
+      "rule_name": "php_csv_formulas",
+      "regex": "(?<![\\w>:$])fputcsv\\s*\\(",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (PHP): exportación CSV. Una celda que empieza por =, +, -, @, tabulador o retorno de carro se ejecuta como fórmula al abrirla en una hoja de cálculo: antepón una comilla simple a esos valores antes de escribirlos. La descarga exige capability y nonce."
+    },
+    {
+      "rule_name": "php_datos_en_log",
+      "regex": "(?<![\\w>:$])(?:error_log|var_dump|print_r|var_export)\\s*\\(",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (PHP): volcado o registro de datos. Los envíos del formulario contienen datos personales y no se escriben en error_log ni en debug.log, ni se vuelcan en la respuesta. Registra identificadores, no contenido, y retira los volcados de depuración antes de terminar."
+    },
+    {
+      "rule_name": "wp_query_arg_sin_escapar",
+      "regex": "(?<![\\w>:$])(?:add|remove)_query_arg\\s*\\(",
+      "paths": ["*.php"],
+      "exclude_paths": ["*/tests/*", "*/vendor/*", "*/node_modules/*", "*/.runtime/*"],
+      "reminder": "⚠️ Seguridad (WordPress): add_query_arg() y remove_query_arg() no escapan su resultado y, sin URL explícita, parten de la URL de la petición, que controla el visitante. Escapa al imprimir con esc_url() y usa esc_url_raw() si va a una redirección o a la base de datos."
+    }
+  ]
+}

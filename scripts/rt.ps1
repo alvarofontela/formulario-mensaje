@@ -592,6 +592,13 @@ switch ($Command) {
         In-Root { & $Exe.Php vendor\phpunit\phpunit\phpunit @Rest }
         exit $LASTEXITCODE
     }
+    'lint' {
+        # `rt lint` revisa; `rt lint fix` corrige lo que PHPCS sabe arreglar solo.
+        $env:XDEBUG_MODE = 'off'
+        $tool, $lintArgs = if ($Rest[0] -eq 'fix') { 'phpcbf', @($Rest | Select-Object -Skip 1) } else { 'phpcs', $Rest }
+        In-Root { & $Exe.Php "vendor/squizlabs/php_codesniffer/bin/$tool" @lintArgs }
+        exit $LASTEXITCODE
+    }
     'e2e' {
         Start-All
         In-Root { & npx.cmd playwright test @Rest }
@@ -680,6 +687,7 @@ Entorno local de WordPress en .runtime/   ->   $BaseUrl
   rt sql [-e "consulta"]   Cliente MariaDB sobre la base de datos de WordPress
 
   rt phpunit [args]        Tests de integración (usa --coverage-text o similar para cobertura)
+  rt lint [fix] [args]     PHPCS sobre plugin/: estándares de WordPress y compatibilidad con PHP 8.1+
   rt e2e [args]            Tests de Playwright      rt playwright <args>   Resto de comandos de Playwright
   rt mail [n|clear] [--json]   Correos capturados por Mailpit
   rt logs [wp|php|apache|access|mariadb|mailpit|xdebug|clear] [líneas]

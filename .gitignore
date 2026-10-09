@@ -23,6 +23,8 @@ node_modules/
 
 # ── Configuración personal que sustituye a la versionada ─────────────────────
 /phpunit.xml
+/phpcs.xml
+/.phpcs.xml
 /wp-cli.local.yml
 .env
 .env.*
@@ -38,6 +40,8 @@ node_modules/
 # .mcp.json lleva la clave de Context7 en claro: cada persona crea el suyo.
 /.mcp.json
 /.claude/settings.local.json
+/.claude/claude-security-guidance.local.md
+/.claude/security-patterns.local.*
 /CLAUDE.local.md
 /graphify-out/
 

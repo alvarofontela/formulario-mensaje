@@ -1,0 +1,27 @@
+# Reglas de seguridad de formulario-mensaje
+
+Plugin de formularios para WordPress (PHP 8.1+, WordPress 7.0+) que se instala en webs propias y de clientes. Recibe datos de visitantes anónimos: trata toda entrada del formulario como controlada por un atacante, también cuando más tarde se muestra en la administración o se envía por correo.
+
+## Qué es producción y qué es entorno
+
+- `plugin/` es el código que llega a producción y se revisa con todo el rigor.
+- `scripts/`, `tests/`, `rt.cmd`, `rt.sh`, `phpunit.xml.dist` y `playwright.config.ts` son el entorno local de desarrollo. Sus credenciales (`admin`/`admin`, `wp`/`wp`, `root`/`root`) y su `WP_DEBUG` activo pertenecen a un WordPress desechable que solo escucha en `127.0.0.1` y están ahí a propósito. Señala esas mismas cosas si aparecen dentro de `plugin/`.
+
+## Reglas del plugin
+
+1. **Autorización además de nonce.** Un nonce solo protege de CSRF. Toda acción que no sea el envío público del formulario (ajustes, acciones `admin_post_*` y `wp_ajax_*`, rutas REST, cualquier lectura o borrado de envíos) comprueba una capability con `current_user_can()`. `is_admin()` no es una comprobación de permisos.
+2. **Rutas REST.** Toda ruta declara `permission_callback`. `__return_true` solo es aceptable en la ruta pública de envío; cualquier ruta que lea, liste, modifique o borre envíos o ajustes exige capability. Los argumentos se validan con `args` (`validate_callback`, `sanitize_callback`) o con un schema.
+3. **Acceso por identificador.** Si una petición recibe el id de un formulario o de un envío, se comprueba que el usuario puede acceder a ese objeto concreto, no solo que existe (IDOR).
+4. **Entrada.** Se leen claves concretas, nunca `$_POST`, `$_GET` o `$_REQUEST` enteros; primero `wp_unslash()` y después la función del tipo de dato (`sanitize_text_field`, `sanitize_textarea_field`, `sanitize_email` con `is_email`, `absint`, `sanitize_key`, `esc_url_raw`). Los valores de lista cerrada se validan contra la lista.
+5. **Salida.** Escapado tardío y según el contexto: `esc_html`, `esc_attr`, `esc_url`, `esc_textarea`, `wp_kses_post`; los datos para JavaScript, con `wp_json_encode` o `wp_add_inline_script`. Los datos de un envío nunca son fiables, tampoco en la administración (XSS almacenado contra el administrador) ni en correos HTML. Los textos traducibles se imprimen con las variantes que escapan (`esc_html__`, `esc_html_e`, `esc_attr__`).
+6. **SQL.** Toda consulta con datos variables pasa por `$wpdb->prepare()`; los nombres de tabla o columna variables usan el marcador `%i`, y `LIKE` usa `$wpdb->esc_like()`. No se interpolan ni concatenan variables en el SQL, tampoco en `ORDER BY` o `LIMIT`.
+7. **Correo.** Nada que venga del formulario llega a las cabeceras (`From`, `Reply-To`, `Cc`, `Bcc`, asunto) sin validarse con `is_email()` y sin eliminar los saltos de línea: es inyección de cabeceras. El destinatario sale de la configuración, no de la petición. El remitente no se toma del visitante (suplantación, fallos de SPF y DMARC); su dirección va, como mucho, en `Reply-To`.
+8. **Abuso del envío público.** Para un visitante anónimo el nonce es igual para todos y no detiene a un bot: no cuenta como autenticación ni como antispam. El envío público necesita defensa propia contra la automatización (honeypot, límite por tiempo o por IP). La IP del cliente no se toma de cabeceras falsificables (`X-Forwarded-For`, `Client-IP`) salvo configuración explícita.
+9. **Ficheros.** Si hay subidas, pasan por `wp_handle_upload()` con una lista cerrada de tipos MIME; nunca `move_uploaded_file()` ni el nombre original como ruta, y los ficheros guardados no deben ser ejecutables ni adivinables por URL. Las rutas construidas con datos externos se validan contra la travesía de directorios (`validate_file()`, `realpath()` dentro del directorio esperado).
+10. **Peticiones salientes.** Si la URL de destino la puede configurar un usuario, se usa `wp_safe_remote_get()` o `wp_safe_remote_post()`, no `wp_remote_*` (SSRF). No se desactiva `sslverify`.
+11. **Redirecciones.** Con destino variable, `wp_safe_redirect()` seguido de `exit`; `wp_redirect()` solo con destinos fijos.
+12. **Deserialización y ejecución.** Sin `unserialize()` ni `maybe_unserialize()` sobre datos que vengan de una petición o de un envío (se usa JSON). Sin `eval`, `extract`, funciones de shell ni `include`/`require` con rutas variables.
+13. **Exportación.** Si se exportan envíos a CSV, las celdas que empiezan por `=`, `+`, `-`, `@`, tabulador o retorno de carro se neutralizan (inyección de fórmulas), y la descarga exige capability y nonce.
+14. **Secretos y datos personales.** Sin claves, tokens ni contraseñas en el código: van en opciones o en constantes de `wp-config.php`, y no se exponen por REST, `wp_localize_script` ni HTML. Los envíos contienen datos personales: no se escriben en `error_log` ni en `debug.log`, ni en URLs, ni en respuestas a usuarios sin permiso.
+15. **Tokens.** Los valores que deben ser impredecibles se generan con `wp_generate_password()` o `random_bytes()`, nunca con `md5`, `uniqid`, `rand`, `wp_generate_uuid4` o la hora; se comparan con `hash_equals()`.
+16. **Acceso directo.** Todo fichero PHP del plugin empieza con la guarda `defined( 'ABSPATH' ) || exit;`.
