@@ -10,6 +10,9 @@ namespace Formulario_Mensaje\Rest;
 use Formulario_Mensaje\Actions\Action_Type_Registry;
 use Formulario_Mensaje\Antispam\Client_Ip_Resolver;
 use Formulario_Mensaje\Antispam\Token_Service;
+use Formulario_Mensaje\Captcha\Captcha_Config_Repository;
+use Formulario_Mensaje\Captcha\Captcha_Config_Sanitizer;
+use Formulario_Mensaje\Captcha\Captcha_Provider_Registry;
 use Formulario_Mensaje\Container;
 use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Forms\Form_Service;
@@ -89,6 +92,15 @@ final class Rest_Provider implements Service_Provider {
 		);
 
 		$container->set(
+			Captcha_Settings_Controller::class,
+			static fn ( Container $c ): Captcha_Settings_Controller => new Captcha_Settings_Controller(
+				$c->get( Captcha_Config_Repository::class ),
+				$c->get( Captcha_Config_Sanitizer::class ),
+				$c->get( Captcha_Provider_Registry::class )
+			)
+		);
+
+		$container->set(
 			Submission_Records_Controller::class,
 			static fn ( Container $c ): Submission_Records_Controller => new Submission_Records_Controller(
 				$c->get( Submission_Service::class ),
@@ -120,6 +132,7 @@ final class Rest_Provider implements Service_Provider {
 				$container->get( Submission_Records_Controller::class )->register_routes();
 				$container->get( Maintenance_Controller::class )->register_routes();
 				$container->get( Mail_Settings_Controller::class )->register_routes();
+				$container->get( Captcha_Settings_Controller::class )->register_routes();
 			}
 		);
 	}

@@ -423,7 +423,6 @@
   "General": "General",
   "Set a sender address in the email settings: the default one of this site is not a valid email address.": "Indica una dirección de remitente en los ajustes de correo: la que este sitio usa por defecto no es una dirección de correo válida.",
   "You have sent too many test emails. Wait a few minutes and try again.": "Has enviado demasiados correos de prueba. Espera unos minutos y vuelve a intentarlo.",
-  "Settings saved. The SMTP server has changed, so the stored password has been deleted: write the password of the new server.": "Ajustes guardados. El servidor SMTP ha cambiado, así que la contraseña guardada se ha borrado: escribe la del servidor nuevo.",
   "[%1$s] %2$d form action has failed": [
     "[%1$s] Ha fallado %2$d acción de los formularios",
     "[%1$s] Han fallado %2$d acciones de los formularios"
@@ -481,5 +480,28 @@
   "The log says what was done with each submission: which notifications and webhooks were sent, and which failed. Entries older than this are deleted, except the ones still waiting for a retry.": "El registro dice qué se hizo con cada envío: qué notificaciones y webhooks se enviaron y cuáles fallaron. Las entradas más antiguas se borran, salvo las que siguen esperando un reintento.",
   "Once a day the plugin deletes the submissions that have exceeded the retention period of their form and the old entries of the delivery log, and sends the webhooks that were left waiting. You can run that maintenance now.": "Una vez al día el plugin borra los envíos que han superado el periodo de retención de su formulario y las entradas antiguas del registro de entregas, y envía los webhooks que se hayan quedado esperando. Puedes lanzar ese mantenimiento ahora.",
   "In the queue": "En cola",
-  "Next attempt: %s": "Siguiente intento: %s"
+  "Next attempt: %s": "Siguiente intento: %s",
+  "Complete the security check before sending the form.": "Completa la comprobación de seguridad antes de enviar el formulario.",
+  "The security check could not be completed. Please try again in a moment.": "No se ha podido completar la comprobación de seguridad. Inténtalo de nuevo en un momento.",
+  "The security check failed. Please try again.": "La comprobación de seguridad ha fallado. Inténtalo de nuevo.",
+  "hCaptcha": "hCaptcha",
+  "Google reCAPTCHA v3": "Google reCAPTCHA v3",
+  "Cloudflare Turnstile": "Cloudflare Turnstile",
+  "Captcha service, site key and score threshold.": "Servicio de captcha, clave del sitio y puntuación mínima.",
+  "New secret key. An empty value keeps the stored one.": "Clave secreta nueva. Un valor vacío conserva la guardada.",
+  "Delete the stored secret key.": "Borrar la clave secreta guardada.",
+  "Token of the captcha service, if the form uses one.": "Testigo del servicio de captcha, si el formulario usa uno.",
+  "Protect with the captcha of the settings": "Proteger con el captcha de los ajustes",
+  "Only has effect if a captcha service is configured in the settings of the plugin. With captcha, the form cannot be sent without JavaScript.": "Solo tiene efecto si hay un servicio de captcha configurado en los ajustes del plugin. Con captcha, el formulario no se puede enviar sin JavaScript.",
+  "Captcha": "Captcha",
+  "Every form is already protected without a captcha. Add one only if you still receive spam: it loads a script from another company in the pages with a form, when the visitor starts filling it in, and a form with captcha cannot be sent without JavaScript.": "Todos los formularios están ya protegidos sin captcha. Añade uno solo si te sigue llegando spam: carga un script de otra empresa en las páginas con formulario, cuando el visitante empieza a rellenarlo, y un formulario con captcha no se puede enviar sin JavaScript.",
+  "Captcha service": "Servicio de captcha",
+  "Site key": "Clave del sitio",
+  "The public key the service gives you for this site.": "La clave pública que el servicio te da para este sitio.",
+  "Secret key": "Clave secreta",
+  "Minimum score": "Puntuación mínima",
+  "reCAPTCHA scores each visitor from 0 (a bot) to 1 (a person). Submissions below this score are rejected. 0.5 is the usual value: raise it if spam gets through, lower it if real visitors are rejected.": "reCAPTCHA puntúa a cada visitante de 0 (un robot) a 1 (una persona). Los envíos por debajo de esta puntuación se rechazan. 0,5 es el valor habitual: súbelo si se cuela spam, bájalo si se rechaza a visitantes reales.",
+  "The captcha is used in every form as soon as both keys are saved. Each form can opt out in its “After sending” tab.": "El captcha se usa en todos los formularios en cuanto se guardan las dos claves. Cada formulario puede renunciar a él en su pestaña «Tras el envío».",
+  "The SMTP server has changed, so the stored password has been deleted: write the password of the new server.": "El servidor SMTP ha cambiado, así que la contraseña guardada se ha borrado: escribe la del servidor nuevo.",
+  "The captcha service has changed, so the stored secret key has been deleted: write the secret key of the new service.": "El servicio de captcha ha cambiado, así que la clave secreta guardada se ha borrado: escribe la del servicio nuevo."
 }

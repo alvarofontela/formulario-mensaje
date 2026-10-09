@@ -98,3 +98,42 @@ add_action(
 		);
 	}
 );
+
+/*
+ * Doble de los servicios de captcha para los tests: un testigo que empieza por «rt-» no se consulta
+ * a Cloudflare, Google ni hCaptcha, sino que se responde aquí. «rt-valido» es bueno; cualquier otro
+ * «rt-…», no. Los demás testigos siguen yendo al servicio real, para poder probarlo a mano.
+ */
+add_filter(
+	'pre_http_request',
+	static function ( $response, $args, $url ) {
+		$token = is_array( $args['body'] ?? null ) ? (string) ( $args['body']['response'] ?? '' ) : '';
+
+		if ( ! str_contains( (string) $url, '/siteverify' ) || ! str_starts_with( $token, 'rt-' ) ) {
+			return $response;
+		}
+
+		$body = 'rt-valido' === $token
+			? array(
+				'success' => true,
+				'score'   => 0.9,
+				'action'  => 'formulario_mensaje_submit',
+			)
+			: array(
+				'success'     => false,
+				'error-codes' => array( 'invalid-input-response' ),
+			);
+
+		return array(
+			'response' => array(
+				'code'    => 200,
+				'message' => 'OK',
+			),
+			'body'     => wp_json_encode( $body ),
+			'headers'  => array(),
+			'cookies'  => array(),
+		);
+	},
+	10,
+	3
+);

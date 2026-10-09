@@ -47,6 +47,20 @@ export default function FormSettingsPanel( { settings, fields, onChange } ) {
 				onChange={ ( value ) => set( 'submit_label', value ) }
 			/>
 
+			<ToggleControl
+				__nextHasNoMarginBottom
+				label={ __(
+					'Protect with the captcha of the settings',
+					'formulario-mensaje'
+				) }
+				help={ __(
+					'Only has effect if a captcha service is configured in the settings of the plugin. With captcha, the form cannot be sent without JavaScript.',
+					'formulario-mensaje'
+				) }
+				checked={ settings.captcha_enabled !== false }
+				onChange={ ( value ) => set( 'captcha_enabled', value ) }
+			/>
+
 			<h2 className="fm-settings__heading">
 				{ __( 'After a successful submission', 'formulario-mensaje' ) }
 			</h2>

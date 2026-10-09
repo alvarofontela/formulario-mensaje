@@ -24,6 +24,11 @@ final class Submission_Request_Factory {
 	private const MAX_LENGTH = 200;
 
 	/**
+	 * Longitud máxima del testigo del captcha: los de algunos servicios ocupan varios miles de caracteres.
+	 */
+	private const MAX_CAPTCHA_LENGTH = 8192;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Client_Ip_Resolver $ip_resolver IP del visitante.
@@ -42,8 +47,9 @@ final class Submission_Request_Factory {
 	 * @param mixed              $honeypot Contenido del campo trampa.
 	 * @param mixed              $token    Token antispam.
 	 * @param Submission_Channel $channel  Vía por la que ha llegado.
+	 * @param mixed              $captcha_token Testigo del captcha, sin validar.
 	 */
-	public function create( int $form_id, mixed $values, mixed $honeypot, mixed $token, Submission_Channel $channel ): Submission_Request {
+	public function create( int $form_id, mixed $values, mixed $honeypot, mixed $token, Submission_Channel $channel, mixed $captcha_token = '' ): Submission_Request {
 		return new Submission_Request(
 			$form_id,
 			is_array( $values ) ? $values : array(),
@@ -52,7 +58,8 @@ final class Submission_Request_Factory {
 			$channel,
 			$this->ip_resolver->resolve(),
 			$this->page_url(),
-			mb_substr( $this->server->get( 'HTTP_USER_AGENT' ), 0, 255 )
+			mb_substr( $this->server->get( 'HTTP_USER_AGENT' ), 0, 255 ),
+			is_scalar( $captcha_token ) ? mb_substr( (string) $captcha_token, 0, self::MAX_CAPTCHA_LENGTH ) : ''
 		);
 	}
 

@@ -119,6 +119,36 @@ msgstr "No se ha podido enviar tu mensaje. Recarga la página e inténtalo de nu
 msgid "You have sent too many messages. Please try again in a few minutes."
 msgstr "Has enviado demasiados mensajes. Inténtalo de nuevo dentro de unos minutos."
 
+#: includes/captcha/class-captcha-check.php:49
+#: includes/frontend/class-fallback-controller.php:55
+msgid "This form needs JavaScript to be sent. Enable it in your browser and try again."
+msgstr "Este formulario necesita JavaScript para enviarse. Actívalo en tu navegador e inténtalo de nuevo."
+
+#: includes/captcha/class-captcha-check.php:57
+#: includes/frontend/class-form-renderer.php:125
+msgid "Complete the security check before sending the form."
+msgstr "Completa la comprobación de seguridad antes de enviar el formulario."
+
+#: includes/captcha/class-captcha-check.php:71
+msgid "The security check could not be completed. Please try again in a moment."
+msgstr "No se ha podido completar la comprobación de seguridad. Inténtalo de nuevo en un momento."
+
+#: includes/captcha/class-captcha-check.php:78
+msgid "The security check failed. Please try again."
+msgstr "La comprobación de seguridad ha fallado. Inténtalo de nuevo."
+
+#: includes/captcha/class-hcaptcha-provider.php:41
+msgid "hCaptcha"
+msgstr "hCaptcha"
+
+#: includes/captcha/class-recaptcha-provider.php:49
+msgid "Google reCAPTCHA v3"
+msgstr "Google reCAPTCHA v3"
+
+#: includes/captcha/class-turnstile-provider.php:41
+msgid "Cloudflare Turnstile"
+msgstr "Cloudflare Turnstile"
+
 #: includes/fields/class-common-settings.php:27
 msgid "Label"
 msgstr "Etiqueta"
@@ -440,7 +470,7 @@ msgid "Notification"
 msgstr "Notificación"
 
 #: includes/forms/class-form-definition-sanitizer.php:106
-#: includes/frontend/class-form-renderer.php:120
+#: includes/frontend/class-form-renderer.php:135
 msgid "Send"
 msgstr "Enviar"
 
@@ -461,10 +491,6 @@ msgstr "No se ha podido actualizar el formulario."
 msgid "Untitled form"
 msgstr "Formulario sin título"
 
-#: includes/frontend/class-fallback-controller.php:55
-msgid "This form needs JavaScript to be sent. Enable it in your browser and try again."
-msgstr "Este formulario necesita JavaScript para enviarse. Actívalo en tu navegador e inténtalo de nuevo."
-
 #: includes/frontend/class-fallback-controller.php:56
 #: includes/frontend/class-fallback-controller.php:162
 msgid "The form could not be sent"
@@ -474,17 +500,17 @@ msgstr "No se ha podido enviar el formulario"
 msgid "This form does not exist or is in the trash."
 msgstr "Este formulario no existe o está en la papelera."
 
-#: includes/frontend/class-form-renderer.php:110
+#: includes/frontend/class-form-renderer.php:115
 msgid "Your message could not be sent. Check your connection and try again."
 msgstr "No se ha podido enviar tu mensaje. Comprueba tu conexión e inténtalo de nuevo."
 
 #. translators: %s: the asterisk that marks required fields.
-#: includes/frontend/class-form-renderer.php:132
+#: includes/frontend/class-form-renderer.php:149
 #, php-format
 msgid "Fields marked with %s are required."
 msgstr "Los campos marcados con %s son obligatorios."
 
-#: includes/frontend/class-form-renderer.php:150
+#: includes/frontend/class-form-renderer.php:167
 msgid "Leave this field empty"
 msgstr "Deja este campo vacío"
 
@@ -602,6 +628,25 @@ msgstr "Identificador del webhook que se prueba."
 msgid "Sorry, you are not allowed to manage forms."
 msgstr "Lo siento, no tienes permisos para gestionar formularios."
 
+#: includes/rest/class-captcha-settings-controller.php:63
+msgid "Captcha service, site key and score threshold."
+msgstr "Servicio de captcha, clave del sitio y puntuación mínima."
+
+#: includes/rest/class-captcha-settings-controller.php:68
+msgid "New secret key. An empty value keeps the stored one."
+msgstr "Clave secreta nueva. Un valor vacío conserva la guardada."
+
+#: includes/rest/class-captcha-settings-controller.php:73
+msgid "Delete the stored secret key."
+msgstr "Borrar la clave secreta guardada."
+
+#: includes/rest/class-captcha-settings-controller.php:95
+#: includes/rest/class-mail-settings-controller.php:122
+#: includes/rest/class-maintenance-controller.php:50
+#: includes/rest/class-settings-controller.php:119
+msgid "Sorry, you are not allowed to manage the plugin settings."
+msgstr "Lo siento, no tienes permisos para cambiar los ajustes del plugin."
+
 #: includes/rest/class-forms-controller.php:67
 #: includes/rest/class-submissions-controller.php:52
 msgid "Form identifier."
@@ -634,12 +679,6 @@ msgstr "Valores nuevos de las credenciales. Un valor vacío conserva el guardado
 #: includes/rest/class-mail-settings-controller.php:78
 msgid "Names of the stored credentials to delete."
 msgstr "Nombres de las credenciales guardadas que se borran."
-
-#: includes/rest/class-mail-settings-controller.php:122
-#: includes/rest/class-maintenance-controller.php:50
-#: includes/rest/class-settings-controller.php:119
-msgid "Sorry, you are not allowed to manage the plugin settings."
-msgstr "Lo siento, no tienes permisos para cambiar los ajustes del plugin."
 
 #: includes/rest/class-settings-controller.php:69
 msgid "Where the visitor IP address is taken from."
@@ -702,10 +741,14 @@ msgid "Anti-spam token issued for this form."
 msgstr "Token antispam emitido para este formulario."
 
 #: includes/rest/class-submissions-controller.php:94
+msgid "Token of the captcha service, if the form uses one."
+msgstr "Testigo del servicio de captcha, si el formulario usa uno."
+
+#: includes/rest/class-submissions-controller.php:99
 msgid "Must be empty."
 msgstr "Tiene que estar vacío."
 
-#: includes/rest/class-submissions-controller.php:113
+#: includes/rest/class-submissions-controller.php:118
 #: includes/submissions/class-submission-handler.php:69
 msgid "This form is no longer available."
 msgstr "Este formulario ya no está disponible."
@@ -923,6 +966,14 @@ msgstr "Las etiquetas se sustituyen por datos de cada envío. Pulsa una para añ
 #: build/admin/index.js:6
 msgid "Button text"
 msgstr "Texto del botón"
+
+#: build/admin/index.js:6
+msgid "Protect with the captcha of the settings"
+msgstr "Proteger con el captcha de los ajustes"
+
+#: build/admin/index.js:6
+msgid "Only has effect if a captcha service is configured in the settings of the plugin. With captcha, the form cannot be sent without JavaScript."
+msgstr "Solo tiene efecto si hay un servicio de captcha configurado en los ajustes del plugin. Con captcha, el formulario no se puede enviar sin JavaScript."
 
 #: build/admin/index.js:6
 msgid "After a successful submission"
@@ -1499,6 +1550,43 @@ msgid "Keep the stored one"
 msgstr "Conservar el valor guardado"
 
 #: build/admin/index.js:20
+#: build/admin/index.js:21
+msgid "Captcha"
+msgstr "Captcha"
+
+#: build/admin/index.js:20
+msgid "Every form is already protected without a captcha. Add one only if you still receive spam: it loads a script from another company in the pages with a form, when the visitor starts filling it in, and a form with captcha cannot be sent without JavaScript."
+msgstr "Todos los formularios están ya protegidos sin captcha. Añade uno solo si te sigue llegando spam: carga un script de otra empresa en las páginas con formulario, cuando el visitante empieza a rellenarlo, y un formulario con captcha no se puede enviar sin JavaScript."
+
+#: build/admin/index.js:20
+msgid "Captcha service"
+msgstr "Servicio de captcha"
+
+#: build/admin/index.js:20
+msgid "Site key"
+msgstr "Clave del sitio"
+
+#: build/admin/index.js:20
+msgid "The public key the service gives you for this site."
+msgstr "La clave pública que el servicio te da para este sitio."
+
+#: build/admin/index.js:20
+msgid "Secret key"
+msgstr "Clave secreta"
+
+#: build/admin/index.js:20
+msgid "Minimum score"
+msgstr "Puntuación mínima"
+
+#: build/admin/index.js:20
+msgid "reCAPTCHA scores each visitor from 0 (a bot) to 1 (a person). Submissions below this score are rejected. 0.5 is the usual value: raise it if spam gets through, lower it if real visitors are rejected."
+msgstr "reCAPTCHA puntúa a cada visitante de 0 (un robot) a 1 (una persona). Los envíos por debajo de esta puntuación se rechazan. 0,5 es el valor habitual: súbelo si se cuela spam, bájalo si se rechaza a visitantes reales."
+
+#: build/admin/index.js:20
+msgid "The captcha is used in every form as soon as both keys are saved. Each form can opt out in its “After sending” tab."
+msgstr "El captcha se usa en todos los formularios en cuanto se guardan las dos claves. Cada formulario puede renunciar a él en su pestaña «Tras el envío»."
+
+#: build/admin/index.js:20
 msgid "Email delivery"
 msgstr "Envío de correo"
 
@@ -1635,8 +1723,12 @@ msgid "Cleanup done."
 msgstr "Limpieza hecha."
 
 #: build/admin/index.js:21
-msgid "Settings saved. The SMTP server has changed, so the stored password has been deleted: write the password of the new server."
-msgstr "Ajustes guardados. El servidor SMTP ha cambiado, así que la contraseña guardada se ha borrado: escribe la del servidor nuevo."
+msgid "The SMTP server has changed, so the stored password has been deleted: write the password of the new server."
+msgstr "El servidor SMTP ha cambiado, así que la contraseña guardada se ha borrado: escribe la del servidor nuevo."
+
+#: build/admin/index.js:21
+msgid "The captcha service has changed, so the stored secret key has been deleted: write the secret key of the new service."
+msgstr "El servicio de captcha ha cambiado, así que la clave secreta guardada se ha borrado: escribe la del servicio nuevo."
 
 #: build/admin/index.js:21
 msgid "Settings saved."

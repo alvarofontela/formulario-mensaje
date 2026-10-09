@@ -28,6 +28,7 @@ class FormController {
 		this.status = form.querySelector( '.fm-status' );
 		this.success = this.root.querySelector( '.fm-success' );
 		this.token = null;
+		this.captcha = null;
 		this.busy = false;
 
 		// La validación la hace el servidor y los errores se muestran junto a cada campo.
@@ -35,10 +36,13 @@ class FormController {
 
 		this.fillContext();
 
-		// El token antispam se pide cuando el visitante empieza a usar el formulario, no al cargar la página.
+		// El token antispam y el captcha se piden cuando el visitante empieza a usar el formulario, no al cargar la página.
 		form.addEventListener(
 			'focusin',
-			() => this.requestToken().catch( () => {} ),
+			() => {
+				this.requestToken().catch( () => {} );
+				this.prepareCaptcha().catch( () => {} );
+			},
 			{ once: true }
 		);
 		form.addEventListener( 'submit', ( event ) => this.onSubmit( event ) );
@@ -117,6 +121,29 @@ class FormController {
 	}
 
 	/**
+	 * Prepara el captcha, si el formulario lo lleva. Las llamadas repetidas comparten la misma carga.
+	 *
+	 * @return {Promise<?{getToken: Function, reset: Function}>} El captcha, o null si el formulario no lleva.
+	 */
+	prepareCaptcha() {
+		if ( ! this.form.dataset.fmCaptcha ) {
+			return Promise.resolve( null );
+		}
+
+		if ( ! this.captcha ) {
+			// El módulo del captcha solo se descarga en los formularios que lo usan.
+			this.captcha = import( this.form.dataset.fmCaptchaModule )
+				.then( ( module ) => module.mountCaptcha( this.form ) )
+				.catch( ( error ) => {
+					this.captcha = null;
+					throw error;
+				} );
+		}
+
+		return this.captcha;
+	}
+
+	/**
 	 * @param {SubmitEvent} event Evento de envío.
 	 */
 	async onSubmit( event ) {
@@ -143,6 +170,13 @@ class FormController {
 			} else {
 				this.onError( result.body );
 			}
+
+			// El testigo del captcha solo vale para un envío: para el siguiente intento hace falta otro.
+			if ( this.captcha ) {
+				this.captcha
+					.then( ( captcha ) => captcha.reset() )
+					.catch( () => {} );
+			}
 		} catch {
 			this.onError( null );
 		} finally {
@@ -167,6 +201,22 @@ class FormController {
 		data.delete( 'action' );
 		data.delete( 'fm_form_id' );
 		data.set( 'token', token.value );
+
+		if ( this.form.dataset.fmCaptcha ) {
+			// Sin testigo no se envía nada: el servidor lo rechazaría igual.
+			const captchaToken = await this.prepareCaptcha()
+				.then( ( captcha ) => captcha.getToken() )
+				.catch( () => '' );
+
+			if ( ! captchaToken ) {
+				return {
+					ok: false,
+					body: { message: this.form.dataset.fmCaptchaMessage },
+				};
+			}
+
+			data.set( 'captcha', captchaToken );
+		}
 
 		const response = await fetch( `${ this.endpoint }/submissions`, {
 			method: 'POST',

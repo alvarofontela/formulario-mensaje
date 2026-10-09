@@ -8,6 +8,7 @@
 namespace Formulario_Mensaje\Frontend;
 
 use Formulario_Mensaje\Antispam\Honeypot_Check;
+use Formulario_Mensaje\Captcha\Captcha_Service;
 use Formulario_Mensaje\Fields\Field_Markup;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Fields\Render_Context;
@@ -46,10 +47,14 @@ final class Form_Renderer {
 	 *
 	 * @param Field_Type_Registry $field_types Tipos de campo.
 	 * @param Field_Markup        $markup      HTML común de los campos.
+	 * @param Captcha_Service     $captcha     Captcha de los formularios.
+	 * @param Frontend_Assets     $assets      Scripts y estilos del formulario.
 	 */
 	public function __construct(
 		private readonly Field_Type_Registry $field_types,
-		private readonly Field_Markup $markup
+		private readonly Field_Markup $markup,
+		private readonly Captcha_Service $captcha,
+		private readonly Frontend_Assets $assets
 	) {}
 
 	/**
@@ -110,14 +115,26 @@ final class Form_Renderer {
 			$attributes['data-fm-error-message'] = __( 'Your message could not be sent. Check your connection and try again.', 'formulario-mensaje' );
 		}
 
+		// Con captcha, el script carga su módulo y el del servicio cuando el visitante empieza a usar el formulario.
+		$captcha = $interactive ? $this->captcha->client_config( $form ) : null;
+
+		if ( null !== $captcha ) {
+			$attributes['data-fm-captcha']         = $captcha['provider'];
+			$attributes['data-fm-captcha-key']     = $captcha['site_key'];
+			$attributes['data-fm-captcha-module']  = $this->assets->captcha_module_url();
+			$attributes['data-fm-captcha-message'] = __( 'Complete the security check before sending the form.', 'formulario-mensaje' );
+		}
+
 		return sprintf(
-			'<form%1$s><div class="fm-status" role="alert" tabindex="-1" hidden></div>%2$s%3$s%4$s%5$s<div class="fm-actions"><button type="submit" class="fm-submit wp-element-button">%6$s</button></div></form>',
+			'<form%1$s><div class="fm-status" role="alert" tabindex="-1" hidden></div>%2$s%3$s%4$s%5$s%7$s<div class="fm-actions"><button type="submit" class="fm-submit wp-element-button">%6$s</button></div></form>',
 			$this->markup->attributes( $attributes ),
 			$has_required ? $this->required_note() : '',
 			$fields,
 			$this->honeypot( $context ),
 			$interactive ? $this->fallback_fields( $form ) : '',
-			esc_html( (string) $form->definition->setting( 'submit_label', __( 'Send', 'formulario-mensaje' ) ) )
+			esc_html( (string) $form->definition->setting( 'submit_label', __( 'Send', 'formulario-mensaje' ) ) ),
+			// Hueco donde el servicio pinta su casilla, si la tiene.
+			null === $captcha ? '' : '<div class="fm-captcha" data-fm-captcha-slot></div>'
 		);
 	}
 

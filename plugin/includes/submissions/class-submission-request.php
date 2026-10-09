@@ -25,6 +25,7 @@ final class Submission_Request {
 	 * @param string               $client_ip  IP del visitante, o cadena vacía si no se conoce.
 	 * @param string               $page_url   Dirección de la página de origen, o cadena vacía.
 	 * @param string               $user_agent Navegador del visitante, o cadena vacía.
+	 * @param string               $captcha_token Testigo del captcha, si el formulario lo lleva.
 	 */
 	public function __construct(
 		public readonly int $form_id,
@@ -34,6 +35,7 @@ final class Submission_Request {
 		public readonly Submission_Channel $channel,
 		public readonly string $client_ip = '',
 		public readonly string $page_url = '',
-		public readonly string $user_agent = ''
+		public readonly string $user_agent = '',
+		public readonly string $captcha_token = ''
 	) {}
 }

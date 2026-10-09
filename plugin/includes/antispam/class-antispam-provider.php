@@ -7,6 +7,7 @@
 
 namespace Formulario_Mensaje\Antispam;
 
+use Formulario_Mensaje\Captcha\Captcha_Check;
 use Formulario_Mensaje\Container;
 use Formulario_Mensaje\Database\Schema;
 use Formulario_Mensaje\Service_Provider;
@@ -53,13 +54,14 @@ final class Antispam_Provider implements Service_Provider {
 
 		$container->set(
 			Spam_Guard::class,
-			// De la más barata a la más cara. El límite por IP va al final: reserva un hueco y no debe
-			// hacerlo por un envío que otra comprobación va a rechazar.
+			// De la más barata a la más cara. El captcha va detrás del límite por IP porque consulta a
+			// otro servicio: cada intento, también el que el captcha rechaza, gasta un hueco del límite.
 			static fn ( Container $c ): Spam_Guard => new Spam_Guard(
 				array(
 					new Honeypot_Check(),
 					new Token_Check( $c->get( Token_Service::class ) ),
 					new Rate_Limit_Check( $c->get( Rate_Limiter::class ) ),
+					$c->get( Captcha_Check::class ),
 				)
 			)
 		);

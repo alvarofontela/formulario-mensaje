@@ -75,6 +75,9 @@ export const saveMailSettings = ( data ) =>
 	request( '/settings/mail', 'PUT', data );
 export const sendMailTest = ( to ) =>
 	request( '/settings/mail/test', 'POST', { to } );
+export const getCaptchaSettings = () => request( '/settings/captcha' );
+export const saveCaptchaSettings = ( data ) =>
+	request( '/settings/captcha', 'PUT', data );
 export const sendTestEmail = ( data ) =>
 	request( '/forms/test-email', 'POST', data );
 export const sendTestWebhook = ( data ) =>

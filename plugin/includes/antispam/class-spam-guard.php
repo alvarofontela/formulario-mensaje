@@ -21,33 +21,28 @@ final class Spam_Guard {
 	/**
 	 * Constructor.
 	 *
-	 * @param Spam_Check[] $checks Comprobaciones, en el orden en que se aplican. Las que reservan algo
-	 *                             (Reserving_Check) van al final, para no reservar por un envío que otra rechaza.
+	 * @param Spam_Check[] $checks Comprobaciones, en el orden en que se aplican: de la más barata a la más cara.
 	 */
 	public function __construct( private readonly array $checks ) {}
 
 	/**
 	 * Aplica las comprobaciones hasta que una rechaza el envío.
 	 *
-	 * Si una rechaza, las anteriores devuelven lo que hubieran reservado.
+	 * Si una rechaza, lo que hubieran reservado las anteriores no se devuelve: un envío rechazado por
+	 * una defensa es un intento, y tiene que seguir contando para el límite por IP. Así nadie puede
+	 * insistir sin tope contra una comprobación cara, como la del captcha, que consulta a otro servicio.
 	 *
 	 * @param Submission_Request $request Envío tal como llegó.
 	 * @param Form               $form    Formulario al que se envía.
 	 * @return WP_Error|null Null si el envío puede continuar.
 	 */
 	public function inspect( Submission_Request $request, Form $form ): ?WP_Error {
-		$passed = array();
-
 		foreach ( $this->checks as $check ) {
 			$error = $check->check( $request, $form );
 
 			if ( null !== $error ) {
-				$this->release_checks( $passed, $request, $form );
-
 				return $error;
 			}
-
-			$passed[] = $check;
 		}
 
 		return null;
@@ -60,18 +55,7 @@ final class Spam_Guard {
 	 * @param Form               $form    Formulario al que se envió.
 	 */
 	public function release( Submission_Request $request, Form $form ): void {
-		$this->release_checks( $this->checks, $request, $form );
-	}
-
-	/**
-	 * Devuelve lo reservado por las comprobaciones que reservan.
-	 *
-	 * @param Spam_Check[]       $checks  Comprobaciones.
-	 * @param Submission_Request $request Envío.
-	 * @param Form               $form    Formulario.
-	 */
-	private function release_checks( array $checks, Submission_Request $request, Form $form ): void {
-		foreach ( $checks as $check ) {
+		foreach ( $this->checks as $check ) {
 			if ( $check instanceof Reserving_Check ) {
 				$check->release( $request, $form );
 			}

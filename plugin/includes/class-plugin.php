@@ -45,6 +45,7 @@ final class Plugin {
 			new Fields\Fields_Provider(),
 			new Actions\Actions_Provider(),
 			new Forms\Forms_Provider(),
+			new Captcha\Captcha_Module_Provider(),
 			new Antispam\Antispam_Provider(),
 			new Mail\Mail_Provider(),
 			new Storage\Storage_Provider(),

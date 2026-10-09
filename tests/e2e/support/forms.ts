@@ -103,6 +103,11 @@ export class AdminApi {
     await this.send('put', '/formulario-mensaje/v1/settings/mail', { settings, secrets, clear });
   }
 
+  /** Guarda los ajustes del captcha. Sin clave secreta, se borra la guardada. */
+  async saveCaptchaSettings(settings: Record<string, unknown>, secret = ''): Promise<void> {
+    await this.send('put', '/formulario-mensaje/v1/settings/captcha', { settings, secret, clear_secret: secret === '' });
+  }
+
   async dispose(): Promise<void> {
     await this.context.dispose();
   }

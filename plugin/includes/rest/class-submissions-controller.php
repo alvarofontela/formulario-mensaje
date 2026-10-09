@@ -90,6 +90,11 @@ final class Submissions_Controller {
 						'type'        => 'string',
 						'default'     => '',
 					),
+					'captcha'                    => array(
+						'description' => __( 'Token of the captcha service, if the form uses one.', 'formulario-mensaje' ),
+						'type'        => 'string',
+						'default'     => '',
+					),
 					Honeypot_Check::FIELD_NAME   => array(
 						'description' => __( 'Must be empty.', 'formulario-mensaje' ),
 						'type'        => 'string',
@@ -140,7 +145,8 @@ final class Submissions_Controller {
 				$request->get_param( Render_Context::VALUES_PARAM ),
 				$request->get_param( Honeypot_Check::FIELD_NAME ),
 				$request->get_param( 'token' ),
-				Submission_Channel::Rest
+				Submission_Channel::Rest,
+				$request->get_param( 'captcha' )
 			)
 		);
 

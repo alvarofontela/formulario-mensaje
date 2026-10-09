@@ -114,6 +114,8 @@ final class Form_Definition_Sanitizer {
 			'tracking_enabled' => ! array_key_exists( 'tracking_enabled', $raw ) || ! empty( $raw['tracking_enabled'] ),
 			// Los envíos se guardan salvo que se desactive expresamente; IP y navegador, solo si se piden.
 			'store_enabled'    => ! array_key_exists( 'store_enabled', $raw ) || ! empty( $raw['store_enabled'] ),
+			// Activado salvo renuncia expresa: si el sitio configura un captcha, protege todos sus formularios.
+			'captcha_enabled'  => ! array_key_exists( 'captcha_enabled', $raw ) || ! empty( $raw['captcha_enabled'] ),
 			'store_ip'         => in_array( $raw['store_ip'] ?? null, array( Submission_Journal::IP_ANONYMIZED, Submission_Journal::IP_FULL ), true ) ? $raw['store_ip'] : Submission_Journal::IP_NONE,
 			'store_user_agent' => ! empty( $raw['store_user_agent'] ),
 			'retention_days'   => is_numeric( $raw['retention_days'] ?? null ) ? max( 0, min( 3650, (int) $raw['retention_days'] ) ) : 0,

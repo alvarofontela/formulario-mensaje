@@ -12,18 +12,22 @@ import { useEffect, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
 import {
+	getCaptchaSettings,
 	getMailSettings,
 	getSettings,
 	runMaintenance,
+	saveCaptchaSettings,
 	saveMailSettings,
 	saveSettings,
 } from './api';
 import { siteHost } from './config';
+import CaptchaSettings from './captcha-settings';
 import MailSettings from './mail-settings';
 
 const TABS = [
 	{ name: 'general', title: __( 'General', 'formulario-mensaje' ) },
 	{ name: 'mail', title: __( 'Email', 'formulario-mensaje' ) },
+	{ name: 'captcha', title: __( 'Captcha', 'formulario-mensaje' ) },
 ];
 
 const toLines = ( list ) => ( Array.isArray( list ) ? list.join( '\n' ) : '' );
@@ -46,6 +50,13 @@ export default function SettingsPage() {
 	const [ secretStatus, setSecretStatus ] = useState( {} );
 	const [ secrets, setSecrets ] = useState( {} );
 	const [ cleared, setCleared ] = useState( [] );
+	const [ captcha, setCaptcha ] = useState( null );
+	const [ captchaInfo, setCaptchaInfo ] = useState( {
+		providers: [],
+		secret: {},
+	} );
+	const [ captchaSecret, setCaptchaSecret ] = useState( '' );
+	const [ captchaCleared, setCaptchaCleared ] = useState( false );
 	const [ saving, setSaving ] = useState( false );
 	const [ cleaning, setCleaning ] = useState( false );
 	const [ notice, setNotice ] = useState( null );
@@ -64,6 +75,16 @@ export default function SettingsPage() {
 		setCleared( [] );
 	};
 
+	const applyCaptcha = ( response ) => {
+		setCaptcha( response.settings );
+		setCaptchaInfo( {
+			providers: response.providers,
+			secret: response.secret,
+		} );
+		setCaptchaSecret( '' );
+		setCaptchaCleared( false );
+	};
+
 	const mailDirty =
 		!! mail &&
 		( JSON.stringify( mail ) !== savedMail ||
@@ -71,10 +92,15 @@ export default function SettingsPage() {
 			cleared.length > 0 );
 
 	useEffect( () => {
-		Promise.all( [ getSettings(), getMailSettings() ] )
-			.then( ( [ general, mailResponse ] ) => {
+		Promise.all( [
+			getSettings(),
+			getMailSettings(),
+			getCaptchaSettings(),
+		] )
+			.then( ( [ general, mailResponse, captchaResponse ] ) => {
 				apply( general );
 				applyMail( mailResponse );
+				applyCaptcha( captchaResponse );
 			} )
 			.catch( ( error ) =>
 				setNotice( { status: 'error', message: error.message } )
@@ -101,27 +127,38 @@ export default function SettingsPage() {
 				delivery_log_days: settings.delivery_log_days,
 			} ),
 			saveMailSettings( { settings: mail, secrets, clear: cleared } ),
+			saveCaptchaSettings( {
+				settings: captcha,
+				secret: captchaSecret,
+				clear_secret: captchaCleared,
+			} ),
 		] )
-			.then( ( [ general, mailResponse ] ) => {
+			.then( ( [ general, mailResponse, captchaResponse ] ) => {
 				apply( general );
 				applyMail( mailResponse );
-				setNotice(
-					mailResponse.discarded?.includes( 'smtp_password' )
-						? {
-								status: 'warning',
-								message: __(
-									'Settings saved. The SMTP server has changed, so the stored password has been deleted: write the password of the new server.',
-									'formulario-mensaje'
-								),
-							}
-						: {
-								status: 'success',
-								message: __(
-									'Settings saved.',
-									'formulario-mensaje'
-								),
-							}
-				);
+				applyCaptcha( captchaResponse );
+
+				// Una credencial pertenece al servicio para el que se escribió: si cambia, hay que volver a escribirla.
+				const warnings = [
+					mailResponse.discarded?.includes( 'smtp_password' ) &&
+						__(
+							'The SMTP server has changed, so the stored password has been deleted: write the password of the new server.',
+							'formulario-mensaje'
+						),
+					captchaResponse.discarded &&
+						__(
+							'The captcha service has changed, so the stored secret key has been deleted: write the secret key of the new service.',
+							'formulario-mensaje'
+						),
+				].filter( Boolean );
+
+				setNotice( {
+					status: warnings.length ? 'warning' : 'success',
+					message: [
+						__( 'Settings saved.', 'formulario-mensaje' ),
+						...warnings,
+					].join( ' ' ),
+				} );
 			} )
 			.catch( ( error ) =>
 				setNotice( { status: 'error', message: error.message } )
@@ -169,17 +206,31 @@ export default function SettingsPage() {
 				</Notice>
 			) }
 
-			{ ! ( settings && mail ) && ! notice && (
+			{ ! ( settings && mail && captcha ) && ! notice && (
 				<div className="fm-admin__loading">
 					<Spinner />
 				</div>
 			) }
 
-			{ settings && mail && (
+			{ settings && mail && captcha && (
 				<form className="fm-settings-page__form" onSubmit={ save }>
 					<TabPanel className="fm-settings-page__tabs" tabs={ TABS }>
 						{ ( tab ) =>
-							tab.name === 'mail' ? (
+							// eslint-disable-next-line no-nested-ternary -- Tres pestañas, una por rama.
+							tab.name === 'captcha' ? (
+								<CaptchaSettings
+									settings={ captcha }
+									onChange={ setCaptcha }
+									providers={ captchaInfo.providers }
+									secretStatus={ captchaInfo.secret }
+									secret={ captchaSecret }
+									onSecret={ setCaptchaSecret }
+									cleared={ captchaCleared }
+									onToggleClear={ () =>
+										setCaptchaCleared( ! captchaCleared )
+									}
+								/>
+							) : tab.name === 'mail' ? (
 								<MailSettings
 									settings={ mail }
 									onChange={ setMail }

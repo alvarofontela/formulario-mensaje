@@ -177,6 +177,14 @@
 
 /* Envío */
 
+.formulario-mensaje .fm-captcha {
+	margin-block-end: 1em;
+}
+
+.formulario-mensaje .fm-captcha:empty {
+	display: none;
+}
+
 .formulario-mensaje .fm-actions {
 	display: flex;
 	flex-wrap: wrap;

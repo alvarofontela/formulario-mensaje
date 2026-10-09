@@ -228,7 +228,7 @@ Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fa
 | 2. Envíos y privacidad | Hecha |
 | 3. Correo avanzado | Hecha |
 | 4. Webhooks | Hecha |
-| 5. Captchas | Pendiente |
+| 5. Captchas | Hecha |
 | 6. Constructor avanzado | Pendiente |
 | 7. Estilo, bloque y Elementor | Pendiente |
 | 8. Lógica condicional en campos | Pendiente |
@@ -284,6 +284,20 @@ Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel
 - **Hooks**: el filtro `formulario_mensaje_email_message` recibe ahora un mensaje que puede llevar HTML.
 
 No verificado contra servicios reales: Resend se ha probado con un doble de la HTTP API (petición, cabecera de autorización, errores) y el SMTP contra Mailpit, que no cifra ni pide credenciales. Quedan sin probar STARTTLS, SSL y la autenticación contra un servidor real.
+
+### Fase 5: lo que se decidió al hacerla
+
+- **El captcha se configura una vez para todo el sitio** (Ajustes → Captcha: servicio, clave del sitio, clave secreta y, para reCAPTCHA, puntuación mínima) y protege todos los formularios en cuanto están las dos claves. Cada formulario puede renunciar a él (ajuste `captcha_enabled`, en su pestaña «Tras el envío»). A medio configurar no se activa.
+- **Tres servicios, un contrato** (`Captcha_Provider`): Cloudflare Turnstile, Google reCAPTCHA v3 y hCaptcha. Comparten el cliente de verificación (`Siteverify_Client`); reCAPTCHA comprueba además la puntuación mínima (0,5 por defecto, de 0,1 a 0,9) y que el testigo se pidió para la acción del formulario. Se registran en `formulario_mensaje_register_captcha_providers`; un servicio de terceros necesita además su adaptador en el navegador (`window.formularioMensajeCaptchaAdapters`).
+- **Nada de terceros al abrir la página**: el formulario solo lleva unos atributos `data-`. Cuando el visitante lo enfoca, el script del formulario importa `assets/js/captcha.js`, y este carga el script del servicio. Las páginas sin formulario, y los formularios sin captcha, no cargan nada.
+- **El captcha va detrás del límite por IP y los intentos que rechaza gastan ese límite**: es la única defensa que consulta a otro servicio, y sin tope serviría para hacerle peticiones a costa del sitio. Para ello cambió una regla de la fase 1: lo que una defensa rechaza ya no devuelve el hueco reservado.
+- **Si el servicio de captcha no responde, el envío se rechaza** con un aviso de que se intente más tarde. Aceptar sin comprobar dejaría el captcha sin efecto.
+- **Sin JavaScript no hay captcha**: un formulario con captcha rechaza el POST normal, aunque los envíos sin JavaScript estén permitidos en los ajustes.
+- **Casilla sin resolver**: si el servicio espera a que el visitante pulse su casilla, el formulario avisa al momento en vez de enviar; si su comprobación es automática y sigue en curso, espera hasta 10 segundos. Tras cada intento se pide un testigo nuevo, porque solo valen una vez.
+- **Clave secreta** en el almacén de secretos (`captcha_secret`, constante `FORMULARIO_MENSAJE_CAPTCHA_SECRET`). Como la contraseña de SMTP, va ligada a su servicio: al cambiar de servicio sin escribir la nueva, la guardada se descarta.
+- **Privacidad**: los tres servicios reciben la IP del visitante y lo que su script recoja en el navegador. La pantalla de ajustes lo advierte y recomienda usar captcha solo si sigue llegando spam; informar de ello en la política de privacidad del sitio queda en manos de quien lo activa.
+
+Verificado contra los servicios reales con sus claves públicas de prueba: la verificación en servidor de Turnstile y de hCaptcha (aprobado y rechazado). No verificado: reCAPTCHA v3, que no tiene claves de prueba, ni los scripts reales de los tres servicios en el navegador, que en los tests se sustituyen por dobles.
 
 ### Fase 4: lo que se decidió al hacerla
 

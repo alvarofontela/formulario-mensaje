@@ -8,6 +8,7 @@
 namespace Formulario_Mensaje\Lifecycle;
 
 use Formulario_Mensaje\Alerts\Failure_Alert;
+use Formulario_Mensaje\Captcha\Captcha_Config_Repository;
 use Formulario_Mensaje\Database\Schema;
 use Formulario_Mensaje\Forms\Form_Post_Type;
 use Formulario_Mensaje\Mail\Option_Mail_Settings_Repository;
@@ -93,6 +94,7 @@ final class Uninstaller {
 
 		delete_option( Option_Settings_Repository::OPTION );
 		delete_option( Option_Mail_Settings_Repository::OPTION );
+		delete_option( Captcha_Config_Repository::OPTION );
 		delete_option( Failure_Counter::OPTION );
 	}
 }
