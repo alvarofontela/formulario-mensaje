@@ -25,5 +25,6 @@ final class Rules_Provider implements Service_Provider {
 	public function register( Container $container ): void {
 		$container->set( Rule_Evaluator::class, static fn (): Rule_Evaluator => new Rule_Evaluator() );
 		$container->set( Condition_Sanitizer::class, static fn (): Condition_Sanitizer => new Condition_Sanitizer() );
+		$container->set( Visibility_Resolver::class, static fn ( Container $c ): Visibility_Resolver => new Visibility_Resolver( $c->get( Rule_Evaluator::class ) ) );
 	}
 }

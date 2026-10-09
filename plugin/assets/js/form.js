@@ -1,8 +1,13 @@
 /**
  * Formulario Mensaje: envío del formulario sin recargar la página.
  *
- * Módulo sin dependencias. Si no se carga, el formulario sigue funcionando como POST normal.
+ * Sin librerías: solo depende del motor de reglas del propio plugin. Si no se carga, el formulario
+ * sigue funcionando como POST normal, con todos sus campos a la vista.
  */
+
+// WordPress resuelve este nombre con su mapa de importación, con la versión del plugin.
+// eslint-disable-next-line import/no-unresolved
+import { resolveVisibility } from '@formulario-mensaje/rules';
 
 const FORM_SELECTOR = 'form.fm-form[data-fm-form]';
 const TOKEN_ERRORS = [
@@ -46,6 +51,18 @@ class FormController {
 
 		this.fillContext();
 
+		// Campos y elementos que solo se muestran si se cumple su condición.
+		this.conditional = Array.from(
+			form.querySelectorAll( '[data-fm-condition]' )
+		).map( ( element, index ) => ( {
+			element,
+			// Un elemento sin valor propio (un párrafo) no tiene identificador de campo.
+			id: element.dataset.fmField || `#${ index }`,
+			condition: this.parseCondition( element.dataset.fmCondition ),
+		} ) );
+
+		this.applyConditions();
+
 		// El token antispam y el captcha se piden cuando el visitante empieza a usar el formulario, no al cargar la página.
 		form.addEventListener(
 			'focusin',
@@ -56,12 +73,93 @@ class FormController {
 			{ once: true }
 		);
 		form.addEventListener( 'submit', ( event ) => this.onSubmit( event ) );
-		form.addEventListener( 'input', ( event ) =>
-			this.clearFieldError( event.target )
+		form.addEventListener( 'input', ( event ) => {
+			this.clearFieldError( event.target );
+			this.applyConditions();
+		} );
+		form.addEventListener( 'change', ( event ) => {
+			this.clearFieldError( event.target );
+			this.applyConditions();
+		} );
+	}
+
+	/**
+	 * @param {string} json Condición de un campo, en JSON.
+	 * @return {Object} Condición; vacía (se cumple siempre) si el JSON no es válido.
+	 */
+	parseCondition( json ) {
+		try {
+			return JSON.parse( json ) || {};
+		} catch {
+			return {};
+		}
+	}
+
+	/**
+	 * Valores actuales de los campos, por su identificador. Se leen todos, también los de los
+	 * campos ocultos: de ocultarlos al calcular se encarga el motor de reglas.
+	 *
+	 * @return {Object<string, string[]>} Valores.
+	 */
+	readValues() {
+		const values = {};
+
+		Array.from( this.form.elements ).forEach( ( control ) => {
+			const match = /^fm\[([a-z][a-z0-9_]*)\]/.exec( control.name || '' );
+
+			if ( ! match ) {
+				return;
+			}
+
+			values[ match[ 1 ] ] = values[ match[ 1 ] ] || [];
+
+			if (
+				( control.type === 'checkbox' || control.type === 'radio' ) &&
+				! control.checked
+			) {
+				return;
+			}
+
+			values[ match[ 1 ] ].push( control.value );
+		} );
+
+		return values;
+	}
+
+	/**
+	 * Muestra u oculta los campos con condición según lo que haya escrito el visitante.
+	 *
+	 * Los controles de un campo oculto se desactivan: así no viajan con el envío ni los valida el
+	 * navegador. El servidor vuelve a aplicar las condiciones al recibirlo.
+	 */
+	applyConditions() {
+		if ( ! this.conditional.length ) {
+			return;
+		}
+
+		const visible = resolveVisibility(
+			this.conditional,
+			this.readValues()
 		);
-		form.addEventListener( 'change', ( event ) =>
-			this.clearFieldError( event.target )
-		);
+
+		this.conditional.forEach( ( { element }, index ) => {
+			const hide = ! visible[ index ];
+
+			if ( element.hidden === hide ) {
+				return;
+			}
+
+			element.hidden = hide;
+			element
+				.querySelectorAll( 'input, select, textarea' )
+				.forEach( ( control ) => {
+					control.disabled = hide;
+				} );
+
+			if ( hide ) {
+				this.clearFieldError( element );
+			}
+		} );
 	}
 
 	/**
@@ -273,6 +371,7 @@ class FormController {
 		if ( result.after_submit === 'reset' ) {
 			this.form.reset();
 			this.fillContext();
+			this.applyConditions();
 		} else {
 			this.form.hidden = true;
 		}

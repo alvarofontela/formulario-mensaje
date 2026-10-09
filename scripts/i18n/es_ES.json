@@ -572,5 +572,7 @@
   "Borders": "Bordes",
   "Focus outline": "Contorno de foco",
   "Form colors": "Colores del formulario",
-  "Form spacing and borders": "Separación y bordes del formulario"
+  "Form spacing and borders": "Separación y bordes del formulario",
+  "Conditional": "Condicional",
+  "Show only if": "Mostrar solo si"
 }

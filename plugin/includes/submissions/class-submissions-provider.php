@@ -12,6 +12,7 @@ use Formulario_Mensaje\Antispam\Client_Ip_Resolver;
 use Formulario_Mensaje\Antispam\Spam_Guard;
 use Formulario_Mensaje\Container;
 use Formulario_Mensaje\Queue\Queue_Dispatcher;
+use Formulario_Mensaje\Rules\Visibility_Resolver;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Service_Provider;
@@ -49,7 +50,7 @@ final class Submissions_Provider implements Service_Provider {
 
 		$container->set(
 			Submission_Validator::class,
-			static fn ( Container $c ): Submission_Validator => new Submission_Validator( $c->get( Field_Type_Registry::class ) )
+			static fn ( Container $c ): Submission_Validator => new Submission_Validator( $c->get( Field_Type_Registry::class ), $c->get( Visibility_Resolver::class ) )
 		);
 
 		$container->set(

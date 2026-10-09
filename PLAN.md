@@ -231,7 +231,7 @@ Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fa
 | 5. Captchas | Hecha |
 | 6. Constructor avanzado | Hecha |
 | 7. Estilo, bloque y Elementor | Hecha |
-| 8. Lógica condicional en campos | Pendiente |
+| 8. Lógica condicional en campos | Hecha |
 | 9. Formularios por pasos | Pendiente |
 | 10. Ficheros | Pendiente |
 | 11. Extensión | Pendiente |
@@ -284,6 +284,16 @@ Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel
 - **Hooks**: el filtro `formulario_mensaje_email_message` recibe ahora un mensaje que puede llevar HTML.
 
 No verificado contra servicios reales: Resend se ha probado con un doble de la HTTP API (petición, cabecera de autorización, errores) y el SMTP contra Mailpit, que no cifra ni pide credenciales. Quedan sin probar STARTTLS, SSL y la autenticación contra un servidor real.
+
+### Fase 8: lo que se decidió al hacerla
+
+- **Cada campo puede llevar una condición para mostrarse** («Mostrar solo si…»), con el mismo editor de reglas que las notificaciones y los webhooks. Vale también para los elementos de presentación (un párrafo, un título). Como el ancho, es una propiedad del campo en la definición (`condition`), no una opción de cada tipo.
+- **Un campo oculto no forma parte del envío**: no se valida aunque sea obligatorio, su valor se descarta aunque la petición lo traiga, y no aparece en los correos, en los webhooks ni en el envío guardado. Quien depende de un campo oculto lo ve vacío.
+- **Decide el servidor.** El navegador muestra y oculta para que el formulario sea cómodo, pero al recibir el envío el servidor vuelve a calcular qué campos correspondían, con sus propias reglas y sobre los valores ya saneados.
+- **El mismo motor en los dos lados**: `Rule_Evaluator` y `Visibility_Resolver` en PHP y `assets/js/rules.js` en el navegador, comprobados contra los mismos casos (`tests/fixtures/reglas.json`), que ejecutan PHPUnit y Playwright. Un cambio en las reglas se hace en los dos y se añade su caso al fichero.
+- **Dependencias en cadena y circulares**: la visibilidad se calcula por pasadas hasta que deja de cambiar, con un tope igual al número de elementos; el resultado es el mismo en servidor y navegador aunque dos campos dependan el uno del otro. Un campo no puede depender de sí mismo: esa regla se descarta al guardar.
+- **Sin JavaScript se ven todos los campos** y el servidor aplica las condiciones al recibir el envío, como estaba previsto. Con JavaScript, los controles de un campo oculto se desactivan, así que ni viajan ni los valida el navegador.
+- **El motor de reglas del navegador es un módulo aparte**, declarado como dependencia del script del formulario: WordPress lo resuelve con su mapa de importación y lo precarga. Se carga en toda página con formulario, tenga o no condiciones; ocupa poco y evita que los campos condicionales parpadeen al abrir la página.
 
 ### Fase 7: lo que se decidió al hacerla
 

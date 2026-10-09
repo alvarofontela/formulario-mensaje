@@ -6,6 +6,7 @@ export interface FormField {
   type: string;
   settings: Record<string, unknown>;
   width?: number;
+  condition?: { match: 'all' | 'any'; rules: { field: string; operator: string; value: string }[] };
 }
 
 export interface FormDefinition {

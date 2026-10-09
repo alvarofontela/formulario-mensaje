@@ -8,6 +8,7 @@ import {
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
+import ConditionEditor from './condition-editor';
 import { fieldGroups, fieldTypes, fieldWidths, getFieldType } from './config';
 import FieldSettings from './field-settings';
 import { createField, createId, fieldTitle, moveItem } from './utils';
@@ -211,6 +212,9 @@ export default function FieldsPanel( { fields, onChange } ) {
 										{ field.width && field.width !== 100
 											? ` · ${ field.width } %`
 											: '' }
+										{ field.condition?.rules?.length > 0
+											? ` · ${ __( 'Conditional', 'formulario-mensaje' ) }`
+											: '' }
 										{ field.settings?.required
 											? ` · ${ __( 'Required', 'formulario-mensaje' ) }`
 											: '' }
@@ -332,6 +336,20 @@ export default function FieldsPanel( { fields, onChange } ) {
 											}
 										/>
 									) }
+									<ConditionEditor
+										label={ __(
+											'Show only if',
+											'formulario-mensaje'
+										) }
+										condition={ field.condition }
+										// Un campo no puede depender de sí mismo.
+										fields={ fields.filter(
+											( other ) => other.id !== field.id
+										) }
+										onChange={ ( condition ) =>
+											patch( index, { condition } )
+										}
+									/>
 									<p className="fm-fields__id">
 										{ __(
 											'Tag for emails and messages:',

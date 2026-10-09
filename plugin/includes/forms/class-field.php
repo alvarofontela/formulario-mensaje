@@ -32,13 +32,22 @@ final class Field {
 	 * @param string               $type     Tipo de campo, tal como está registrado.
 	 * @param array<string, mixed> $settings Opciones del campo.
 	 * @param int                  $width    Ancho que ocupa en su fila, en tanto por ciento: uno de WIDTHS.
+	 * @param array<string, mixed> $condition Condición para mostrarlo (`match` y `rules`); sin reglas se muestra siempre.
 	 */
 	public function __construct(
 		public readonly string $id,
 		public readonly string $type,
 		public readonly array $settings = array(),
-		public readonly int $width = 100
+		public readonly int $width = 100,
+		public readonly array $condition = array()
 	) {}
+
+	/**
+	 * Indica si el campo solo se muestra cuando se cumple una condición.
+	 */
+	public function is_conditional(): bool {
+		return ! empty( $this->condition['rules'] );
+	}
 
 	/**
 	 * Convierte un valor sin validar en uno de los anchos admitidos; ante la duda, todo el ancho.
@@ -101,10 +110,11 @@ final class Field {
 	 */
 	public function to_array(): array {
 		return array(
-			'id'       => $this->id,
-			'type'     => $this->type,
-			'settings' => $this->settings,
-			'width'    => $this->width,
+			'id'        => $this->id,
+			'type'      => $this->type,
+			'settings'  => $this->settings,
+			'width'     => $this->width,
+			'condition' => $this->condition,
 		);
 	}
 }

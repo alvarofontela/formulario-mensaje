@@ -32,7 +32,13 @@ export function createField( type ) {
 		settings[ control.key ] = structuredClone( control.default ?? '' );
 	} );
 
-	return { id: createId( 'f_' ), type: type.type, settings, width: 100 };
+	return {
+		id: createId( 'f_' ),
+		type: type.type,
+		settings,
+		width: 100,
+		condition: { match: 'all', rules: [] },
+	};
 }
 
 /**

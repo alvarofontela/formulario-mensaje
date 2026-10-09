@@ -25,6 +25,11 @@ final class Frontend_Assets {
 	public const MODULE_ID = 'formulario-mensaje-form';
 
 	/**
+	 * Identificador del módulo con el motor de reglas del navegador.
+	 */
+	public const RULES_MODULE_ID = '@formulario-mensaje/rules';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $plugin_file Ruta del fichero principal del plugin.
@@ -40,7 +45,9 @@ final class Frontend_Assets {
 	 */
 	public function register(): void {
 		wp_register_style( self::STYLE_HANDLE, $this->style_url(), array(), $this->version );
-		wp_register_script_module( self::MODULE_ID, plugins_url( 'assets/js/form.js', $this->plugin_file ), array(), $this->version );
+		// El motor de reglas es un módulo aparte: WordPress lo resuelve con su mapa de importación y su versión.
+		wp_register_script_module( self::RULES_MODULE_ID, plugins_url( 'assets/js/rules.js', $this->plugin_file ), array(), $this->version );
+		wp_register_script_module( self::MODULE_ID, plugins_url( 'assets/js/form.js', $this->plugin_file ), array( self::RULES_MODULE_ID ), $this->version );
 	}
 
 	/**

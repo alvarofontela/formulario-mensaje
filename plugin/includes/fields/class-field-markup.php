@@ -29,7 +29,7 @@ final class Field_Markup {
 		$id = $context->control_id( $field );
 
 		return sprintf(
-			'<div class="%1$s" data-fm-field="%2$s"><label class="fm-label" for="%3$s">%4$s%5$s</label>%6$s%7$s%8$s</div>',
+			'<div class="%1$s" data-fm-field="%2$s"%9$s><label class="fm-label" for="%3$s">%4$s%5$s</label>%6$s%7$s%8$s</div>',
 			esc_attr( $this->wrapper_class( $field ) ),
 			esc_attr( $field->id ),
 			esc_attr( $id ),
@@ -37,7 +37,8 @@ final class Field_Markup {
 			$this->required_mark( $field ),
 			$control,
 			$this->help( $field, $id ),
-			$this->error_slot( $id )
+			$this->error_slot( $id ),
+			$this->condition( $field )
 		);
 	}
 
@@ -52,7 +53,7 @@ final class Field_Markup {
 		$id = $context->control_id( $field );
 
 		return sprintf(
-			'<fieldset class="%1$s" data-fm-field="%2$s" id="%3$s"%4$s><legend class="fm-label">%5$s%6$s</legend><div class="fm-choices">%7$s</div>%8$s%9$s</fieldset>',
+			'<fieldset class="%1$s" data-fm-field="%2$s" id="%3$s"%4$s%10$s><legend class="fm-label">%5$s%6$s</legend><div class="fm-choices">%7$s</div>%8$s%9$s</fieldset>',
 			esc_attr( $this->wrapper_class( $field ) . ' fm-field--group' ),
 			esc_attr( $field->id ),
 			esc_attr( $id ),
@@ -61,7 +62,8 @@ final class Field_Markup {
 			$this->required_mark( $field ),
 			$controls,
 			$this->help( $field, $id ),
-			$this->error_slot( $id )
+			$this->error_slot( $id ),
+			$this->condition( $field )
 		);
 	}
 
@@ -76,12 +78,13 @@ final class Field_Markup {
 		$id = $context->control_id( $field );
 
 		return sprintf(
-			'<div class="%1$s" data-fm-field="%2$s">%3$s%4$s%5$s</div>',
+			'<div class="%1$s" data-fm-field="%2$s"%6$s>%3$s%4$s%5$s</div>',
 			esc_attr( $this->wrapper_class( $field ) ),
 			esc_attr( $field->id ),
 			$control,
 			$this->help( $field, $id ),
-			$this->error_slot( $id )
+			$this->error_slot( $id ),
+			$this->condition( $field )
 		);
 	}
 
@@ -92,7 +95,7 @@ final class Field_Markup {
 	 * @param string $content HTML del elemento, ya escapado.
 	 */
 	public function presentation( Field $field, string $content ): string {
-		return sprintf( '<div class="%1$s">%2$s</div>', esc_attr( $this->wrapper_class( $field ) ), $content );
+		return sprintf( '<div class="%1$s"%3$s>%2$s</div>', esc_attr( $this->wrapper_class( $field ) ), $content, $this->condition( $field ) );
 	}
 
 	/**
@@ -138,6 +141,16 @@ final class Field_Markup {
 		}
 
 		return $html;
+	}
+
+	/**
+	 * Atributo con la condición de un campo, para que el navegador lo muestre u oculte mientras se
+	 * rellena el formulario. El servidor vuelve a aplicarla al recibir el envío.
+	 *
+	 * @param Field $field Campo.
+	 */
+	private function condition( Field $field ): string {
+		return $field->is_conditional() ? $this->attributes( array( 'data-fm-condition' => (string) wp_json_encode( $field->condition ) ) ) : '';
 	}
 
 	/**

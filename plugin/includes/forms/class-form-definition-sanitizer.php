@@ -93,11 +93,31 @@ final class Form_Definition_Sanitizer {
 				$id,
 				$type->get_type(),
 				$this->schema_sanitizer->sanitize( $type->get_settings_schema(), $item['settings'] ?? array() ),
-				Field::normalize_width( $item['width'] ?? null )
+				Field::normalize_width( $item['width'] ?? null ),
+				$this->sanitize_field_condition( $item['condition'] ?? array(), $id )
 			);
 		}
 
 		return $fields;
+	}
+
+	/**
+	 * Sanea la condición con la que se muestra un campo. Un campo no puede depender de sí mismo.
+	 *
+	 * @param mixed  $raw      Condición sin validar.
+	 * @param string $field_id Identificador del campo.
+	 * @return array<string, mixed>
+	 */
+	private function sanitize_field_condition( mixed $raw, string $field_id ): array {
+		$condition          = $this->conditions->sanitize( $raw );
+		$condition['rules'] = array_values(
+			array_filter(
+				$condition['rules'],
+				static fn ( array $rule ): bool => $rule['field'] !== $field_id
+			)
+		);
+
+		return $condition;
 	}
 
 	/**

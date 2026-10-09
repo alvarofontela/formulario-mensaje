@@ -55,7 +55,8 @@ final class Form_Definition {
 				$field['id'],
 				$field['type'],
 				is_array( $field['settings'] ?? null ) ? $field['settings'] : array(),
-				Field::normalize_width( $field['width'] ?? null )
+				Field::normalize_width( $field['width'] ?? null ),
+				is_array( $field['condition'] ?? null ) ? $field['condition'] : array()
 			);
 		}
 

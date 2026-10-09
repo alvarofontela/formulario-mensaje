@@ -1,6 +1,6 @@
 <?php
 /**
- * Validación de los datos de un envío.
+ * Validación de un envío.
  *
  * @package Formulario_Mensaje
  */
@@ -9,11 +9,19 @@ namespace Formulario_Mensaje\Submissions;
 
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Forms\Form;
+use Formulario_Mensaje\Rules\Visibility_Resolver;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Sanea y valida en el servidor los valores recibidos, campo a campo, según su tipo.
+ * Sanea y valida los valores de un envío contra los campos del formulario.
+ *
+ * Solo se leen los valores de los campos que el formulario tiene; lo demás que traiga la petición
+ * se ignora. Cada tipo de campo sanea y valida su propio valor.
+ *
+ * Los campos con condición que no se cumple no forman parte del envío: no se validan, aunque sean
+ * obligatorios, y su valor se descarta aunque la petición lo traiga. Es el servidor quien lo decide,
+ * con sus propias reglas: lo que el navegador haya mostrado u ocultado no cuenta.
  */
 final class Submission_Validator {
 
@@ -21,22 +29,26 @@ final class Submission_Validator {
 	 * Constructor.
 	 *
 	 * @param Field_Type_Registry $field_types Tipos de campo.
+	 * @param Visibility_Resolver $visibility  Visibilidad condicional.
 	 */
-	public function __construct( private readonly Field_Type_Registry $field_types ) {}
+	public function __construct(
+		private readonly Field_Type_Registry $field_types,
+		private readonly Visibility_Resolver $visibility
+	) {}
 
 	/**
-	 * Sanea y valida los valores de un envío.
-	 *
-	 * Solo se leen los campos que define el formulario; cualquier otra clave de la petición se ignora.
+	 * Sanea y valida un envío.
 	 *
 	 * @param Form                 $form       Formulario.
-	 * @param array<string, mixed> $raw_values Valores tal como llegaron, sin barras de escape.
+	 * @param array<string, mixed> $raw_values Valores tal como llegan, por identificador de campo.
 	 * @return array{entries: array<string, Submission_Entry>, errors: array<string, string>}
 	 */
 	public function validate( Form $form, array $raw_values ): array {
-		$entries = array();
-		$errors  = array();
+		$values     = array();
+		$conditions = array();
+		$inputs     = array();
 
+		// Primero se sanean todos los valores: las condiciones se evalúan sobre valores ya saneados.
 		foreach ( $form->definition->fields as $field ) {
 			$type = $this->field_types->get_input( $field->type );
 
@@ -44,7 +56,21 @@ final class Submission_Validator {
 				continue;
 			}
 
-			$value = $type->sanitize_value( $field, $raw_values[ $field->id ] ?? null );
+			$inputs[ $field->id ]     = array( $field, $type );
+			$values[ $field->id ]     = $type->sanitize_value( $field, $raw_values[ $field->id ] ?? null );
+			$conditions[ $field->id ] = $field->condition;
+		}
+
+		$visible = $this->visibility->resolve( $conditions, $values );
+		$entries = array();
+		$errors  = array();
+
+		foreach ( $inputs as $id => list( $field, $type ) ) {
+			if ( ! $visible[ $id ] ) {
+				continue;
+			}
+
+			$value = $values[ $id ];
 			$empty = '' === $value || array() === $value;
 			$error = null;
 
@@ -55,11 +81,11 @@ final class Submission_Validator {
 			}
 
 			if ( null !== $error ) {
-				$errors[ $field->id ] = $error;
+				$errors[ $id ] = $error;
 			}
 
-			$entries[ $field->id ] = new Submission_Entry(
-				$field->id,
+			$entries[ $id ] = new Submission_Entry(
+				$id,
 				$field->type,
 				$field->label(),
 				$value,
@@ -70,12 +96,12 @@ final class Submission_Validator {
 		/**
 		 * Filtra los errores de validación de un envío.
 		 *
-		 * Permite añadir reglas propias: devuelve el array con una entrada por campo no válido.
+		 * Permite añadir validaciones propias (por ejemplo, entre varios campos) o retirar errores.
 		 *
 		 * @since 0.1.0
 		 *
 		 * @param array<string, string>           $errors  Mensajes de error, por identificador de campo.
-		 * @param array<string, Submission_Entry> $entries Datos saneados, por identificador de campo.
+		 * @param array<string, Submission_Entry> $entries Datos del envío ya saneados, solo de los campos que le corresponden.
 		 * @param Form                            $form    Formulario.
 		 */
 		$filtered = apply_filters( 'formulario_mensaje_validation_errors', $errors, $entries, $form );
@@ -87,9 +113,9 @@ final class Submission_Validator {
 	}
 
 	/**
-	 * Descarta lo que un filtro haya devuelto y no sea un mensaje de texto para un campo del envío.
+	 * Deja solo los errores bien formados y de campos que existen en el envío.
 	 *
-	 * @param mixed                           $errors  Errores tras pasar por el filtro.
+	 * @param mixed                           $errors  Errores tras el filtro.
 	 * @param array<string, Submission_Entry> $entries Datos del envío.
 	 * @return array<string, string>
 	 */

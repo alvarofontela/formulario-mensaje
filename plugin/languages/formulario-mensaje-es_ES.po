@@ -505,7 +505,7 @@ msgid "Other URL parameter"
 msgstr "Otro parámetro de la URL"
 
 #: includes/fields/types/class-hidden-field-type.php:91
-#: build/admin/index.js:6
+#: build/admin/index.js:1
 #: build/admin/index.js:12
 msgid "Value"
 msgstr "Valor"
@@ -544,7 +544,7 @@ msgid "Empty option text"
 msgstr "Texto de la opción vacía"
 
 #: includes/fields/types/class-select-field-type.php:65
-#: build/admin/index.js:6
+#: build/admin/index.js:1
 msgid "Select an option"
 msgstr "Elige una opción"
 
@@ -564,12 +564,12 @@ msgstr "Este es un mensaje de ejemplo.\nTiene dos líneas."
 msgid "Enter a valid web address."
 msgstr "Escribe una dirección web válida."
 
-#: includes/forms/class-form-definition-sanitizer.php:114
+#: includes/forms/class-form-definition-sanitizer.php:134
 #: includes/frontend/class-form-renderer.php:145
 msgid "Send"
 msgstr "Enviar"
 
-#: includes/forms/class-form-definition-sanitizer.php:117
+#: includes/forms/class-form-definition-sanitizer.php:137
 #: includes/submissions/class-confirmation-builder.php:62
 msgid "Thank you. Your message has been sent."
 msgstr "Gracias. Hemos recibido tu mensaje."
@@ -1025,7 +1025,7 @@ msgstr "Revisa los campos marcados."
 msgid "Your message could not be sent. Please try again later."
 msgstr "No se ha podido enviar tu mensaje. Inténtalo de nuevo más tarde."
 
-#: includes/submissions/class-submission-validator.php:52
+#: includes/submissions/class-submission-validator.php:78
 msgid "This field is required."
 msgstr "Este campo es obligatorio."
 
@@ -1054,6 +1054,44 @@ msgstr "Has enviado demasiados webhooks de prueba. Espera unos minutos y vuelve 
 #: includes/webhooks/class-webhook-tester.php:69
 msgid "The form has no webhook with that identifier."
 msgstr "El formulario no tiene ningún webhook con ese identificador."
+
+#: build/admin/index.js:1
+msgid "Without rules, it always applies."
+msgstr "Sin reglas, se aplica siempre."
+
+#: build/admin/index.js:1
+msgid "It applies when"
+msgstr "Se aplica cuando"
+
+#: build/admin/index.js:1
+msgid "all the rules are met"
+msgstr "se cumplen todas las reglas"
+
+#: build/admin/index.js:1
+msgid "any of the rules is met"
+msgstr "se cumple alguna de las reglas"
+
+#: build/admin/index.js:1
+#: build/admin/index.js:6
+msgid "Field"
+msgstr "Campo"
+
+#: build/admin/index.js:1
+#: build/admin/index.js:6
+msgid "Select a field"
+msgstr "Elige un campo"
+
+#: build/admin/index.js:1
+msgid "Comparison"
+msgstr "Comparación"
+
+#: build/admin/index.js:1
+msgid "Remove rule"
+msgstr "Quitar regla"
+
+#: build/admin/index.js:1
+msgid "Add rule"
+msgstr "Añadir regla"
 
 #. translators: %d: position of an option in a list, starting at 1.
 #: build/admin/index.js:2
@@ -1118,6 +1156,10 @@ msgstr "Arrastra para reordenar"
 msgid "Unknown type"
 msgstr "Tipo desconocido"
 
+#: build/admin/index.js:2
+msgid "Conditional"
+msgstr "Condicional"
+
 #. translators: %s: name of a field.
 #: build/admin/index.js:3
 #, js-format
@@ -1155,6 +1197,10 @@ msgstr "Ancho"
 #: build/admin/index.js:6
 msgid "Consecutive fields that add up to the full width share a row. On narrow screens each field takes its own row."
 msgstr "Los campos seguidos que suman el ancho completo comparten fila. En pantallas estrechas cada campo ocupa su propia fila."
+
+#: build/admin/index.js:6
+msgid "Show only if"
+msgstr "Mostrar solo si"
 
 #: build/admin/index.js:6
 msgid "Tag for emails and messages:"
@@ -1258,14 +1304,6 @@ msgid "Their values travel in the address and may end up in browser history and 
 msgstr "Sus valores viajan en la dirección y pueden acabar en el historial del navegador y en los registros del servidor. Añade solo lo que necesite la página de destino."
 
 #: build/admin/index.js:6
-msgid "Field"
-msgstr "Campo"
-
-#: build/admin/index.js:6
-msgid "Select a field"
-msgstr "Elige un campo"
-
-#: build/admin/index.js:6
 msgid "Remove field"
 msgstr "Quitar el campo"
 
@@ -1276,34 +1314,6 @@ msgstr "Avisar del envío para medir conversiones"
 #: build/admin/index.js:6
 msgid "Fires a JavaScript event and pushes “formulario_mensaje_submit” to dataLayer (Google Tag Manager). No personal data is included."
 msgstr "Lanza un evento de JavaScript y añade «formulario_mensaje_submit» a dataLayer (Google Tag Manager). No incluye ningún dato personal."
-
-#: build/admin/index.js:6
-msgid "Without rules, it always applies."
-msgstr "Sin reglas, se aplica siempre."
-
-#: build/admin/index.js:6
-msgid "It applies when"
-msgstr "Se aplica cuando"
-
-#: build/admin/index.js:6
-msgid "all the rules are met"
-msgstr "se cumplen todas las reglas"
-
-#: build/admin/index.js:6
-msgid "any of the rules is met"
-msgstr "se cumple alguna de las reglas"
-
-#: build/admin/index.js:6
-msgid "Comparison"
-msgstr "Comparación"
-
-#: build/admin/index.js:6
-msgid "Remove rule"
-msgstr "Quitar regla"
-
-#: build/admin/index.js:6
-msgid "Add rule"
-msgstr "Añadir regla"
 
 #: build/admin/index.js:6
 msgid "Turned off"
