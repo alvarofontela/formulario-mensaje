@@ -17,6 +17,7 @@ use Formulario_Mensaje\Frontend\Form_Renderer;
 use Formulario_Mensaje\Frontend\Frontend_Assets;
 use Formulario_Mensaje\Mail\Mail_Settings_Repository;
 use Formulario_Mensaje\Mail\Mail_Settings_Sanitizer;
+use Formulario_Mensaje\Mail\Mail_Settings_Service;
 use Formulario_Mensaje\Mail\Mail_Tester;
 use Formulario_Mensaje\Secrets\Secret_Vault;
 use Formulario_Mensaje\Service_Provider;
@@ -27,6 +28,7 @@ use Formulario_Mensaje\Storage\Submission_Service;
 use Formulario_Mensaje\Submissions\Submission_Handler;
 use Formulario_Mensaje\Submissions\Submission_Request_Factory;
 use Formulario_Mensaje\Support\Server_Vars;
+use Formulario_Mensaje\Webhooks\Webhook_Tester;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -62,8 +64,16 @@ final class Rest_Provider implements Service_Provider {
 				$c->get( Form_Service::class ),
 				$c->get( Form_Renderer::class ),
 				$c->get( Frontend_Assets::class ),
-				$c->get( Submission_Service::class ),
-				$c->get( Mail_Tester::class )
+				$c->get( Submission_Service::class )
+			)
+		);
+
+		$container->set(
+			Action_Tests_Controller::class,
+			static fn ( Container $c ): Action_Tests_Controller => new Action_Tests_Controller(
+				$c->get( Form_Service::class ),
+				$c->get( Mail_Tester::class ),
+				$c->get( Webhook_Tester::class )
 			)
 		);
 
@@ -72,6 +82,7 @@ final class Rest_Provider implements Service_Provider {
 			static fn ( Container $c ): Mail_Settings_Controller => new Mail_Settings_Controller(
 				$c->get( Mail_Settings_Repository::class ),
 				$c->get( Mail_Settings_Sanitizer::class ),
+				$c->get( Mail_Settings_Service::class ),
 				$c->get( Secret_Vault::class ),
 				$c->get( Mail_Tester::class )
 			)
@@ -104,6 +115,7 @@ final class Rest_Provider implements Service_Provider {
 			static function () use ( $container ): void {
 				$container->get( Submissions_Controller::class )->register_routes();
 				$container->get( Forms_Controller::class )->register_routes();
+				$container->get( Action_Tests_Controller::class )->register_routes();
 				$container->get( Settings_Controller::class )->register_routes();
 				$container->get( Submission_Records_Controller::class )->register_routes();
 				$container->get( Maintenance_Controller::class )->register_routes();

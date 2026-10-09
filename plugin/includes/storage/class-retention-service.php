@@ -1,6 +1,6 @@
 <?php
 /**
- * Retención automática de envíos.
+ * Retención de datos.
  *
  * @package Formulario_Mensaje
  */
@@ -9,46 +9,48 @@ namespace Formulario_Mensaje\Storage;
 
 use Formulario_Mensaje\Forms\Form;
 use Formulario_Mensaje\Forms\Form_Repository;
+use Formulario_Mensaje\Settings\Settings_Repository;
 use Formulario_Mensaje\Support\Clock;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Borra los envíos que han superado los días de retención que fija su formulario.
+ * Borra los datos que han superado su periodo de retención: los envíos, según lo que diga su
+ * formulario, y el registro de entregas, según los ajustes del plugin.
  *
- * Se ejecuta a diario. Si se retrasa o se repite no pasa nada: cada vez borra lo que toque en ese momento.
+ * Se ejecuta a diario y se puede lanzar a mano. Hacerlo tarde o dos veces no causa daño: borra lo
+ * que en ese momento esté caducado.
  */
 final class Retention_Service {
 
 	/**
-	 * Días que se conservan los fallos de entrega de formularios que no guardan sus envíos.
-	 */
-	private const ORPHAN_DELIVERY_DAYS = 30;
-
-	/**
-	 * Lotes de borrado por formulario y ejecución, para acotar lo que tarda.
+	 * Lotes de envíos que se borran, como mucho, por formulario en cada pasada.
 	 */
 	private const MAX_BATCHES = 25;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param Form_Repository     $forms       Almacén de formularios.
-	 * @param Submission_Service  $submissions Servicio de envíos guardados.
-	 * @param Delivery_Repository $deliveries  Registro de entregas.
-	 * @param Failure_Counter     $failures    Contador de entregas fallidas.
-	 * @param Clock               $clock       Reloj.
+	 * @param Form_Repository       $forms       Almacén de formularios.
+	 * @param Submission_Service    $submissions Servicio de envíos guardados.
+	 * @param Submission_Repository $stored      Almacén de envíos.
+	 * @param Delivery_Repository   $deliveries  Registro de entregas.
+	 * @param Failure_Counter       $failures    Contador de entregas fallidas.
+	 * @param Settings_Repository   $settings    Ajustes del plugin.
+	 * @param Clock                 $clock       Reloj.
 	 */
 	public function __construct(
 		private readonly Form_Repository $forms,
 		private readonly Submission_Service $submissions,
+		private readonly Submission_Repository $stored,
 		private readonly Delivery_Repository $deliveries,
 		private readonly Failure_Counter $failures,
+		private readonly Settings_Repository $settings,
 		private readonly Clock $clock
 	) {}
 
 	/**
-	 * Aplica la retención de todos los formularios.
+	 * Borra los envíos y las entregas caducados.
 	 *
 	 * @return int Envíos borrados.
 	 */
@@ -67,7 +69,12 @@ final class Retention_Service {
 			}
 		}
 
-		if ( $this->deliveries->delete_orphans_before( gmdate( 'Y-m-d H:i:s', $now - self::ORPHAN_DELIVERY_DAYS * DAY_IN_SECONDS ) ) > 0 ) {
+		// Las entregas en cola no se tocan: todavía tienen trabajo pendiente.
+		$log_days = $this->settings->get()->delivery_log_days;
+
+		if ( $this->deliveries->delete_finished_before( gmdate( 'Y-m-d H:i:s', $now - $log_days * DAY_IN_SECONDS ) ) > 0 ) {
+			// Entre lo borrado puede haber fallos que nadie llegó a revisar: los recuentos se rehacen.
+			$this->stored->recount_failed_actions();
 			$this->failures->refresh();
 		}
 

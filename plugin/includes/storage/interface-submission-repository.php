@@ -76,4 +76,10 @@ interface Submission_Repository {
 	 * @param int $failed Entregas fallidas pendientes.
 	 */
 	public function set_failed_actions( int $id, int $failed ): void;
+
+	/**
+	 * Recalcula, a partir del registro de entregas, las entregas fallidas pendientes de los envíos
+	 * que tenían alguna. Hace falta cuando el registro se purga.
+	 */
+	public function recount_failed_actions(): void;
 }

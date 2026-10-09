@@ -4,6 +4,7 @@ import {
 	RadioControl,
 	Spinner,
 	TabPanel,
+	TextControl,
 	TextareaControl,
 	ToggleControl,
 } from '@wordpress/components';
@@ -95,16 +96,32 @@ export default function SettingsPage() {
 				allowed_redirect_hosts: toList( hosts ),
 				accept_no_js: settings.accept_no_js,
 				delete_data_on_uninstall: settings.delete_data_on_uninstall,
+				failure_alerts: settings.failure_alerts,
+				failure_alert_email: settings.failure_alert_email,
+				delivery_log_days: settings.delivery_log_days,
 			} ),
 			saveMailSettings( { settings: mail, secrets, clear: cleared } ),
 		] )
 			.then( ( [ general, mailResponse ] ) => {
 				apply( general );
 				applyMail( mailResponse );
-				setNotice( {
-					status: 'success',
-					message: __( 'Settings saved.', 'formulario-mensaje' ),
-				} );
+				setNotice(
+					mailResponse.discarded?.includes( 'smtp_password' )
+						? {
+								status: 'warning',
+								message: __(
+									'Settings saved. The SMTP server has changed, so the stored password has been deleted: write the password of the new server.',
+									'formulario-mensaje'
+								),
+							}
+						: {
+								status: 'success',
+								message: __(
+									'Settings saved.',
+									'formulario-mensaje'
+								),
+							}
+				);
 			} )
 			.catch( ( error ) =>
 				setNotice( { status: 'error', message: error.message } )
@@ -322,13 +339,102 @@ export default function SettingsPage() {
 									<section className="fm-card">
 										<h2>
 											{ __(
+												'Failed actions',
+												'formulario-mensaje'
+											) }
+										</h2>
+										<p>
+											{ __(
+												'When a notification cannot be sent, or a webhook fails after all its retries, it stays in the Submissions screen until someone retries or dismisses it.',
+												'formulario-mensaje'
+											) }
+										</p>
+										<div className="fm-settings">
+											<ToggleControl
+												__nextHasNoMarginBottom
+												label={ __(
+													'Send me an email when an action fails',
+													'formulario-mensaje'
+												) }
+												help={ __(
+													'At most one email every 12 hours, with the number of failures since the previous one.',
+													'formulario-mensaje'
+												) }
+												checked={
+													!! settings.failure_alerts
+												}
+												onChange={ ( value ) =>
+													set(
+														'failure_alerts',
+														value
+													)
+												}
+											/>
+											{ settings.failure_alerts && (
+												<TextControl
+													__next40pxDefaultSize
+													__nextHasNoMarginBottom
+													type="email"
+													label={ __(
+														'Address for those emails',
+														'formulario-mensaje'
+													) }
+													help={ __(
+														'Empty to use the one of the site administrator.',
+														'formulario-mensaje'
+													) }
+													value={
+														settings.failure_alert_email ||
+														''
+													}
+													onChange={ ( value ) =>
+														set(
+															'failure_alert_email',
+															value
+														)
+													}
+												/>
+											) }
+											<TextControl
+												__next40pxDefaultSize
+												__nextHasNoMarginBottom
+												className="fm-settings__short"
+												type="number"
+												min={ 1 }
+												max={ 365 }
+												label={ __(
+													'Days the delivery log is kept',
+													'formulario-mensaje'
+												) }
+												help={ __(
+													'The log says what was done with each submission: which notifications and webhooks were sent, and which failed. Entries older than this are deleted, except the ones still waiting for a retry.',
+													'formulario-mensaje'
+												) }
+												value={ String(
+													settings.delivery_log_days ??
+														30
+												) }
+												onChange={ ( value ) =>
+													set(
+														'delivery_log_days',
+														parseInt( value, 10 ) ||
+															1
+													)
+												}
+											/>
+										</div>
+									</section>
+
+									<section className="fm-card">
+										<h2>
+											{ __(
 												'Data',
 												'formulario-mensaje'
 											) }
 										</h2>
 										<p>
 											{ __(
-												'Once a day the plugin deletes the submissions that have exceeded the retention period of their form. You can run that cleanup now.',
+												'Once a day the plugin deletes the submissions that have exceeded the retention period of their form and the old entries of the delivery log, and sends the webhooks that were left waiting. You can run that maintenance now.',
 												'formulario-mensaje'
 											) }
 										</p>

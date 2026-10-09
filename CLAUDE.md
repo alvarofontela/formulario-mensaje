@@ -241,6 +241,8 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 | `src/` | Fuentes de lo que sí se compila: la aplicación de administración (`src/admin/`) y el bloque (`src/blocks/form/`) |
 | `plugin/build/`, `plugin/languages/` | Generados (ver «Qué no se edita a mano») |
 
+Para añadir un tipo de acción (como el correo o el webhook): una clase que implemente `Action_Type` y su proveedor. `is_deferred()` decide si se ejecuta mientras el visitante espera o en segundo plano, por la cola (`plugin/includes/queue/`), con reintentos. La cola no es una tabla aparte: son las filas en estado pendiente del registro de entregas.
+
 Para añadir un transporte de correo: una clase en `plugin/includes/mail/` que implemente `Mail_Transport` y una línea en `Mail_Provider`. Un secreto nuevo (clave de API, contraseña) se guarda con `Secret_Vault`, nunca en una opción en claro, y ninguna ruta lo devuelve.
 
 Para añadir un tipo de campo: una clase en `plugin/includes/fields/types/` que implemente `Field_Type` (o `Input_Field_Type` si recoge datos) y una línea en `Fields_Provider`. El constructor pinta sus ajustes a partir del esquema que declara, sin tocar el JavaScript. Un tipo de acción se añade igual, con `Action_Type` y su proveedor.
@@ -255,6 +257,7 @@ Para añadir un tipo de campo: una clase en `plugin/includes/fields/types/` que 
 - El tiempo mínimo de relleno (3 s) es real en Playwright: cada envío tarda al menos eso. En PHPUnit lo anula `Caso_Formulario`. Para crear envíos rápido en los tests de administración, `submitWithoutJs()` (dos por formulario cada diez minutos, que es el límite de esa vía).
 - Las tablas del plugin se crean una vez en `tests/phpunit/bootstrap.php`. Dentro de un test WordPress convierte `CREATE TABLE` y `DROP TABLE` en operaciones sobre tablas temporales, así que el borrado de tablas al desinstalar no se puede comprobar con PHPUnit.
 - Los controladores y servicios viven todo el proceso de PHPUnit: no guardes en ellos nada que dependa de la petición (un recuento, el usuario), o un test verá datos de otro.
+- La cola se procesa en PHPUnit lanzando su acción (`do_action( Queue_Schedule::HOOK )`, tras retirar el evento programado, como hace WP-Cron); para simular que pasa el tiempo se adelanta `next_attempt_at` en la tabla. En Playwright la procesa el WP-Cron real y los webhooks llegan al receptor del entorno, `rt/v1/sink` (`tests/e2e/support/sink.ts`), que guarda lo que recibe y responde con el código que se le pida. Está en este mismo WordPress porque la HTTP API segura rechaza cualquier otra dirección local.
 - Los servicios externos se sustituyen por dobles: las peticiones HTTP, con el filtro `pre_http_request`; el SMTP se prueba contra Mailpit (`127.0.0.1:1025`, sin cifrado ni credenciales). Los tests de Playwright que cambian los ajustes de correo los devuelven a los de fábrica al terminar (`AdminApi.saveMailSettings({})`).
 - `tests/phpunit/EntornoTest.php` y `tests/e2e/entorno.spec.ts` solo comprueban el entorno; sirven de plantilla.
 

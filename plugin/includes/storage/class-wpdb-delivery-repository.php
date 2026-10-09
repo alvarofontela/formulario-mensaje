@@ -179,16 +179,21 @@ final class Wpdb_Delivery_Repository implements Delivery_Repository {
 	}
 
 	/**
-	 * Borra las entregas sin envío guardado anteriores a una fecha.
+	 * Borra las entregas terminadas cuyo último cambio es anterior a una fecha.
 	 *
 	 * @param string $before_gmt Fecha límite en GMT (formato MySQL).
 	 * @return int Entregas borradas.
 	 */
-	public function delete_orphans_before( string $before_gmt ): int {
+	public function delete_finished_before( string $before_gmt ): int {
 		$wpdb = $this->wpdb;
 
 		return (int) $wpdb->query(
-			$wpdb->prepare( 'DELETE FROM %i WHERE submission_id = 0 AND created_at < %s', $this->schema->deliveries_table(), $before_gmt )
+			$wpdb->prepare(
+				'DELETE FROM %i WHERE status <> %s AND updated_at < %s',
+				$this->schema->deliveries_table(),
+				Delivery_Status::Pending->value,
+				$before_gmt
+			)
 		);
 	}
 
@@ -227,7 +232,8 @@ final class Wpdb_Delivery_Repository implements Delivery_Repository {
 			(int) $row['attempts'],
 			(string) $row['error'],
 			(int) strtotime( $row['created_at'] . ' UTC' ),
-			(int) strtotime( $row['updated_at'] . ' UTC' )
+			(int) strtotime( $row['updated_at'] . ' UTC' ),
+			empty( $row['next_attempt_at'] ) ? 0 : (int) strtotime( $row['next_attempt_at'] . ' UTC' )
 		);
 	}
 }

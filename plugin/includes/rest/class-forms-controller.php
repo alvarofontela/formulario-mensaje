@@ -13,7 +13,6 @@ use Formulario_Mensaje\Frontend\Form_Renderer;
 use Formulario_Mensaje\Frontend\Frontend_Assets;
 use Formulario_Mensaje\Frontend\Shortcode;
 use Formulario_Mensaje\Lifecycle\Capabilities;
-use Formulario_Mensaje\Mail\Mail_Tester;
 use Formulario_Mensaje\Storage\Submission_Service;
 use WP_Error;
 use WP_REST_Request;
@@ -38,14 +37,12 @@ final class Forms_Controller {
 	 * @param Form_Renderer      $renderer    HTML del formulario.
 	 * @param Frontend_Assets    $assets      Estilos del formulario.
 	 * @param Submission_Service $submissions Servicio de envíos guardados.
-	 * @param Mail_Tester        $mail_tester Correos de prueba.
 	 */
 	public function __construct(
 		private readonly Form_Service $forms,
 		private readonly Form_Renderer $renderer,
 		private readonly Frontend_Assets $assets,
-		private readonly Submission_Service $submissions,
-		private readonly Mail_Tester $mail_tester
+		private readonly Submission_Service $submissions
 	) {}
 
 	/**
@@ -108,29 +105,6 @@ final class Forms_Controller {
 				'callback'            => array( $this, 'preview' ),
 				'permission_callback' => array( $this, 'can_manage' ),
 				'args'                => $item_args,
-			)
-		);
-
-		register_rest_route(
-			Rest_Provider::ROUTE_NAMESPACE,
-			'/forms/test-email',
-			array(
-				'methods'             => WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'test_email' ),
-				'permission_callback' => array( $this, 'can_manage' ),
-				'args'                => $item_args + array(
-					'action_id' => array(
-						'description' => __( 'Identifier of the notification to test.', 'formulario-mensaje' ),
-						'type'        => 'string',
-						'required'    => true,
-					),
-					'to'        => array(
-						'description' => __( 'Address the test email is sent to.', 'formulario-mensaje' ),
-						'type'        => 'string',
-						'format'      => 'email',
-						'required'    => true,
-					),
-				),
 			)
 		);
 
@@ -355,29 +329,6 @@ final class Forms_Controller {
 				'theme_css'   => wp_get_global_stylesheet(),
 			)
 		);
-	}
-
-	/**
-	 * Envía una notificación del formulario en edición, con datos de ejemplo, a la dirección indicada.
-	 *
-	 * @param WP_REST_Request $request Petición.
-	 * @return WP_REST_Response|WP_Error
-	 */
-	public function test_email( WP_REST_Request $request ): WP_REST_Response|WP_Error {
-		$result = $this->mail_tester->send_notification_test(
-			$this->forms->build( $request['title'], $request['definition'] ),
-			(string) $request['action_id'],
-			sanitize_email( (string) $request['to'] )
-		);
-
-		if ( is_wp_error( $result ) ) {
-			$data = $result->get_error_data();
-
-			// Un fallo del transporte no trae código de estado: el destino no ha aceptado el correo.
-			return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => is_array( $data ) && isset( $data['status'] ) ? (int) $data['status'] : 502 ) );
-		}
-
-		return new WP_REST_Response( array( 'sent' => true ) );
 	}
 
 	/**

@@ -396,6 +396,10 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		font-size: 12px;
 	}
 
+	&__short {
+		max-width: 320px;
+	}
+
 	&__columns {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -446,6 +450,15 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 
 	.components-notice {
 		margin: 8px 0 0;
+	}
+
+	&__response {
+		max-height: 160px;
+		margin: 8px 0 0;
+		overflow: auto;
+		font-size: 12px;
+		white-space: pre-wrap;
+		word-break: break-word;
 	}
 }
 
@@ -617,6 +630,11 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 	&--ok {
 		background: #edfaef;
 		color: #005c12;
+	}
+
+	&--wait {
+		background: #fcf9e8;
+		color: #6e4e00;
 	}
 }
 

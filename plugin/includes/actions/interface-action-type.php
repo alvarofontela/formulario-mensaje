@@ -52,4 +52,10 @@ interface Action_Type {
 	 * @return true|WP_Error True si se completó; el error no debe contener datos del envío.
 	 */
 	public function execute( array $settings, Submission $submission, Form $form ): bool|WP_Error;
+
+	/**
+	 * Indica si la acción se ejecuta en segundo plano, por la cola y con reintentos, en vez de
+	 * mientras el visitante espera. Es lo propio de las que dependen de un servicio ajeno.
+	 */
+	public function is_deferred(): bool;
 }

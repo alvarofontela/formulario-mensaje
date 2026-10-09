@@ -53,4 +53,51 @@ final class Submission {
 	public function formatted( string $field_id ): string {
 		return isset( $this->entries[ $field_id ] ) ? $this->entries[ $field_id ]->formatted : '';
 	}
+
+	/**
+	 * Copia del envío para guardarla como JSON mientras espera en la cola.
+	 *
+	 * No lleva la IP ni el navegador: las acciones no los usan.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function to_array(): array {
+		return array(
+			'form_id'    => $this->form_id,
+			'reference'  => $this->reference,
+			'created_at' => $this->created_at,
+			'page_url'   => $this->page_url,
+			'entries'    => array_map( static fn ( Submission_Entry $entry ): array => $entry->to_array(), array_values( $this->entries ) ),
+		);
+	}
+
+	/**
+	 * Reconstruye un envío a partir del array que devuelve to_array().
+	 *
+	 * @param mixed $data Array leído de la base de datos.
+	 * @return self|null Null si no tiene la forma esperada.
+	 */
+	public static function from_array( mixed $data ): ?self {
+		if ( ! is_array( $data ) || ! is_string( $data['reference'] ?? null ) || ! is_array( $data['entries'] ?? null ) ) {
+			return null;
+		}
+
+		$entries = array();
+
+		foreach ( $data['entries'] as $item ) {
+			$entry = Submission_Entry::from_array( $item );
+
+			if ( null !== $entry ) {
+				$entries[ $entry->field_id ] = $entry;
+			}
+		}
+
+		return new self(
+			(int) ( $data['form_id'] ?? 0 ),
+			$data['reference'],
+			(int) ( $data['created_at'] ?? 0 ),
+			is_string( $data['page_url'] ?? null ) ? $data['page_url'] : '',
+			$entries
+		);
+	}
 }

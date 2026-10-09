@@ -15,6 +15,7 @@ import FormSettingsPanel from './form-settings-panel';
 import NotificationPanel from './notification-panel';
 import Preview from './preview';
 import StoragePanel from './storage-panel';
+import WebhooksPanel from './webhooks-panel';
 
 const TABS = [
 	{ name: 'fields', title: __( 'Fields', 'formulario-mensaje' ) },
@@ -22,6 +23,7 @@ const TABS = [
 		name: 'notification',
 		title: __( 'Notifications', 'formulario-mensaje' ),
 	},
+	{ name: 'webhooks', title: __( 'Webhooks', 'formulario-mensaje' ) },
 	{ name: 'storage', title: __( 'Storage', 'formulario-mensaje' ) },
 	{ name: 'settings', title: __( 'After sending', 'formulario-mensaje' ) },
 ];
@@ -227,6 +229,15 @@ export default function FormEditor( { formId, onClose, onCreated } ) {
 								) }
 								{ tab.name === 'notification' && (
 									<NotificationPanel
+										title={ title }
+										definition={ definition }
+										onChange={ ( actions ) =>
+											change( { actions } )
+										}
+									/>
+								) }
+								{ tab.name === 'webhooks' && (
+									<WebhooksPanel
 										title={ title }
 										definition={ definition }
 										onChange={ ( actions ) =>

@@ -19,6 +19,12 @@ defined( 'ABSPATH' ) || exit;
  *
  * Usa su propia instancia del PHPMailer que trae WordPress, no la de `wp_mail()`: así el resto del
  * correo del sitio sigue como estaba, y otros plugins de correo no cambian este servidor.
+ *
+ * El servidor es el que escribe quien tiene `formulario_mensaje_manage_settings`, y puede ser interno
+ * a propósito: lo habitual en muchos alojamientos es `localhost` o un relé de la red privada, así
+ * que aquí no vale la lista de destinos «seguros» de la HTTP API. Lo que acota el riesgo de usarlo
+ * para sondear la red es que ese permiso solo lo tiene el administrador, que la conexión solo habla
+ * SMTP y que del fallo se devuelve el mensaje de PHPMailer, recortado, nunca lo que envíe el otro extremo.
  */
 final class Smtp_Transport implements Mail_Transport {
 
@@ -26,6 +32,11 @@ final class Smtp_Transport implements Mail_Transport {
 	 * Segundos de espera para conectar y para cada respuesta del servidor.
 	 */
 	private const TIMEOUT = 15;
+
+	/**
+	 * Longitud máxima del mensaje de error que se devuelve y se anota.
+	 */
+	private const MAX_ERROR_LENGTH = 200;
 
 	/**
 	 * Constructor.
@@ -107,8 +118,8 @@ final class Smtp_Transport implements Mail_Transport {
 
 			$mailer->send();
 		} catch ( Mailer_Exception $exception ) {
-			// El mensaje de PHPMailer describe el fallo de conexión o la respuesta del servidor, no el correo.
-			return new WP_Error( 'formulario_mensaje_smtp_failed', wp_strip_all_tags( $exception->getMessage() ) );
+			// El mensaje de PHPMailer describe el fallo (conexión, autenticación, rechazo), no el correo.
+			return new WP_Error( 'formulario_mensaje_smtp_failed', mb_substr( sanitize_text_field( $exception->getMessage() ), 0, self::MAX_ERROR_LENGTH ) );
 		} finally {
 			$mailer->smtpClose();
 		}

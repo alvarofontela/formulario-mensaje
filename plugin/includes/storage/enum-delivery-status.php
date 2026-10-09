@@ -28,4 +28,9 @@ enum Delivery_Status: string {
 	 * La acción falló y alguien decidió no reintentarla.
 	 */
 	case Dismissed = 'dismissed';
+
+	/**
+	 * La acción está en la cola: todavía no se ha ejecutado, o falló y se va a reintentar sola.
+	 */
+	case Pending = 'pending';
 }

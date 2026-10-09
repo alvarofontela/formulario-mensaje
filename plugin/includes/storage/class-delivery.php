@@ -27,6 +27,7 @@ final class Delivery {
 	 * @param string          $error         Motivo del fallo, o cadena vacía.
 	 * @param int             $created_at    Marca de tiempo Unix del primer intento.
 	 * @param int             $updated_at    Marca de tiempo Unix del último intento.
+	 * @param int             $next_attempt_at Marca de tiempo Unix del siguiente intento, si está en la cola; si no, 0.
 	 */
 	public function __construct(
 		public readonly int $id,
@@ -38,7 +39,8 @@ final class Delivery {
 		public readonly int $attempts,
 		public readonly string $error,
 		public readonly int $created_at,
-		public readonly int $updated_at
+		public readonly int $updated_at,
+		public readonly int $next_attempt_at = 0
 	) {}
 
 	/**

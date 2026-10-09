@@ -227,7 +227,7 @@ Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fa
 | 1. Núcleo | Hecha |
 | 2. Envíos y privacidad | Hecha |
 | 3. Correo avanzado | Hecha |
-| 4. Webhooks | Pendiente |
+| 4. Webhooks | Hecha |
 | 5. Captchas | Pendiente |
 | 6. Constructor avanzado | Pendiente |
 | 7. Estilo, bloque y Elementor | Pendiente |
@@ -284,6 +284,33 @@ Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel
 - **Hooks**: el filtro `formulario_mensaje_email_message` recibe ahora un mensaje que puede llevar HTML.
 
 No verificado contra servicios reales: Resend se ha probado con un doble de la HTTP API (petición, cabecera de autorización, errores) y el SMTP contra Mailpit, que no cifra ni pide credenciales. Quedan sin probar STARTTLS, SSL y la autenticación contra un servidor real.
+
+### Fase 4: lo que se decidió al hacerla
+
+- **La cola es el propio registro de entregas**, no una tabla aparte: una entrega en estado «en cola» lleva la fecha de su siguiente intento (esquema versión 2: columnas `next_attempt_at` y `payload`). Así no hay dos sitios que mantener de acuerdo, y el detalle de un envío muestra el webhook desde que entra en la cola.
+- **Cada tipo de acción dice si va en segundo plano** (`Action_Type::is_deferred()`): el correo no, porque si falla y el envío no se guarda el visitante tiene que saberlo; el webhook sí. Una acción de terceros elige.
+- **Primer intento al terminar la petición del visitante**: se programa un evento único de WP-Cron para ya y se lanza WP-Cron al cerrar la petición, sin hacerle esperar. Con `DISABLE_WP_CRON`, lo recoge el cron del sistema. El mantenimiento diario y su botón de los ajustes también procesan la cola, como red de seguridad.
+- **Reintentos**: tras cada fallo se espera 1 minuto, 5 minutos, 30 minutos, 2 horas y 8 horas (seis intentos en total; filtro `formulario_mensaje_retry_delays`). Mientras se reintenta, el webhook no cuenta como fallo. Agotados, pasa a «fallido», aparece en la lista de fallos y se puede reintentar a mano, que lo ejecuta en el momento.
+- **Varios procesos a la vez no duplican un webhook**: cada entrega se reserva con una sola sentencia SQL antes de ejecutarla; si el proceso muere, vuelve a la cola a los cinco minutos. El destino recibe la misma cabecera `X-Formulario-Mensaje-Reference` en todos los intentos de un envío, por si quiere descartar repeticiones.
+- **Formularios que no guardan sus envíos**: la cola lleva su propia copia del envío (sin IP ni navegador) hasta que la entrega termina, bien o mal; entonces se borra. Es lo mínimo para poder reintentar. Agotados los reintentos, ese webhook ya no se puede reintentar a mano.
+- **Un webhook que se desactiva o se borra mientras espera en la cola no se envía**; se usa siempre la configuración actual, así que corregir la dirección arregla los intentos siguientes.
+- **Webhook**: dirección `http(s)`, método POST, PUT o PATCH, cuerpo siempre en JSON. Datos: el envío completo (`form`, `reference`, `date`, `page_url`, `fields` por identificador de campo y `labels`) o solo las claves que se elijan, cada una con un texto con etiquetas (filtro `formulario_mensaje_webhook_payload`). Cabeceras adicionales configurables, salvo las que fija la petición y las del plugin. Espera máxima de 10 segundos (filtro `formulario_mensaje_webhook_timeout`), sin seguir redirecciones. Se da por entregado con cualquier respuesta 2xx.
+- **Firma**: con un secreto, cada petición lleva `X-Formulario-Mensaje-Timestamp` y `X-Formulario-Mensaje-Signature: sha256=<HMAC-SHA256 de «marca de tiempo.cuerpo»>`.
+- **El secreto de firma se guarda cifrado dentro de la definición del formulario**, no en el almacén de secretos: viaja con el formulario al duplicarlo y no hay nada que limpiar al borrarlo. El navegador solo recibe el valor cifrado, que devuelve tal cual al guardar; no admite constante en `wp-config.php`. Las cabeceras adicionales, en cambio, se guardan en claro y las ve quien puede editar el formulario: el constructor lo avisa.
+- **Destinos internos**: la petición va por `wp_safe_remote_request()`, que rechaza `localhost`, las redes privadas y los puertos que no sean 80, 443 u 8080. Para un n8n en la misma máquina o en la red interna hay que permitirlo con los filtros del núcleo `http_request_host_is_external` y `http_allowed_safe_ports`; el plugin no ofrece un ajuste para ello, a propósito.
+- **Prueba de un webhook** desde el constructor: en el momento, con datos de ejemplo y la cabecera `X-Formulario-Mensaje-Test`, sin pasar por la cola; muestra el código y el principio de la respuesta. En el registro de entregas nunca se guarda el cuerpo de la respuesta, solo el código.
+- **Aviso por correo de los fallos**: cuando una notificación no sale o un webhook agota sus reintentos, se avisa al administrador (o a la dirección que se indique en los ajustes) con el número de fallos y el enlace a la pantalla de envíos, sin datos de ningún envío. Como mucho un aviso cada 12 horas (filtro `formulario_mensaje_failure_alert_interval`); se puede desactivar. Se simplificó «fallan repetidamente»: avisa el primer fallo y agrupa los siguientes. Si falla el transporte del plugin, el aviso sale por el correo de WordPress.
+- **Purga del registro de entregas**: las entregas terminadas se borran a los 30 días (ajuste, de 1 a 365), también las fallidas que nadie revisó; las que están en la cola no. Sustituye a la purga fija de la fase 2.
+- **Reorganizado**: la lógica común de «ejecutar la acción de una entrega con su configuración actual» pasó a `Delivery_Executor`, que comparten el reintento manual y la cola; las rutas de prueba (`/forms/test-email`, `/forms/test-webhook`) tienen su propio controlador; y el constructor edita notificaciones y webhooks con el mismo componente de lista.
+- **Hooks nuevos**: acción `formulario_mensaje_delivery_failed` (una entrega que ya no se reintenta sola) y `formulario_mensaje_process_queue`; filtros `formulario_mensaje_retry_delays`, `formulario_mensaje_webhook_payload`, `formulario_mensaje_webhook_timeout` y `formulario_mensaje_failure_alert_interval`.
+
+No verificado contra servicios reales: los webhooks se han probado con dobles de la HTTP API y, en el navegador, contra un receptor montado en el propio WordPress local, por WP-Cron real. No se ha probado contra n8n ni contra un CRM.
+
+Cambios sobre la fase 3, a raíz de la revisión de seguridad de su commit:
+
+- **La contraseña de SMTP va ligada a su servidor**: si se cambia el servidor sin escribir la contraseña del nuevo, la guardada se descarta y la pantalla lo avisa. Antes, apuntar los ajustes a otro servidor le habría entregado una contraseña que nadie puede leer. Una contraseña definida como constante no se puede descartar: quien la pone en `wp-config.php` decide a quién da el permiso de cambiar los ajustes.
+- **Las pruebas de correo tienen un límite por usuario** (10 cada 10 minutos, común a las dos pruebas): no dejan rastro en el registro, así que sin límite servirían para enviar correo en cantidad.
+- **El servidor SMTP puede ser interno a propósito** (`localhost`, un relé de la red privada), así que no se le aplica la lista de destinos seguros de la HTTP API. Se justifica en el código: solo lo configura quien gestiona los ajustes, la conexión solo habla SMTP y del fallo se devuelve el mensaje de PHPMailer recortado.
 
 Cambios sobre la fase 2, a raíz de la revisión de seguridad de su commit:
 

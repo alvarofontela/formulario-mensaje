@@ -7,9 +7,11 @@
 
 namespace Formulario_Mensaje\Lifecycle;
 
+use Formulario_Mensaje\Alerts\Failure_Alert;
 use Formulario_Mensaje\Database\Schema;
 use Formulario_Mensaje\Forms\Form_Post_Type;
 use Formulario_Mensaje\Mail\Option_Mail_Settings_Repository;
+use Formulario_Mensaje\Queue\Queue_Schedule;
 use Formulario_Mensaje\Secrets\Secret_Vault;
 use Formulario_Mensaje\Settings\Option_Settings_Repository;
 use Formulario_Mensaje\Storage\Failure_Counter;
@@ -37,11 +39,13 @@ final class Uninstaller {
 	 * @param Capabilities         $capabilities Capabilities del plugin.
 	 * @param Schema               $schema       Esquema de las tablas del plugin.
 	 * @param Maintenance_Schedule $maintenance  Programación del mantenimiento diario.
+	 * @param Queue_Schedule       $queue        Programación de la cola.
 	 */
 	public function __construct(
 		private readonly Capabilities $capabilities,
 		private readonly Schema $schema,
-		private readonly Maintenance_Schedule $maintenance
+		private readonly Maintenance_Schedule $maintenance,
+		private readonly Queue_Schedule $queue
 	) {}
 
 	/**
@@ -50,7 +54,9 @@ final class Uninstaller {
 	public function uninstall(): void {
 		$this->capabilities->remove_from_all_roles();
 		$this->maintenance->clear();
+		$this->queue->clear();
 		delete_option( Secret_Vault::OPTION );
+		delete_option( Failure_Alert::OPTION );
 
 		$settings = get_option( Option_Settings_Repository::OPTION, array() );
 

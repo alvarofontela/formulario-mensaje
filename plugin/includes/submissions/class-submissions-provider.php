@@ -11,6 +11,7 @@ use Formulario_Mensaje\Actions\Action_Runner;
 use Formulario_Mensaje\Antispam\Client_Ip_Resolver;
 use Formulario_Mensaje\Antispam\Spam_Guard;
 use Formulario_Mensaje\Container;
+use Formulario_Mensaje\Queue\Queue_Dispatcher;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Service_Provider;
@@ -85,6 +86,7 @@ final class Submissions_Provider implements Service_Provider {
 				$c->get( Submission_Validator::class ),
 				$c->get( Submission_Journal::class ),
 				$c->get( Action_Runner::class ),
+				$c->get( Queue_Dispatcher::class ),
 				$c->get( Confirmation_Builder::class ),
 				$c->get( Reference_Generator::class ),
 				$c->get( Clock::class )

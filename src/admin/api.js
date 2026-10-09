@@ -77,3 +77,5 @@ export const sendMailTest = ( to ) =>
 	request( '/settings/mail/test', 'POST', { to } );
 export const sendTestEmail = ( data ) =>
 	request( '/forms/test-email', 'POST', data );
+export const sendTestWebhook = ( data ) =>
+	request( '/forms/test-webhook', 'POST', data );

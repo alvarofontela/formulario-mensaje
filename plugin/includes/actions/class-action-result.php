@@ -21,11 +21,13 @@ final class Action_Result {
 	 * @param string $type      Tipo de la acción.
 	 * @param bool   $success   Si la acción se completó.
 	 * @param string $error     Motivo del fallo, para diagnóstico; nunca contiene datos del envío.
+	 * @param bool   $deferred  Si la acción no se ha ejecutado todavía porque va por la cola.
 	 */
 	public function __construct(
 		public readonly string $action_id,
 		public readonly string $type,
 		public readonly bool $success,
-		public readonly string $error = ''
+		public readonly string $error = '',
+		public readonly bool $deferred = false
 	) {}
 }

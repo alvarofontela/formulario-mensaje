@@ -22,7 +22,7 @@ final class Schema {
 	/**
 	 * Versión del esquema que crea este código.
 	 */
-	public const VERSION = 1;
+	public const VERSION = 2;
 
 	/**
 	 * Opción que guarda la versión del esquema instalado.
@@ -99,6 +99,11 @@ final class Schema {
 			) {$collate};"
 		);
 
+		/*
+		 * El registro de entregas hace también de cola: una entrega pendiente lleva la fecha de su
+		 * siguiente intento y, si el formulario no guarda sus envíos, una copia del envío en `payload`
+		 * que se borra en cuanto la entrega termina.
+		 */
 		dbDelta(
 			"CREATE TABLE {$deliveries} (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -111,10 +116,13 @@ final class Schema {
 				error text NOT NULL,
 				created_at datetime NOT NULL,
 				updated_at datetime NOT NULL,
+				next_attempt_at datetime DEFAULT NULL,
+				payload longtext,
 				PRIMARY KEY  (id),
 				KEY submission_id (submission_id),
 				KEY status (status),
-				KEY form_id (form_id)
+				KEY form_id (form_id),
+				KEY queue (status,next_attempt_at)
 			) {$collate};"
 		);
 

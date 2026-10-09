@@ -37,7 +37,7 @@ final class Action_Runner {
 	 *
 	 * @param Form       $form       Formulario.
 	 * @param Submission $submission Envío ya validado.
-	 * @return Action_Result[] Un resultado por acción ejecutada.
+	 * @return Action_Result[] Un resultado por acción que le toca al envío, ejecutada o aplazada.
 	 */
 	public function run( Form $form, Submission $submission ): array {
 		$results = array();
@@ -57,6 +57,12 @@ final class Action_Runner {
 
 			// Tampoco la que tiene una condición que este envío no cumple: no es un fallo, no le toca.
 			if ( ! $this->rules->passes( $action['condition'] ?? array(), $values ) ) {
+				continue;
+			}
+
+			// Las acciones en segundo plano no se ejecutan aquí: se devuelven anotadas para que entren en la cola.
+			if ( $type->is_deferred() ) {
+				$results[] = new Action_Result( $action['id'], $action['type'], false, '', true );
 				continue;
 			}
 

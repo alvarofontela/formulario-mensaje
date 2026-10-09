@@ -10,6 +10,7 @@ use Formulario_Mensaje\Forms\Post_Form_Repository;
 use Formulario_Mensaje\Lifecycle\Capabilities;
 use Formulario_Mensaje\Lifecycle\Maintenance_Schedule;
 use Formulario_Mensaje\Lifecycle\Uninstaller;
+use Formulario_Mensaje\Queue\Queue_Schedule;
 use Formulario_Mensaje\Settings\Option_Settings_Repository;
 use Formulario_Mensaje\Storage\Csv_Exporter;
 use Formulario_Mensaje\Storage\Failure_Counter;
@@ -339,7 +340,7 @@ class AlmacenTest extends Caso_Formulario {
 		$eterno   = $this->guardar( $sin_retencion, $ahora - 400 * DAY_IN_SECONDS );
 
 		$reloj     = new Reloj_Falso( $ahora );
-		$retencion = new Retention_Service( new Post_Form_Repository(), $this->servicio( $reloj ), $this->entregas, $this->contador(), $reloj );
+		$retencion = new Retention_Service( new Post_Form_Repository(), $this->servicio( $reloj ), $this->envios, $this->entregas, $this->contador(), new Ajustes_En_Memoria(), $reloj );
 
 		$this->assertSame( 1, $retencion->purge() );
 		$this->assertNull( $this->envios->find( $antiguo ) );
@@ -465,7 +466,7 @@ class AlmacenTest extends Caso_Formulario {
 		$formulario   = $this->crear_formulario();
 		$capabilities = new Capabilities();
 		$capabilities->grant_to_administrator();
-		$desinstalar  = new Uninstaller( $capabilities, $this->esquema(), new Maintenance_Schedule() );
+		$desinstalar  = new Uninstaller( $capabilities, $this->esquema(), new Maintenance_Schedule(), new Queue_Schedule( new Reloj_Falso() ) );
 
 		update_option( Option_Settings_Repository::OPTION, array( 'delete_data_on_uninstall' => false ) );
 		$desinstalar->uninstall();

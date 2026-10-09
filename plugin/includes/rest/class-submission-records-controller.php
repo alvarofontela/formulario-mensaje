@@ -340,6 +340,7 @@ final class Submission_Records_Controller {
 			'error'         => $delivery->error,
 			'created_at'    => gmdate( 'Y-m-d\TH:i:s\Z', $delivery->created_at ),
 			'updated_at'    => gmdate( 'Y-m-d\TH:i:s\Z', $delivery->updated_at ),
+			'next_attempt'  => $delivery->next_attempt_at > 0 ? gmdate( 'Y-m-d\TH:i:s\Z', $delivery->next_attempt_at ) : null,
 			'can_retry'     => $delivery->can_retry(),
 		);
 	}

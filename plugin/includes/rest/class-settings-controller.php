@@ -83,6 +83,21 @@ final class Settings_Controller {
 							'type'        => 'boolean',
 							'default'     => false,
 						),
+						'failure_alerts'           => array(
+							'description' => __( 'Send an email when the actions of a form fail.', 'formulario-mensaje' ),
+							'type'        => 'boolean',
+							'default'     => true,
+						),
+						'failure_alert_email'      => array(
+							'description' => __( 'Address that receives those emails. Empty to use the one of the site administrator.', 'formulario-mensaje' ),
+							'type'        => 'string',
+							'default'     => '',
+						),
+						'delivery_log_days'        => array(
+							'description' => __( 'Days the delivery log is kept.', 'formulario-mensaje' ),
+							'type'        => 'integer',
+							'default'     => Settings::DEFAULT_DELIVERY_LOG_DAYS,
+						),
 					),
 				),
 			)
@@ -126,6 +141,9 @@ final class Settings_Controller {
 				'allowed_redirect_hosts'   => $request['allowed_redirect_hosts'],
 				'accept_no_js'             => $request['accept_no_js'],
 				'delete_data_on_uninstall' => $request['delete_data_on_uninstall'],
+				'failure_alerts'           => $request['failure_alerts'],
+				'failure_alert_email'      => $request['failure_alert_email'],
+				'delivery_log_days'        => $request['delivery_log_days'],
 			)
 		);
 

@@ -65,6 +65,13 @@ final class Email_Action implements Action_Type {
 	}
 
 	/**
+	 * El correo se envía mientras el visitante espera: si falla y el envío no se guarda, tiene que saberlo.
+	 */
+	public function is_deferred(): bool {
+		return false;
+	}
+
+	/**
 	 * Ajustes iniciales de una notificación nueva.
 	 *
 	 * @return array<string, mixed>

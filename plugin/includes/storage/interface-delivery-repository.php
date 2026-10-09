@@ -72,10 +72,11 @@ interface Delivery_Repository {
 	public function delete_for_submissions( array $submission_ids ): void;
 
 	/**
-	 * Borra las entregas sin envío guardado anteriores a una fecha.
+	 * Borra las entregas terminadas (completadas, fallidas o descartadas) cuyo último cambio es
+	 * anterior a una fecha. Las que están en la cola no se tocan.
 	 *
 	 * @param string $before_gmt Fecha límite en GMT (formato MySQL).
 	 * @return int Entregas borradas.
 	 */
-	public function delete_orphans_before( string $before_gmt ): int;
+	public function delete_finished_before( string $before_gmt ): int;
 }

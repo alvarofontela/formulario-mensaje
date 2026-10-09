@@ -163,7 +163,7 @@ test('los correos se envían por el servidor SMTP configurado y la contraseña n
   await expect(page.getByLabel('Un servidor SMTP')).toBeChecked();
   await expect(page.getByLabel('Usuario', { exact: true })).toHaveValue('usuario-e2e');
   await expect(page.getByLabel('Contraseña', { exact: true })).toHaveValue('');
-  await expect(page.getByLabel('Contraseña', { exact: true })).toHaveAttribute('placeholder', /Guardada/);
+  await expect(page.getByLabel('Contraseña', { exact: true })).toHaveAttribute('placeholder', /valor guardado/);
   expect(await page.content()).not.toContain(password);
 
   await page.getByRole('button', { name: 'Enviar prueba' }).click();

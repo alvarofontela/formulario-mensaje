@@ -19,5 +19,6 @@ global $wpdb;
 ( new Formulario_Mensaje\Lifecycle\Uninstaller(
 	new Formulario_Mensaje\Lifecycle\Capabilities(),
 	new Formulario_Mensaje\Database\Schema( $wpdb ),
-	new Formulario_Mensaje\Lifecycle\Maintenance_Schedule()
+	new Formulario_Mensaje\Lifecycle\Maintenance_Schedule(),
+	new Formulario_Mensaje\Queue\Queue_Schedule( new Formulario_Mensaje\Support\System_Clock() )
 ) )->uninstall();

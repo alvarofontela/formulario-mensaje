@@ -9,6 +9,7 @@ namespace Formulario_Mensaje\Mail;
 
 use Formulario_Mensaje\Actions\Action_Type_Registry;
 use Formulario_Mensaje\Actions\Actions_Provider;
+use Formulario_Mensaje\Antispam\Rate_Limiter;
 use Formulario_Mensaje\Container;
 use Formulario_Mensaje\Secrets\Secret_Vault;
 use Formulario_Mensaje\Service_Provider;
@@ -40,13 +41,26 @@ final class Mail_Provider implements Service_Provider {
 			static fn ( Container $c ): Mail_Settings_Repository => new Option_Mail_Settings_Repository( $c->get( Mail_Settings_Sanitizer::class ) )
 		);
 
+		$container->set(
+			Mail_Settings_Service::class,
+			static fn ( Container $c ): Mail_Settings_Service => new Mail_Settings_Service(
+				$c->get( Mail_Settings_Repository::class ),
+				$c->get( Secret_Vault::class )
+			)
+		);
+
+		$container->set(
+			Wp_Mail_Transport::class,
+			static fn ( Container $c ): Wp_Mail_Transport => new Wp_Mail_Transport( $c->get( Mail_Settings_Repository::class ) )
+		);
+
 		// Añadir un transporte es añadir una clase y una línea aquí: quien envía correo no cambia.
 		$container->set(
 			Mail_Transport::class,
 			static fn ( Container $c ): Mail_Transport => new Selected_Transport(
 				$c->get( Mail_Settings_Repository::class ),
 				array(
-					Mail_Settings::TRANSPORT_WP_MAIL => new Wp_Mail_Transport( $c->get( Mail_Settings_Repository::class ) ),
+					Mail_Settings::TRANSPORT_WP_MAIL => $c->get( Wp_Mail_Transport::class ),
 					Mail_Settings::TRANSPORT_SMTP    => new Smtp_Transport( $c->get( Mail_Settings_Repository::class ), $c->get( Secret_Vault::class ) ),
 					Mail_Settings::TRANSPORT_RESEND  => new Resend_Transport( $c->get( Mail_Settings_Repository::class ), $c->get( Secret_Vault::class ) ),
 				)
@@ -73,7 +87,8 @@ final class Mail_Provider implements Service_Provider {
 				$c->get( Mail_Transport::class ),
 				$c->get( Email_Template::class ),
 				$c->get( Email_Action::class ),
-				$c->get( Sample_Submission_Factory::class )
+				$c->get( Sample_Submission_Factory::class ),
+				$c->get( Rate_Limiter::class )
 			)
 		);
 

@@ -12,6 +12,7 @@ use Formulario_Mensaje\Actions\Action_Runner;
 use Formulario_Mensaje\Antispam\Spam_Guard;
 use Formulario_Mensaje\Forms\Form;
 use Formulario_Mensaje\Forms\Form_Repository;
+use Formulario_Mensaje\Queue\Queue_Dispatcher;
 use Formulario_Mensaje\Storage\Submission_Journal;
 use Formulario_Mensaje\Support\Clock;
 use WP_Error;
@@ -34,6 +35,7 @@ final class Submission_Handler {
 	 * @param Submission_Validator $validator    Validación de los datos.
 	 * @param Submission_Journal   $journal      Guardado del envío y registro de sus acciones.
 	 * @param Action_Runner        $actions      Ejecución de las acciones.
+	 * @param Queue_Dispatcher     $queue        Entrada de las acciones en segundo plano en la cola.
 	 * @param Confirmation_Builder $confirmation Confirmación para el visitante.
 	 * @param Reference_Generator  $references   Números de referencia.
 	 * @param Clock                $clock        Reloj.
@@ -44,6 +46,7 @@ final class Submission_Handler {
 		private readonly Submission_Validator $validator,
 		private readonly Submission_Journal $journal,
 		private readonly Action_Runner $actions,
+		private readonly Queue_Dispatcher $queue,
 		private readonly Confirmation_Builder $confirmation,
 		private readonly Reference_Generator $references,
 		private readonly Clock $clock
@@ -116,7 +119,10 @@ final class Submission_Handler {
 
 		$this->journal->record_results( $form, $stored_id, $results );
 
-		if ( 0 === $stored_id && $this->nothing_succeeded( $form, $results ) ) {
+		// Las acciones en segundo plano quedan en la cola, que tiene su propia copia del envío si no se guarda.
+		$queued = $this->queue->dispatch( $form, $submission, $stored_id, $results );
+
+		if ( 0 === $stored_id && 0 === $queued && $this->nothing_succeeded( $form, $results ) ) {
 			$this->spam_guard->release( $request, $form );
 
 			return new WP_Error(

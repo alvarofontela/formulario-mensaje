@@ -11,6 +11,7 @@ use Formulario_Mensaje\Lifecycle\Capabilities;
 use Formulario_Mensaje\Mail\Mail_Settings;
 use Formulario_Mensaje\Mail\Mail_Settings_Repository;
 use Formulario_Mensaje\Mail\Mail_Settings_Sanitizer;
+use Formulario_Mensaje\Mail\Mail_Settings_Service;
 use Formulario_Mensaje\Mail\Mail_Tester;
 use Formulario_Mensaje\Secrets\Secret_Vault;
 use WP_Error;
@@ -29,21 +30,18 @@ defined( 'ABSPATH' ) || exit;
 final class Mail_Settings_Controller {
 
 	/**
-	 * Secretos que gestiona esta pantalla.
-	 */
-	private const SECRETS = array( Mail_Settings::SECRET_SMTP_PASSWORD, Mail_Settings::SECRET_RESEND_API_KEY );
-
-	/**
 	 * Constructor.
 	 *
 	 * @param Mail_Settings_Repository $settings  Almacén de ajustes de correo.
 	 * @param Mail_Settings_Sanitizer  $sanitizer Saneado de ajustes de correo.
-	 * @param Secret_Vault             $secrets   Almacén de secretos.
+	 * @param Mail_Settings_Service    $service   Guardado de los ajustes y sus credenciales.
+	 * @param Secret_Vault             $secrets   Almacén de secretos, para decir de dónde sale cada uno.
 	 * @param Mail_Tester              $tester    Correos de prueba.
 	 */
 	public function __construct(
 		private readonly Mail_Settings_Repository $settings,
 		private readonly Mail_Settings_Sanitizer $sanitizer,
+		private readonly Mail_Settings_Service $service,
 		private readonly Secret_Vault $secrets,
 		private readonly Mail_Tester $tester
 	) {}
@@ -81,7 +79,7 @@ final class Mail_Settings_Controller {
 							'type'        => 'array',
 							'items'       => array(
 								'type' => 'string',
-								'enum' => self::SECRETS,
+								'enum' => Mail_Settings_Service::SECRETS,
 							),
 							'default'     => array(),
 						),
@@ -139,23 +137,14 @@ final class Mail_Settings_Controller {
 	 * @param WP_REST_Request $request Petición.
 	 */
 	public function update_settings( WP_REST_Request $request ): WP_REST_Response {
-		$settings = $this->sanitizer->sanitize( $request['settings'] );
-		$secrets  = is_array( $request['secrets'] ) ? $request['secrets'] : array();
+		$settings  = $this->sanitizer->sanitize( $request['settings'] );
+		$discarded = $this->service->update(
+			$settings,
+			is_array( $request['secrets'] ) ? $request['secrets'] : array(),
+			array_filter( (array) $request['clear'], 'is_string' )
+		);
 
-		$this->settings->save( $settings );
-
-		foreach ( self::SECRETS as $name ) {
-			$value = is_string( $secrets[ $name ] ?? null ) ? $secrets[ $name ] : '';
-
-			// Un valor vacío significa «no lo he tocado»: el campo nunca muestra el secreto guardado.
-			if ( '' !== $value ) {
-				$this->secrets->set( $name, $value );
-			} elseif ( in_array( $name, (array) $request['clear'], true ) ) {
-				$this->secrets->set( $name, '' );
-			}
-		}
-
-		return $this->respond( $settings );
+		return $this->respond( $settings, $discarded );
 	}
 
 	/**
@@ -165,11 +154,13 @@ final class Mail_Settings_Controller {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function send_test( WP_REST_Request $request ): WP_REST_Response|WP_Error {
-		$result = $this->tester->send_transport_test( sanitize_email( (string) $request['to'] ) );
+		$result = $this->tester->send_transport_test( sanitize_email( (string) $request['to'] ), get_current_user_id() );
 
 		if ( is_wp_error( $result ) ) {
+			$data = $result->get_error_data();
+
 			// El mensaje del transporte es justo lo que hace falta para corregir la configuración.
-			return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => 502 ) );
+			return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => is_array( $data ) && isset( $data['status'] ) ? (int) $data['status'] : 502 ) );
 		}
 
 		return new WP_REST_Response( array( 'sent' => true ) );
@@ -178,12 +169,13 @@ final class Mail_Settings_Controller {
 	/**
 	 * Respuesta con los ajustes y el estado de cada credencial, sin su valor.
 	 *
-	 * @param Mail_Settings $settings Ajustes de correo.
+	 * @param Mail_Settings $settings  Ajustes de correo.
+	 * @param string[]      $discarded Credenciales descartadas al guardar sin que nadie lo pidiera.
 	 */
-	private function respond( Mail_Settings $settings ): WP_REST_Response {
+	private function respond( Mail_Settings $settings, array $discarded = array() ): WP_REST_Response {
 		$secrets = array();
 
-		foreach ( self::SECRETS as $name ) {
+		foreach ( Mail_Settings_Service::SECRETS as $name ) {
 			$secrets[ $name ] = array(
 				'source'   => $this->secrets->source( $name ),
 				'constant' => $this->secrets->constant_name( $name ),
@@ -192,8 +184,9 @@ final class Mail_Settings_Controller {
 
 		return new WP_REST_Response(
 			array(
-				'settings' => $settings->to_array(),
-				'secrets'  => $secrets,
+				'settings'  => $settings->to_array(),
+				'secrets'   => $secrets,
+				'discarded' => $discarded,
 			)
 		);
 	}

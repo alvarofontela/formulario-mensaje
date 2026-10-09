@@ -19,12 +19,6 @@ final class Option_Settings_Repository implements Settings_Repository {
 	 */
 	public const OPTION = 'formulario_mensaje_settings';
 
-	/**
-	 * Ajustes ya leídos en esta petición.
-	 *
-	 * @var Settings|null
-	 */
-	private ?Settings $settings = null;
 
 	/**
 	 * Constructor.
@@ -37,12 +31,9 @@ final class Option_Settings_Repository implements Settings_Repository {
 	 * Ajustes actuales; los valores por defecto si no se ha guardado ninguno.
 	 */
 	public function get(): Settings {
-		if ( null === $this->settings ) {
-			// Lo guardado se vuelve a sanear: la opción puede haberse editado por otra vía.
-			$this->settings = $this->sanitizer->sanitize( get_option( self::OPTION, array() ) );
-		}
-
-		return $this->settings;
+		// Lo guardado se vuelve a sanear: la opción puede haberse editado por otra vía. No se memoriza
+		// aquí: WordPress ya guarda la opción en su caché, y así un proceso largo no ve ajustes viejos.
+		return $this->sanitizer->sanitize( get_option( self::OPTION, array() ) );
 	}
 
 	/**
@@ -53,7 +44,5 @@ final class Option_Settings_Repository implements Settings_Repository {
 	public function save( Settings $settings ): void {
 		// Sin carga automática: solo hacen falta al recibir un envío o en la administración.
 		update_option( self::OPTION, $settings->to_array(), false );
-
-		$this->settings = $settings;
 	}
 }

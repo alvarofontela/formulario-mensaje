@@ -13,13 +13,14 @@ use Formulario_Mensaje\Database\Schema;
 use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Lifecycle\Maintenance_Schedule;
 use Formulario_Mensaje\Service_Provider;
+use Formulario_Mensaje\Settings\Settings_Repository;
 use Formulario_Mensaje\Support\Clock;
 use wpdb;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Declara el guardado de envíos, el registro de entregas, el reintento, la exportación y la retención.
+ * Declara los envíos guardados, el registro de entregas, la exportación y la retención.
  */
 final class Storage_Provider implements Service_Provider {
 
@@ -68,12 +69,16 @@ final class Storage_Provider implements Service_Provider {
 		);
 
 		$container->set(
+			Delivery_Executor::class,
+			static fn ( Container $c ): Delivery_Executor => new Delivery_Executor( $c->get( Form_Repository::class ), $c->get( Action_Type_Registry::class ) )
+		);
+
+		$container->set(
 			Action_Retrier::class,
 			static fn ( Container $c ): Action_Retrier => new Action_Retrier(
 				$c->get( Delivery_Repository::class ),
 				$c->get( Submission_Repository::class ),
-				$c->get( Form_Repository::class ),
-				$c->get( Action_Type_Registry::class ),
+				$c->get( Delivery_Executor::class ),
 				$c->get( Failure_Counter::class ),
 				$c->get( Clock::class )
 			)
@@ -89,8 +94,10 @@ final class Storage_Provider implements Service_Provider {
 			static fn ( Container $c ): Retention_Service => new Retention_Service(
 				$c->get( Form_Repository::class ),
 				$c->get( Submission_Service::class ),
+				$c->get( Submission_Repository::class ),
 				$c->get( Delivery_Repository::class ),
 				$c->get( Failure_Counter::class ),
+				$c->get( Settings_Repository::class ),
 				$c->get( Clock::class )
 			)
 		);

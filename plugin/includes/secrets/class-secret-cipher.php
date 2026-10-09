@@ -42,10 +42,19 @@ final class Secret_Cipher {
 	}
 
 	/**
+	 * Indica si un valor tiene la forma de los que devuelve encrypt(). No comprueba que se pueda descifrar.
+	 *
+	 * @param string $value Valor a comprobar.
+	 */
+	public function is_encrypted( string $value ): bool {
+		return str_starts_with( $value, self::PREFIX );
+	}
+
+	/**
 	 * Descifra un valor cifrado con encrypt().
 	 *
 	 * @param string $encrypted Valor cifrado.
-	 * @return string|null Texto en claro, o null si el valor no es válido, se ha manipulado o se cifró con otras salts.
+	 * @return string|null El secreto, o null si el valor no es de esta instalación o se ha manipulado.
 	 */
 	public function decrypt( string $encrypted ): ?string {
 		if ( ! str_starts_with( $encrypted, self::PREFIX ) ) {

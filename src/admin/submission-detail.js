@@ -10,10 +10,13 @@ import {
 	retryDelivery,
 } from './api';
 
+const BADGES = { success: 'ok', pending: 'wait' };
+
 const STATUS_LABELS = {
 	success: __( 'Delivered', 'formulario-mensaje' ),
 	failed: __( 'Failed', 'formulario-mensaje' ),
 	dismissed: __( 'Failed (dismissed)', 'formulario-mensaje' ),
+	pending: __( 'In the queue', 'formulario-mensaje' ),
 };
 
 /**
@@ -241,9 +244,8 @@ export default function SubmissionDetail( { submissionId, onClose } ) {
 										</strong>{ ' ' }
 										<span
 											className={ `fm-badge fm-badge--${
-												delivery.status === 'success'
-													? 'ok'
-													: 'error'
+												BADGES[ delivery.status ] ||
+												'error'
 											}` }
 										>
 											{ STATUS_LABELS[
@@ -270,6 +272,22 @@ export default function SubmissionDetail( { submissionId, onClose } ) {
 											)
 										) }
 									</p>
+									{ delivery.status === 'pending' &&
+										delivery.next_attempt && (
+											<p className="fm-admin__muted">
+												{ sprintf(
+													/* translators: %s: date and time. */
+													__(
+														'Next attempt: %s',
+														'formulario-mensaje'
+													),
+													dateI18n(
+														dateFormat,
+														delivery.next_attempt
+													)
+												) }
+											</p>
+										) }
 									{ delivery.status === 'failed' && (
 										<div className="fm-detail__delivery-actions">
 											{ delivery.can_retry && (

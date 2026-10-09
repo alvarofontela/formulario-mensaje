@@ -43,7 +43,11 @@ final class Settings_Sanitizer {
 			$this->sanitize_list( $raw['allowed_redirect_hosts'] ?? array(), array( $this, 'normalize_host' ) ),
 			// Activado salvo que se haya desactivado expresamente: es el comportamiento acordado.
 			! array_key_exists( 'accept_no_js', $raw ) || ! empty( $raw['accept_no_js'] ),
-			! empty( $raw['delete_data_on_uninstall'] )
+			! empty( $raw['delete_data_on_uninstall'] ),
+			! array_key_exists( 'failure_alerts', $raw ) || ! empty( $raw['failure_alerts'] ),
+			is_string( $raw['failure_alert_email'] ?? null ) && false !== is_email( $raw['failure_alert_email'] ) ? sanitize_email( $raw['failure_alert_email'] ) : '',
+			// Al menos un día: con cero, el mantenimiento borraría el registro entero cada vez.
+			is_numeric( $raw['delivery_log_days'] ?? null ) ? max( 1, min( 365, (int) $raw['delivery_log_days'] ) ) : Settings::DEFAULT_DELIVERY_LOG_DAYS
 		);
 	}
 

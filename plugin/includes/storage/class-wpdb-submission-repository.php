@@ -64,7 +64,7 @@ final class Wpdb_Submission_Repository implements Submission_Repository {
 				'page_url'       => $submission->page_url,
 				'ip'             => $submission->ip,
 				'user_agent'     => $submission->user_agent,
-				'entries'        => (string) wp_json_encode( array_map( array( $this, 'entry_to_array' ), array_values( $submission->entries ) ) ),
+				'entries'        => (string) wp_json_encode( array_map( static fn ( Submission_Entry $entry ): array => $entry->to_array(), array_values( $submission->entries ) ) ),
 				'search_text'    => $submission->search_text(),
 				'failed_actions' => $submission->failed_actions,
 			),
@@ -235,19 +235,12 @@ final class Wpdb_Submission_Repository implements Submission_Repository {
 		$decoded = json_decode( (string) $row['entries'], true );
 		$entries = array();
 
-		foreach ( is_array( $decoded ) ? $decoded : array() as $entry ) {
-			if ( ! is_array( $entry ) || ! is_string( $entry['field_id'] ?? null ) ) {
-				continue;
-			}
+		foreach ( is_array( $decoded ) ? $decoded : array() as $item ) {
+			$entry = Submission_Entry::from_array( $item );
 
-			$value     = $entry['value'] ?? '';
-			$entries[] = new Submission_Entry(
-				$entry['field_id'],
-				is_string( $entry['type'] ?? null ) ? $entry['type'] : '',
-				is_string( $entry['label'] ?? null ) ? $entry['label'] : '',
-				is_array( $value ) ? array_map( 'strval', $value ) : (string) $value,
-				is_string( $entry['formatted'] ?? null ) ? $entry['formatted'] : ''
-			);
+			if ( null !== $entry ) {
+				$entries[] = $entry;
+			}
 		}
 
 		return new Stored_Submission(
@@ -264,18 +257,18 @@ final class Wpdb_Submission_Repository implements Submission_Repository {
 	}
 
 	/**
-	 * Convierte un dato del envío en un array para guardarlo como JSON.
-	 *
-	 * @param Submission_Entry $entry Dato del envío.
-	 * @return array<string, mixed>
+	 * Recalcula las entregas fallidas pendientes de los envíos que tenían alguna.
 	 */
-	private function entry_to_array( Submission_Entry $entry ): array {
-		return array(
-			'field_id'  => $entry->field_id,
-			'type'      => $entry->type,
-			'label'     => $entry->label,
-			'value'     => $entry->value,
-			'formatted' => $entry->formatted,
+	public function recount_failed_actions(): void {
+		$wpdb = $this->wpdb;
+
+		$wpdb->query(
+			$wpdb->prepare(
+				'UPDATE %i AS s SET s.failed_actions = ( SELECT COUNT(*) FROM %i AS d WHERE d.submission_id = s.id AND d.status = %s ) WHERE s.failed_actions > 0',
+				$this->schema->submissions_table(),
+				$this->schema->deliveries_table(),
+				'failed'
+			)
 		);
 	}
 }

@@ -243,6 +243,43 @@ class CorreoTest extends Caso_Formulario {
 		$this->assertSame( 'none', $borrado['secrets']['smtp_password']['source'] );
 	}
 
+	public function test_al_cambiar_de_servidor_smtp_la_contrasena_guardada_se_descarta() {
+		$this->como_administrador();
+
+		$ajustes = array( 'transport' => 'smtp', 'smtp_host' => 'smtp.example.org' );
+		$almacen = new Secret_Vault( new Secret_Cipher() );
+
+		$this->rest( 'PUT', '/settings/mail', array( 'settings' => $ajustes, 'secrets' => array( 'smtp_password' => 'secreta' ) ) );
+
+		// Guardar otra cosa sin tocar el servidor la conserva, aunque cambien las mayúsculas.
+		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'SMTP.Example.org', 'smtp_port' => 465 ) + $ajustes ) )->get_data();
+		$this->assertSame( array(), $respuesta['discarded'] );
+		$this->assertSame( 'secreta', $almacen->get( 'smtp_password' ) );
+
+		// Apuntar a otro servidor sin escribir su contraseña no le entrega la del anterior.
+		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'smtp.atacante.example' ) + $ajustes ) )->get_data();
+		$this->assertSame( array( 'smtp_password' ), $respuesta['discarded'] );
+		$this->assertSame( 'none', $respuesta['secrets']['smtp_password']['source'] );
+		$this->assertSame( '', $almacen->get( 'smtp_password' ) );
+
+		// Con la contraseña del servidor nuevo en la misma petición, se guarda esa.
+		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'smtp.nuevo.example' ) + $ajustes, 'secrets' => array( 'smtp_password' => 'otra' ) ) )->get_data();
+		$this->assertSame( array(), $respuesta['discarded'] );
+		$this->assertSame( 'otra', $almacen->get( 'smtp_password' ) );
+	}
+
+	public function test_las_pruebas_de_correo_tienen_un_limite_por_usuario() {
+		$this->como_administrador();
+
+		for ( $i = 0; $i < 10; $i++ ) {
+			$this->assertSame( 200, $this->rest( 'POST', '/settings/mail/test', array( 'to' => 'yo@example.org' ) )->get_status() );
+		}
+
+		$this->assertSame( 429, $this->rest( 'POST', '/settings/mail/test', array( 'to' => 'yo@example.org' ) )->get_status() );
+		$this->assertSame( 429, $this->rest( 'POST', '/forms/test-email', array( 'definition' => $this->definicion(), 'action_id' => 'aviso', 'to' => 'yo@example.org' ) )->get_status(), 'El límite es común a las dos pruebas.' );
+		$this->assertCount( 10, tests_retrieve_phpmailer_instance()->mock_sent );
+	}
+
 	public function test_los_ajustes_de_correo_se_sanean() {
 		$saneador = new Mail_Settings_Sanitizer( array( 'wp_mail', 'smtp', 'resend' ) );
 		$ajustes  = $saneador->sanitize(

@@ -85,27 +85,26 @@ final class Submission_Journal {
 	}
 
 	/**
-	 * Anota el resultado de las acciones de un envío.
+	 * Anota el resultado de las acciones que se han ejecutado con el envío.
 	 *
 	 * De un envío guardado se anotan todas, para ver en su detalle qué se hizo con él. Si el
-	 * formulario no guarda sus envíos, solo los fallos: sirven para avisar, aunque no se puedan reintentar.
+	 * formulario no guarda sus envíos, solo los fallos: sirven para avisar, aunque no se puedan
+	 * reintentar. Las acciones en segundo plano no se anotan aquí: las anota la cola al recibirlas.
 	 *
 	 * @param Form            $form          Formulario.
 	 * @param int             $submission_id Identificador del envío guardado, o 0.
-	 * @param Action_Result[] $results       Resultado de cada acción ejecutada.
+	 * @param Action_Result[] $results       Resultado de cada acción del envío.
 	 */
 	public function record_results( Form $form, int $submission_id, array $results ): void {
 		$now    = $this->clock->now();
-		$failed = false;
+		$failed = array();
 
 		foreach ( $results as $result ) {
-			if ( $result->success && 0 === $submission_id ) {
+			if ( $result->deferred || ( $result->success && 0 === $submission_id ) ) {
 				continue;
 			}
 
-			$failed = $failed || ! $result->success;
-
-			$this->deliveries->insert(
+			$id = $this->deliveries->insert(
 				new Delivery(
 					0,
 					$submission_id,
@@ -119,10 +118,32 @@ final class Submission_Journal {
 					$now
 				)
 			);
+
+			if ( ! $result->success ) {
+				$failed[] = $id;
+			}
 		}
 
-		if ( $failed ) {
-			$this->failures->refresh( $submission_id );
+		if ( array() === $failed ) {
+			return;
+		}
+
+		$this->failures->refresh( $submission_id );
+
+		foreach ( $failed as $id ) {
+			$delivery = $id > 0 ? $this->deliveries->find( $id ) : null;
+
+			if ( null !== $delivery ) {
+				/**
+				 * Se dispara cuando una acción de un envío falla y ya no se va a reintentar sola: una
+				 * notificación que no ha salido, o un webhook que ha agotado sus reintentos.
+				 *
+				 * @since 0.4.0
+				 *
+				 * @param Delivery $delivery Entrega fallida. No contiene datos del envío.
+				 */
+				do_action( 'formulario_mensaje_delivery_failed', $delivery );
+			}
 		}
 	}
 }
