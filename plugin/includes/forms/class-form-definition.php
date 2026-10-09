@@ -25,11 +25,13 @@ final class Form_Definition {
 	 * @param Field[]                                                                                                                                   $fields   Campos, en orden.
 	 * @param array<string, mixed>                                                                                                                      $settings Ajustes del formulario.
 	 * @param array<int, array{id: string, type: string, enabled: bool, name: string, condition: array<string, mixed>, settings: array<string, mixed>}> $actions  Acciones de cada envío.
+	 * @param array<string, string|int>                                                                                                                 $style Estilo del formulario: colores y medidas; lo que falta se hereda del tema.
 	 */
 	public function __construct(
 		public readonly array $fields = array(),
 		public readonly array $settings = array(),
-		public readonly array $actions = array()
+		public readonly array $actions = array(),
+		public readonly array $style = array()
 	) {}
 
 	/**
@@ -72,7 +74,12 @@ final class Form_Definition {
 			);
 		}
 
-		return new self( $fields, is_array( $data['settings'] ?? null ) ? $data['settings'] : array(), $actions );
+		return new self(
+			$fields,
+			is_array( $data['settings'] ?? null ) ? $data['settings'] : array(),
+			$actions,
+			is_array( $data['style'] ?? null ) ? $data['style'] : array()
+		);
 	}
 
 	/**
@@ -111,6 +118,7 @@ final class Form_Definition {
 			'fields'   => array_map( static fn ( Field $field ): array => $field->to_array(), $this->fields ),
 			'settings' => $this->settings,
 			'actions'  => $this->actions,
+			'style'    => $this->style,
 		);
 	}
 }

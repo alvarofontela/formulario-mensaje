@@ -24,19 +24,19 @@ msgstr "Constructor de formularios ligero y auditable: formularios con sus propi
 msgid "Álvaro Fontela"
 msgstr "Álvaro Fontela"
 
-#: includes/admin/class-admin-data.php:66
+#: includes/admin/class-admin-data.php:69
 msgid "Basic fields"
 msgstr "Campos básicos"
 
-#: includes/admin/class-admin-data.php:67
+#: includes/admin/class-admin-data.php:70
 msgid "Choice fields"
 msgstr "Campos de opciones"
 
-#: includes/admin/class-admin-data.php:68
+#: includes/admin/class-admin-data.php:71
 msgid "Advanced fields"
 msgstr "Campos avanzados"
 
-#: includes/admin/class-admin-data.php:69
+#: includes/admin/class-admin-data.php:72
 msgid "Layout"
 msgstr "Presentación"
 
@@ -126,7 +126,7 @@ msgid "This form needs JavaScript to be sent. Enable it in your browser and try 
 msgstr "Este formulario necesita JavaScript para enviarse. Actívalo en tu navegador e inténtalo de nuevo."
 
 #: includes/captcha/class-captcha-check.php:57
-#: includes/frontend/class-form-renderer.php:122
+#: includes/frontend/class-form-renderer.php:135
 msgid "Complete the security check before sending the form."
 msgstr "Completa la comprobación de seguridad antes de enviar el formulario."
 
@@ -149,6 +149,113 @@ msgstr "Google reCAPTCHA v3"
 #: includes/captcha/class-turnstile-provider.php:41
 msgid "Cloudflare Turnstile"
 msgstr "Cloudflare Turnstile"
+
+#: includes/elementor/class-form-widget.php:42
+msgid "Form (Formulario Mensaje)"
+msgstr "Formulario (Formulario Mensaje)"
+
+#: includes/elementor/class-form-widget.php:99
+msgid "Choose the form to show in the settings of this widget."
+msgstr "Elige en los ajustes de este widget el formulario que se muestra."
+
+#: includes/elementor/class-form-widget.php:113
+#: build/blocks/form/index.js:1
+msgid "Select a form"
+msgstr "Elige un formulario"
+
+#: includes/elementor/class-form-widget.php:122
+#: includes/elementor/class-form-widget.php:130
+#: build/admin/index.js:28
+#: build/admin/index.js:31
+#: build/admin/index.js:33
+#: build/admin/index.js:34
+#: build/blocks/form/index.js:1
+msgid "Form"
+msgstr "Formulario"
+
+#: includes/elementor/class-form-widget.php:134
+msgid "Forms are created in the Forms menu of WordPress."
+msgstr "Los formularios se crean en el menú Formularios de WordPress."
+
+#: includes/elementor/class-form-widget.php:148
+msgid "Spacing and borders"
+msgstr "Separación y bordes"
+
+#: includes/elementor/class-form-widget.php:153
+#: build/admin/index.js:10
+#: build/blocks/form/index.js:1
+msgid "Space between fields"
+msgstr "Separación entre campos"
+
+#: includes/elementor/class-form-widget.php:154
+#: build/admin/index.js:10
+#: build/blocks/form/index.js:1
+msgid "Field padding"
+msgstr "Relleno de los campos"
+
+#: includes/elementor/class-form-widget.php:155
+#: build/admin/index.js:10
+#: build/blocks/form/index.js:1
+msgid "Border width"
+msgstr "Grosor del borde"
+
+#: includes/elementor/class-form-widget.php:156
+#: build/admin/index.js:10
+#: build/blocks/form/index.js:1
+msgid "Border radius"
+msgstr "Radio del borde"
+
+#: includes/elementor/class-form-widget.php:157
+#: build/admin/index.js:10
+msgid "Border color"
+msgstr "Color del borde"
+
+#: includes/elementor/class-form-widget.php:158
+#: build/admin/index.js:10
+msgid "Focus outline color"
+msgstr "Color del contorno de foco"
+
+#: includes/elementor/class-form-widget.php:170
+#: build/blocks/form/index.js:1
+msgid "Labels"
+msgstr "Etiquetas"
+
+#: includes/elementor/class-form-widget.php:175
+#: includes/elementor/class-form-widget.php:199
+#: includes/elementor/class-form-widget.php:226
+msgid "Text color"
+msgstr "Color del texto"
+
+#: includes/elementor/class-form-widget.php:194
+#: build/admin/index.js:12
+#: build/admin/index.js:13
+msgid "Fields"
+msgstr "Campos"
+
+#: includes/elementor/class-form-widget.php:200
+#: includes/elementor/class-form-widget.php:225
+msgid "Background color"
+msgstr "Color de fondo"
+
+#: includes/elementor/class-form-widget.php:219
+msgid "Button"
+msgstr "Botón"
+
+#: includes/elementor/class-form-widget.php:238
+msgid "Alignment"
+msgstr "Alineación"
+
+#: includes/elementor/class-form-widget.php:242
+msgid "Start"
+msgstr "Inicio"
+
+#: includes/elementor/class-form-widget.php:246
+msgid "Center"
+msgstr "Centro"
+
+#: includes/elementor/class-form-widget.php:250
+msgid "End"
+msgstr "Final"
 
 #: includes/fields/class-common-settings.php:27
 msgid "Label"
@@ -457,12 +564,12 @@ msgstr "Este es un mensaje de ejemplo.\nTiene dos líneas."
 msgid "Enter a valid web address."
 msgstr "Escribe una dirección web válida."
 
-#: includes/forms/class-form-definition-sanitizer.php:111
-#: includes/frontend/class-form-renderer.php:132
+#: includes/forms/class-form-definition-sanitizer.php:114
+#: includes/frontend/class-form-renderer.php:145
 msgid "Send"
 msgstr "Enviar"
 
-#: includes/forms/class-form-definition-sanitizer.php:114
+#: includes/forms/class-form-definition-sanitizer.php:117
 #: includes/submissions/class-confirmation-builder.php:62
 msgid "Thank you. Your message has been sent."
 msgstr "Gracias. Hemos recibido tu mensaje."
@@ -578,21 +685,21 @@ msgstr "Notificación"
 msgid "The form could not be sent"
 msgstr "No se ha podido enviar el formulario"
 
-#: includes/frontend/class-form-embed.php:68
+#: includes/frontend/class-form-embed.php:69
 msgid "This form does not exist or is in the trash."
 msgstr "Este formulario no existe o está en la papelera."
 
-#: includes/frontend/class-form-renderer.php:113
+#: includes/frontend/class-form-renderer.php:126
 msgid "Your message could not be sent. Check your connection and try again."
 msgstr "No se ha podido enviar tu mensaje. Comprueba tu conexión e inténtalo de nuevo."
 
 #. translators: %s: the asterisk that marks required fields.
-#: includes/frontend/class-form-renderer.php:146
+#: includes/frontend/class-form-renderer.php:159
 #, php-format
 msgid "Fields marked with %s are required."
 msgstr "Los campos marcados con %s son obligatorios."
 
-#: includes/frontend/class-form-renderer.php:164
+#: includes/frontend/class-form-renderer.php:177
 msgid "Leave this field empty"
 msgstr "Deja este campo vacío"
 
@@ -922,12 +1029,12 @@ msgstr "No se ha podido enviar tu mensaje. Inténtalo de nuevo más tarde."
 msgid "This field is required."
 msgstr "Este campo es obligatorio."
 
-#: includes/webhooks/class-webhook-action.php:76
+#: includes/webhooks/class-webhook-action.php:71
 msgid "Webhook"
 msgstr "Webhook"
 
 #. translators: %d: HTTP status code.
-#: includes/webhooks/class-webhook-action.php:163
+#: includes/webhooks/class-webhook-action.php:162
 #, php-format
 msgid "The destination answered with HTTP status %d."
 msgstr "El destino ha respondido con el código HTTP %d."
@@ -1086,6 +1193,7 @@ msgid "Tags are replaced by data of each submission. Click one to add it at the 
 msgstr "Las etiquetas se sustituyen por datos de cada envío. Pulsa una para añadirla al final del texto."
 
 #: build/admin/index.js:6
+#: build/blocks/form/index.js:1
 msgid "Button text"
 msgstr "Texto del botón"
 
@@ -1353,6 +1461,44 @@ msgid "0 keeps them until someone deletes them. The cleanup runs once a day."
 msgstr "Con 0 se conservan hasta que alguien los borre. La limpieza se ejecuta una vez al día."
 
 #: build/admin/index.js:10
+msgid "Label color"
+msgstr "Color de las etiquetas"
+
+#: build/admin/index.js:10
+msgid "Field text color"
+msgstr "Color del texto de los campos"
+
+#: build/admin/index.js:10
+#: build/blocks/form/index.js:1
+msgid "Field background"
+msgstr "Fondo de los campos"
+
+#: build/admin/index.js:10
+#: build/blocks/form/index.js:1
+msgid "Button background"
+msgstr "Fondo del botón"
+
+#: build/admin/index.js:10
+msgid "Button text color"
+msgstr "Color del texto del botón"
+
+#: build/admin/index.js:10
+msgid "Use the one of the theme"
+msgstr "Usar el del tema"
+
+#: build/admin/index.js:10
+msgid "From the theme"
+msgstr "El del tema"
+
+#: build/admin/index.js:10
+msgid "Without changes, the form takes the fonts and colors of the theme. What you set here applies to this form wherever it is shown; the block and the Elementor widget can override it in one place."
+msgstr "Sin cambios, el formulario toma las tipografías y los colores del tema. Lo que ajustes aquí se aplica a este formulario allí donde se muestre; el bloque y el widget de Elementor pueden cambiarlo en un sitio concreto."
+
+#: build/admin/index.js:10
+msgid "Remove all the styles"
+msgstr "Quitar todos los estilos"
+
+#: build/admin/index.js:10
 msgid "Remove"
 msgstr "Quitar"
 
@@ -1475,13 +1621,12 @@ msgid "Delete the stored one"
 msgstr "Borrar el valor guardado"
 
 #: build/admin/index.js:12
-#: build/admin/index.js:13
-msgid "Fields"
-msgstr "Campos"
-
-#: build/admin/index.js:12
 msgid "Notifications"
 msgstr "Notificaciones"
+
+#: build/admin/index.js:12
+msgid "Style"
+msgstr "Estilo"
 
 #: build/admin/index.js:12
 msgid "Webhooks"
@@ -2070,14 +2215,6 @@ msgstr "Detalles"
 
 #: build/admin/index.js:28
 #: build/admin/index.js:31
-#: build/admin/index.js:33
-#: build/admin/index.js:34
-#: build/blocks/form/index.js:1
-msgid "Form"
-msgstr "Formulario"
-
-#: build/admin/index.js:28
-#: build/admin/index.js:31
 #: build/admin/index.js:35
 msgid "(deleted form)"
 msgstr "(formulario borrado)"
@@ -2270,12 +2407,28 @@ msgstr[0] "%d envío borrado."
 msgstr[1] "%d envíos borrados."
 
 #: build/blocks/form/index.js:1
+msgid "Field text"
+msgstr "Texto de los campos"
+
+#: build/blocks/form/index.js:1
+msgid "Borders"
+msgstr "Bordes"
+
+#: build/blocks/form/index.js:1
+msgid "Focus outline"
+msgstr "Contorno de foco"
+
+#: build/blocks/form/index.js:1
 msgid "The forms could not be loaded."
 msgstr "No se han podido cargar los formularios."
 
 #: build/blocks/form/index.js:1
-msgid "Select a form"
-msgstr "Elige un formulario"
+msgid "Form colors"
+msgstr "Colores del formulario"
+
+#: build/blocks/form/index.js:1
+msgid "Form spacing and borders"
+msgstr "Separación y bordes del formulario"
 
 #: build/blocks/form/index.js:1
 msgid "Choose the form to show. Forms are created in the Forms menu."

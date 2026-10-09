@@ -137,3 +137,39 @@ add_filter(
 	10,
 	3
 );
+
+/*
+ * Página de Elementor para los tests: guarda en una página los metadatos con los que Elementor la
+ * trata como suya. La REST API de WordPress no deja escribir esos metadatos. Público a propósito:
+ * solo existe en este entorno.
+ *
+ *   POST /wp-json/rt/v1/elementor-page   { post_id, elements }
+ */
+add_action(
+	'rest_api_init',
+	static function () {
+		register_rest_route(
+			'rt/v1',
+			'/elementor-page',
+			array(
+				'methods'             => 'POST',
+				'permission_callback' => '__return_true',
+				'callback'            => static function ( WP_REST_Request $request ) {
+					$post_id = (int) $request['post_id'];
+
+					update_post_meta( $post_id, '_elementor_edit_mode', 'builder' );
+					update_post_meta( $post_id, '_elementor_template_type', 'wp-page' );
+					update_post_meta( $post_id, '_elementor_version', defined( 'ELEMENTOR_VERSION' ) ? ELEMENTOR_VERSION : '0' );
+					update_post_meta( $post_id, '_elementor_data', wp_slash( wp_json_encode( $request['elements'] ) ) );
+					// La hoja de estilos de la página se regenera en la siguiente visita.
+					delete_post_meta( $post_id, '_elementor_css' );
+
+					return array(
+						'saved'     => true,
+						'elementor' => defined( 'ELEMENTOR_VERSION' ) ? ELEMENTOR_VERSION : null,
+					);
+				},
+			)
+		);
+	}
+);

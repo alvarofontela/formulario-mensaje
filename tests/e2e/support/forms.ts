@@ -11,6 +11,7 @@ export interface FormField {
 export interface FormDefinition {
   fields: FormField[];
   settings: Record<string, unknown>;
+  style?: Record<string, unknown>;
   actions: {
     id: string;
     type: string;
@@ -107,6 +108,11 @@ export class AdminApi {
   /** Guarda los ajustes del captcha. Sin clave secreta, se borra la guardada. */
   async saveCaptchaSettings(settings: Record<string, unknown>, secret = ''): Promise<void> {
     await this.send('put', '/formulario-mensaje/v1/settings/captcha', { settings, secret, clear_secret: secret === '' });
+  }
+
+  /** Activa o desactiva un plugin del entorno, por su fichero sin la extensión (`elementor/elementor`). */
+  async setPluginStatus(plugin: string, status: 'active' | 'inactive'): Promise<void> {
+    await this.send('post', `/wp/v2/plugins/${plugin}`, { status });
   }
 
   async dispose(): Promise<void> {

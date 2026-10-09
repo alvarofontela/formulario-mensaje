@@ -6,14 +6,24 @@
  * propiedades personalizadas de abajo.
  */
 
+/*
+ * Cada propiedad se resuelve en tres pasos: lo que diga el sitio donde está insertado el formulario
+ * (`--fm-embed-*`: el bloque, Elementor), lo que diga el diseñador del formulario (`--fm-form-*`) y,
+ * si nadie dice nada, el valor por defecto. Los colores sin valor por defecto se heredan del tema.
+ */
 .formulario-mensaje {
-	--fm-gap: 1.25rem;
+	--fm-gap: var(--fm-embed-gap, var(--fm-form-gap, 1.25rem));
 	--fm-label-gap: 0.375rem;
-	--fm-control-padding: 0.625em 0.75em;
-	--fm-border-width: 1px;
-	--fm-border-color: rgba(128, 128, 128, 0.7);
-	--fm-border-radius: 4px;
-	--fm-focus-color: currentColor;
+	--fm-control-padding: var(--fm-embed-control-padding, var(--fm-form-control-padding, 0.625em 0.75em));
+	--fm-border-width: var(--fm-embed-border-width, var(--fm-form-border-width, 1px));
+	--fm-border-color: var(--fm-embed-border-color, var(--fm-form-border-color, rgba(128, 128, 128, 0.7)));
+	--fm-border-radius: var(--fm-embed-border-radius, var(--fm-form-border-radius, 4px));
+	--fm-focus-color: var(--fm-embed-focus-color, var(--fm-form-focus-color, currentColor));
+	--fm-label-color: var(--fm-embed-label-color, var(--fm-form-label-color));
+	--fm-field-color: var(--fm-embed-field-color, var(--fm-form-field-color));
+	--fm-field-background: var(--fm-embed-field-background, var(--fm-form-field-background, transparent));
+	--fm-button-background: var(--fm-embed-button-background, var(--fm-form-button-background));
+	--fm-button-color: var(--fm-embed-button-color, var(--fm-form-button-color));
 	--fm-error-color: #b32d2e;
 	--fm-success-color: #1a7f37;
 
@@ -96,6 +106,7 @@
 .formulario-mensaje .fm-label {
 	display: block;
 	padding: 0;
+	color: var(--fm-label-color, currentColor);
 	font-weight: 600;
 }
 
@@ -111,8 +122,8 @@
 	padding: var(--fm-control-padding);
 	border: var(--fm-border-width) solid var(--fm-border-color);
 	border-radius: var(--fm-border-radius);
-	background-color: transparent;
-	color: inherit;
+	background-color: var(--fm-field-background);
+	color: var(--fm-field-color, currentColor);
 	font: inherit;
 	line-height: 1.4;
 }
@@ -232,6 +243,14 @@
 .formulario-mensaje .fm-submit {
 	cursor: pointer;
 	font: inherit;
+}
+
+/* El botón conserva el aspecto que le dé el tema salvo que alguien le ponga color. */
+.formulario-mensaje.fm-button-styled .fm-submit {
+	border-color: transparent;
+	border-radius: var(--fm-border-radius);
+	background-color: var(--fm-button-background, currentColor);
+	color: var(--fm-button-color, inherit);
 }
 
 .formulario-mensaje .fm-form[aria-busy="true"] .fm-submit {

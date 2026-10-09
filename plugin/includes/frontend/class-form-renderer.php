@@ -13,6 +13,7 @@ use Formulario_Mensaje\Fields\Field_Markup;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Fields\Render_Context;
 use Formulario_Mensaje\Forms\Form;
+use Formulario_Mensaje\Forms\Form_Style;
 use Formulario_Mensaje\Rest\Rest_Provider;
 
 defined( 'ABSPATH' ) || exit;
@@ -48,29 +49,41 @@ final class Form_Renderer {
 	 * @param Field_Type_Registry $field_types Tipos de campo.
 	 * @param Field_Markup        $markup      HTML común de los campos.
 	 * @param Captcha_Service     $captcha     Captcha de los formularios.
+	 * @param Form_Style          $style       Estilo de los formularios.
 	 */
 	public function __construct(
 		private readonly Field_Type_Registry $field_types,
 		private readonly Field_Markup $markup,
-		private readonly Captcha_Service $captcha
+		private readonly Captcha_Service $captcha,
+		private readonly Form_Style $style
 	) {}
 
 	/**
 	 * Devuelve el HTML de un formulario, con todos los valores escapados.
 	 *
-	 * @param Form   $form         Formulario.
-	 * @param string $confirmation Mensaje de éxito en HTML ya escapado, si se acaba de completar un envío sin JavaScript.
-	 * @param bool   $show_form    Si se pinta el formulario además del mensaje de éxito.
-	 * @param bool   $interactive  Si el formulario puede enviarse; la vista previa del constructor lo pinta inerte.
+	 * @param Form                 $form         Formulario.
+	 * @param string               $confirmation Mensaje de éxito en HTML ya escapado, si se acaba de completar un envío sin JavaScript.
+	 * @param bool                 $show_form    Si se pinta el formulario además del mensaje de éxito.
+	 * @param bool                 $interactive  Si el formulario puede enviarse; la vista previa del constructor lo pinta inerte.
+	 * @param array<string, mixed> $embed_style Estilo del sitio donde se inserta (el bloque); tiene prioridad sobre el del formulario.
 	 */
-	public function render( Form $form, string $confirmation = '', bool $show_form = true, bool $interactive = true ): string {
+	public function render( Form $form, string $confirmation = '', bool $show_form = true, bool $interactive = true, array $embed_style = array() ): string {
 		++$this->instances;
 
 		$instance = $form->id . '-' . $this->instances;
 
+		// El estilo son propiedades CSS con valores ya validados (colores hexadecimales y píxeles).
+		$css = $this->style->css( $form->definition->style, Form_Style::SCOPE_FORM ) . $this->style->css( $embed_style, Form_Style::SCOPE_EMBED );
+
 		return sprintf(
-			'<div class="formulario-mensaje" id="%1$s">%2$s<div class="fm-success" role="status" tabindex="-1"%3$s>%4$s</div></div>',
-			esc_attr( 'formulario-mensaje-' . $instance ),
+			'<div%1$s>%2$s<div class="fm-success" role="status" tabindex="-1"%3$s>%4$s</div></div>',
+			$this->markup->attributes(
+				array(
+					'class' => 'formulario-mensaje' . ( $this->style->styles_button( $form->definition->style, $embed_style ) ? ' fm-button-styled' : '' ),
+					'id'    => 'formulario-mensaje-' . $instance,
+					'style' => $css,
+				)
+			),
 			$show_form ? $this->form( $form, new Render_Context( $form->id, $instance ), $interactive ) : '',
 			'' === $confirmation ? ' hidden' : '',
 			$confirmation

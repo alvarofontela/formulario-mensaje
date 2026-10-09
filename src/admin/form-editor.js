@@ -15,6 +15,7 @@ import FormSettingsPanel from './form-settings-panel';
 import NotificationPanel from './notification-panel';
 import Preview from './preview';
 import StoragePanel from './storage-panel';
+import StylePanel from './style-panel';
 import WebhooksPanel from './webhooks-panel';
 
 const TABS = [
@@ -23,6 +24,7 @@ const TABS = [
 		name: 'notification',
 		title: __( 'Notifications', 'formulario-mensaje' ),
 	},
+	{ name: 'style', title: __( 'Style', 'formulario-mensaje' ) },
 	{ name: 'webhooks', title: __( 'Webhooks', 'formulario-mensaje' ) },
 	{ name: 'storage', title: __( 'Storage', 'formulario-mensaje' ) },
 	{ name: 'settings', title: __( 'After sending', 'formulario-mensaje' ) },
@@ -247,6 +249,14 @@ export default function FormEditor( {
 										definition={ definition }
 										onChange={ ( actions ) =>
 											change( { actions } )
+										}
+									/>
+								) }
+								{ tab.name === 'style' && (
+									<StylePanel
+										style={ definition.style }
+										onChange={ ( style ) =>
+											change( { style } )
 										}
 									/>
 								) }

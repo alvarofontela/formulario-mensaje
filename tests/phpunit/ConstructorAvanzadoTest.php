@@ -166,9 +166,9 @@ class ConstructorAvanzadoTest extends Caso_Formulario {
 		$this->assertSame( array( 'Authorization', 'X-Api-Key', 'X-Origen' ), array_column( $webhook['headers'], 'name' ) );
 		$this->assertTrue( $documento['definition']['actions'][1]['enabled'] );
 
-		// ...pero no el secreto de firma, ni cifrado, ni el valor de las cabeceras con credenciales.
+		// ...pero no el secreto de firma, ni cifrado, ni el valor de ninguna cabecera: no se adivina por el nombre cuál es secreta.
 		$this->assertSame( '', $webhook['secret'] );
-		$this->assertSame( array( '', '', 'web' ), array_column( $webhook['headers'], 'value' ) );
+		$this->assertSame( array( '', '', '' ), array_column( $webhook['headers'], 'value' ) );
 		$this->assertStringNotContainsString( 'fm1:', $texto );
 		$this->assertStringNotContainsString( 'token-privado', $texto );
 		$this->assertStringNotContainsString( 'clave-privada', $texto );
@@ -253,7 +253,8 @@ class ConstructorAvanzadoTest extends Caso_Formulario {
 			$tipos_accion,
 			new Formulario_Mensaje\Fields\Settings_Schema_Sanitizer( new Formulario_Mensaje\Support\Inline_Html() ),
 			new Formulario_Mensaje\Support\Inline_Html(),
-			new Formulario_Mensaje\Rules\Condition_Sanitizer()
+			new Formulario_Mensaje\Rules\Condition_Sanitizer(),
+			new Formulario_Mensaje\Forms\Form_Style()
 		);
 
 		return ( new Formulario_Mensaje\Forms\Form_Templates( $saneador, $tipos_accion ) )->all();

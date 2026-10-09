@@ -10,6 +10,7 @@ namespace Formulario_Mensaje\Admin;
 use Formulario_Mensaje\Actions\Action_Type_Registry;
 use Formulario_Mensaje\Container;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
+use Formulario_Mensaje\Forms\Form_Style;
 use Formulario_Mensaje\Forms\Form_Templates;
 use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Lifecycle\Translations;
@@ -42,7 +43,8 @@ final class Admin_Provider implements Service_Provider {
 			static fn ( Container $c ): Admin_Data => new Admin_Data(
 				$c->get( Field_Type_Registry::class ),
 				$c->get( Action_Type_Registry::class ),
-				$c->get( Form_Templates::class )
+				$c->get( Form_Templates::class ),
+				$c->get( Form_Style::class )
 			)
 		);
 

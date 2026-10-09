@@ -9,6 +9,7 @@ namespace Formulario_Mensaje\Frontend;
 
 use Formulario_Mensaje\Captcha\Captcha_Service;
 use Formulario_Mensaje\Container;
+use Formulario_Mensaje\Forms\Form_Style;
 use Formulario_Mensaje\Fields\Field_Markup;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Forms\Form_Repository;
@@ -46,7 +47,8 @@ final class Frontend_Provider implements Service_Provider {
 			static fn ( Container $c ): Form_Renderer => new Form_Renderer(
 				$c->get( Field_Type_Registry::class ),
 				$c->get( Field_Markup::class ),
-				$c->get( Captcha_Service::class )
+				$c->get( Captcha_Service::class ),
+				$c->get( Form_Style::class )
 			)
 		);
 

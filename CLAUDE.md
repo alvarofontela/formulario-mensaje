@@ -29,6 +29,11 @@ Para que la consulta sea eficiente:
 | Estándares de código de WordPress (PHPCS) | `/wordpress/wordpress-coding-standards` |
 | PHPCompatibilityWP | `/phpcompatibility/phpcompatibilitywp` |
 | Elementor: addons y widgets clásicos | `/elementor/elementor-developers-docs` |
+| Cloudflare Turnstile | `/websites/developers_cloudflare_turnstile` |
+| hCaptcha | `/websites/hcaptcha` |
+| reCAPTCHA v3 | `/websites/developers_google_recaptcha_v3` |
+| Resend | `/websites/resend` |
+| PHPMailer | `/phpmailer/phpmailer` |
 | Gutenberg: `@wordpress/components`, `api-fetch`, `scripts`, bloques | `/wordpress/gutenberg` |
 
 ### 2. Skills de WordPress para desarrollar el plugin
@@ -243,6 +248,8 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 
 Para añadir un tipo de acción (como el correo o el webhook): una clase que implemente `Action_Type` y su proveedor. `is_deferred()` decide si se ejecuta mientras el visitante espera o en segundo plano, por la cola (`plugin/includes/queue/`), con reintentos. La cola no es una tabla aparte: son las filas en estado pendiente del registro de entregas.
 
+Para añadir un ajuste de estilo: una entrada en `Form_Style`, su propiedad encadenada en `plugin/assets/css/form.css` (`--fm-x: var(--fm-embed-x, var(--fm-form-x, valor))`), su etiqueta en `src/admin/style-panel.js` y en el bloque, y su control en el widget de Elementor (`plugin/includes/elementor/`).
+
 Para añadir una plantilla de partida: una entrada en `Form_Templates::built_in()`. Un ajuste nuevo de un tipo de acción que sea un secreto se quita en su `portable_settings()`, para que no viaje al exportar.
 
 Para añadir un servicio de captcha: una clase en `plugin/includes/captcha/` que implemente `Captcha_Provider`, una línea en `Captcha_Module_Provider` y su adaptador, con el mismo identificador, en `plugin/assets/js/captcha.js`.
@@ -262,6 +269,7 @@ Para añadir un tipo de campo: una clase en `plugin/includes/fields/types/` que 
 - Las tablas del plugin se crean una vez en `tests/phpunit/bootstrap.php`. Dentro de un test WordPress convierte `CREATE TABLE` y `DROP TABLE` en operaciones sobre tablas temporales, así que el borrado de tablas al desinstalar no se puede comprobar con PHPUnit.
 - Los controladores y servicios viven todo el proceso de PHPUnit: no guardes en ellos nada que dependa de la petición (un recuento, el usuario), o un test verá datos de otro.
 - La cola se procesa en PHPUnit lanzando su acción (`do_action( Queue_Schedule::HOOK )`, tras retirar el evento programado, como hace WP-Cron); para simular que pasa el tiempo se adelanta `next_attempt_at` en la tabla. En Playwright la procesa el WP-Cron real y los webhooks llegan al receptor del entorno, `rt/v1/sink` (`tests/e2e/support/sink.ts`), que guarda lo que recibe y responde con el código que se le pida. Está en este mismo WordPress porque la HTTP API segura rechaza cualquier otra dirección local.
+- Elementor (4.3.4) está instalado e inactivo en el entorno. `tests/e2e/estilo.spec.ts` lo activa para su test y lo desactiva al terminar; la página de Elementor se monta con la ruta del entorno `rt/v1/elementor-page`. Para probar con Elementor 3: `rt wp plugin install elementor --version=3.35.9 --force`, `rt e2e estilo` y volver a instalar la 4.3.4.
 - El captcha tiene un doble en los dos lados: en Playwright el script del servicio se sustituye con `context.route()` (`tests/e2e/captcha.spec.ts`), y en el servidor el entorno responde él mismo a la verificación de los testigos que empiezan por `rt-` (`rt-valido` es bueno). Los demás testigos van al servicio real, para poder probarlo a mano con sus claves públicas de prueba.
 - Los servicios externos se sustituyen por dobles: las peticiones HTTP, con el filtro `pre_http_request`; el SMTP se prueba contra Mailpit (`127.0.0.1:1025`, sin cifrado ni credenciales). Los tests de Playwright que cambian los ajustes de correo los devuelven a los de fábrica al terminar (`AdminApi.saveMailSettings({})`).
 - `tests/phpunit/EntornoTest.php` y `tests/e2e/entorno.spec.ts` solo comprueban el entorno; sirven de plantilla.

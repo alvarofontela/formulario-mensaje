@@ -43,13 +43,15 @@ final class Form_Definition_Sanitizer {
 	 * @param Settings_Schema_Sanitizer $schema_sanitizer Saneado de opciones según esquema.
 	 * @param Inline_Html               $inline_html      Filtro del HTML permitido en los textos.
 	 * @param Condition_Sanitizer       $conditions       Saneado de condiciones.
+	 * @param Form_Style                $style            Estilo de los formularios.
 	 */
 	public function __construct(
 		private readonly Field_Type_Registry $field_types,
 		private readonly Action_Type_Registry $action_types,
 		private readonly Settings_Schema_Sanitizer $schema_sanitizer,
 		private readonly Inline_Html $inline_html,
-		private readonly Condition_Sanitizer $conditions
+		private readonly Condition_Sanitizer $conditions,
+		private readonly Form_Style $style
 	) {}
 
 	/**
@@ -64,7 +66,8 @@ final class Form_Definition_Sanitizer {
 		return new Form_Definition(
 			$fields,
 			$this->sanitize_settings( $raw['settings'] ?? array(), $fields ),
-			$this->sanitize_actions( $raw['actions'] ?? array() )
+			$this->sanitize_actions( $raw['actions'] ?? array() ),
+			$this->style->sanitize( $raw['style'] ?? array() )
 		);
 	}
 

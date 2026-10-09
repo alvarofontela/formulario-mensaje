@@ -13,6 +13,7 @@ use Formulario_Mensaje\Fields\Field_Type;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Fields\Input_Field_Type;
 use Formulario_Mensaje\Forms\Field;
+use Formulario_Mensaje\Forms\Form_Style;
 use Formulario_Mensaje\Forms\Form_Templates;
 use Formulario_Mensaje\Lifecycle\Capabilities;
 use Formulario_Mensaje\Rest\Rest_Provider;
@@ -35,11 +36,13 @@ final class Admin_Data {
 	 * @param Field_Type_Registry  $field_types        Tipos de campo.
 	 * @param Action_Type_Registry $action_types       Tipos de acción.
 	 * @param Form_Templates       $templates          Plantillas de partida.
+	 * @param Form_Style           $style              Estilo de los formularios.
 	 */
 	public function __construct(
 		private readonly Field_Type_Registry $field_types,
 		private readonly Action_Type_Registry $action_types,
-		private readonly Form_Templates $templates
+		private readonly Form_Templates $templates,
+		private readonly Form_Style $style
 	) {}
 
 	/**
@@ -87,6 +90,7 @@ final class Admin_Data {
 				$this->templates->all()
 			),
 			'fieldWidths'   => Field::WIDTHS,
+			'styleSchema'   => $this->style->schema(),
 			// Operadores del motor de reglas, para el editor de condiciones.
 			'operators'     => array_map(
 				static fn ( Operator $operator ): array => array(

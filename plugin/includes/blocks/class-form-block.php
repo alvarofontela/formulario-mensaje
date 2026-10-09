@@ -48,7 +48,11 @@ final class Form_Block {
 	 * @param array<string, mixed> $attributes Atributos del bloque.
 	 */
 	public function render( array $attributes ): string {
-		$form = $this->embed->render( absint( $attributes['formId'] ?? 0 ) );
+		$form = $this->embed->render(
+			absint( $attributes['formId'] ?? 0 ),
+			// Los controles de estilo del bloque: se sanean al pintar, como el estilo del formulario.
+			is_array( $attributes['formStyle'] ?? null ) ? $attributes['formStyle'] : array()
+		);
 
 		if ( '' === $form ) {
 			return '';

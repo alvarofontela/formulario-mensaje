@@ -241,8 +241,14 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		border: 1px solid $border;
 		background: $surface;
 
+		// Las pestañas no parten su nombre: si no caben en una fila, pasan a la siguiente.
 		.components-tab-panel__tabs {
+			flex-wrap: wrap;
 			border-bottom: 1px solid $border;
+		}
+
+		.components-tab-panel__tabs-item {
+			white-space: nowrap;
 		}
 	}
 

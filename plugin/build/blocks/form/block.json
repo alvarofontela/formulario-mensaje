@@ -2,7 +2,7 @@
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
   "name": "formulario-mensaje/form",
-  "version": "0.1.0",
+  "version": "0.7.0",
   "title": "Form",
   "category": "widgets",
   "icon": "feedback",
@@ -17,6 +17,10 @@
     "formId": {
       "type": "integer",
       "default": 0
+    },
+    "formStyle": {
+      "type": "object",
+      "default": {}
     }
   },
   "supports": {
@@ -25,6 +29,15 @@
       "wide",
       "full"
     ],
+    "color": {
+      "text": true,
+      "background": true,
+      "link": false
+    },
+    "typography": {
+      "fontSize": true,
+      "lineHeight": true
+    },
     "spacing": {
       "margin": true,
       "padding": true

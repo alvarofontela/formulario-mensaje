@@ -56,10 +56,11 @@ final class Form_Embed {
 	/**
 	 * Devuelve el HTML de un formulario guardado.
 	 *
-	 * @param int $form_id Identificador del formulario.
+	 * @param int                  $form_id Identificador del formulario.
+	 * @param array<string, mixed> $embed_style Estilo del sitio donde se inserta, que tiene prioridad sobre el del formulario.
 	 * @return string Cadena vacía si el formulario no existe o no acepta envíos.
 	 */
-	public function render( int $form_id ): string {
+	public function render( int $form_id, array $embed_style = array() ): string {
 		$form = $this->forms->find( $form_id );
 
 		if ( null === $form || ! $form->is_published() ) {
@@ -76,7 +77,9 @@ final class Form_Embed {
 		return $this->renderer->render(
 			$form,
 			$confirmation,
-			'' === $confirmation || Submission_Result::AFTER_RESET === $form->definition->setting( 'after_submit' )
+			'' === $confirmation || Submission_Result::AFTER_RESET === $form->definition->setting( 'after_submit' ),
+			true,
+			$embed_style
 		);
 	}
 

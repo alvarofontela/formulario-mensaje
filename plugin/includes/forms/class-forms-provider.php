@@ -32,6 +32,8 @@ final class Forms_Provider implements Service_Provider {
 		$container->set( Form_Post_Type::class, static fn (): Form_Post_Type => new Form_Post_Type() );
 		$container->set( Form_Repository::class, static fn (): Form_Repository => new Post_Form_Repository() );
 
+		$container->set( Form_Style::class, static fn (): Form_Style => new Form_Style() );
+
 		$container->set(
 			Form_Definition_Sanitizer::class,
 			static fn ( Container $c ): Form_Definition_Sanitizer => new Form_Definition_Sanitizer(
@@ -39,7 +41,8 @@ final class Forms_Provider implements Service_Provider {
 				$c->get( Action_Type_Registry::class ),
 				$c->get( Settings_Schema_Sanitizer::class ),
 				$c->get( Inline_Html::class ),
-				$c->get( Condition_Sanitizer::class )
+				$c->get( Condition_Sanitizer::class ),
+				$c->get( Form_Style::class )
 			)
 		);
 

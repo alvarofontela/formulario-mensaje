@@ -214,7 +214,7 @@ El orden pone antes lo que da valor en una web real (núcleo, envíos, correo, w
 ## Entorno de pruebas
 
 - El usuario ha dado libertad total para adaptar el WordPress de `.runtime` e instalar en él los plugins que hagan falta.
-- Elementor 4.3.4 (gratuito) está instalado e inactivo desde el 2026-10-08, y la instalación con `rt wp plugin install` funciona pese al límite de rutas de Windows. No se ha comprobado si sobrevive a `rt reset` o a `rt setup`; si no, se incorporará a la instalación del entorno en la fase 7.
+- Elementor 4.3.4 (gratuito) está instalado e inactivo desde el 2026-10-08, y la instalación con `rt wp plugin install` funciona pese al límite de rutas de Windows. No se ha comprobado si sobrevive a `rt reset` o a `rt setup`: si falta, `tests/e2e/estilo.spec.ts` falla al activarlo y hay que reinstalarlo con `rt wp plugin install elementor --version=4.3.4`.
 - El constructor en React se compila con `@wordpress/scripts` (`rt build`), añadido en la fase 1.
 - Para ver el plugin en el navegador se cuenta con los tests de Playwright (`rt e2e`) y con la extensión de Chrome de Claude. El usuario mencionó un MCP de Playwright: en la sesión del 2026-10-08 no había ninguno conectado.
 
@@ -230,7 +230,7 @@ Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fa
 | 4. Webhooks | Hecha |
 | 5. Captchas | Hecha |
 | 6. Constructor avanzado | Hecha |
-| 7. Estilo, bloque y Elementor | Pendiente |
+| 7. Estilo, bloque y Elementor | Hecha |
 | 8. Lógica condicional en campos | Pendiente |
 | 9. Formularios por pasos | Pendiente |
 | 10. Ficheros | Pendiente |
@@ -285,13 +285,28 @@ Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel
 
 No verificado contra servicios reales: Resend se ha probado con un doble de la HTTP API (petición, cabecera de autorización, errores) y el SMTP contra Mailpit, que no cifra ni pide credenciales. Quedan sin probar STARTTLS, SSL y la autenticación contra un servidor real.
 
+### Fase 7: lo que se decidió al hacerla
+
+- **El estilo es una lista cerrada de colores y medidas**, no CSS libre (`Form_Style`): color de etiquetas, de texto y fondo de los campos, de borde, de foco y del botón (fondo y texto); separación entre campos, relleno, grosor y radio del borde. Lo que no se ajusta se hereda del tema, como hasta ahora. La tipografía no está entre los ajustes del formulario: la da el tema, y el bloque y Elementor tienen sus propios controles.
+- **Dos niveles con prioridad clara**, resueltos con propiedades CSS encadenadas y sin depender de la especificidad: lo que diga el sitio donde se inserta (`--fm-embed-*`: el bloque y Elementor) gana a lo que diga el diseñador del formulario (`--fm-form-*`), y este al valor por defecto. Un tema puede seguir fijando directamente `--fm-gap` y compañía.
+- **El estilo del formulario viaja en su atributo `style`**, como propiedades CSS con valores ya validados (hexadecimales y píxeles), no en una hoja de estilos generada. Forma parte de la definición (`style`), así que se duplica, se exporta y se importa con el formulario.
+- **El botón conserva el aspecto del tema** mientras nadie le ponga color; al ponérselo, el formulario lleva la clase `fm-button-styled`.
+- **Bloque**: además de sus ajustes nativos (color de texto y fondo, tamaño de letra, interlineado, márgenes), tiene en su pestaña de estilos los mismos colores y medidas del formulario, que se aplican solo a esa inserción (atributo `formStyle`, saneado al pintar).
+- **Widget de Elementor**: clásico (`Widget_Base`), registrado en `elementor/widgets/register`; si Elementor no está activo, su clase ni se carga. Elige el formulario y da estilo con controles de Elementor (separación y bordes, etiquetas, campos y botón, con tipografía en los tres últimos y alineación del botón) que generan CSS por selectores sobre las propiedades `--fm-embed-*`. El HTML es el mismo que el del bloque y el shortcode, y el formulario se envía igual.
+- **Acceso estático al contenedor** (`Plugin::service()`): la única excepción prevista al «sin estado estático», usada solo por el widget, que Elementor instancia por su cuenta.
+- **En el editor de Elementor** el widget se pinta en el servidor, sin plantilla de JavaScript: lo que se ve es el formulario real.
+
+Probado con Elementor 4.3.4 y con Elementor 3.35.9 (instalando cada versión en el entorno): el widget en la web con sus estilos, el envío del formulario y su aparición en la vista previa del editor. El entorno queda con la 4.3.4, inactiva; el test de Playwright la activa y la desactiva. No se han probado Elementor Pro ni sus contenedores con rejilla, ni los controles del widget uno a uno desde el panel de Elementor (se han aplicado guardando sus valores en la página).
+
 ### Fase 6: lo que se decidió al hacerla
 
 - **Columnas**: cada campo tiene un ancho (todo, tres cuartos, dos tercios, la mitad, un tercio o un cuarto) y los campos seguidos que suman el ancho completo comparten fila. El formulario es una rejilla de doce columnas; por debajo de 480 píxeles de pantalla cada campo ocupa su fila. No hay «filas» ni «columnas» como elementos del constructor: el orden de los campos sigue siendo una sola lista, que es también el orden de lectura y de tabulación.
 - **El ancho es una propiedad del campo en la definición** (`{ id, type, settings, width }`), no una opción de cada tipo: vale para cualquier tipo, también los de terceros, sin que tengan que declararlo.
 - **Plantillas de partida**: al añadir un formulario se elige entre contacto, solicitud de presupuesto (en dos columnas), «te llamamos», alta en el boletín y en blanco. Una plantilla es solo el punto de partida; el formulario no guarda relación con ella. Todas llevan una notificación al administrador del sitio. Filtro `formulario_mensaje_form_templates` para añadir las propias, que pasan por el mismo saneado que un formulario.
 - **Duplicar** crea una copia con todo, también el secreto de firma de sus webhooks, y con las acciones como estuvieran: es la misma web y las mismas personas.
-- **Exportar** descarga un JSON con todo menos los secretos: el secreto de firma de los webhooks y el valor de las cabeceras que por su nombre llevan credenciales (`Authorization`, `X-Api-Key`…). Cada tipo de acción decide qué no sale de la instalación (`Action_Type::portable_settings()`).
+- **Exportar** descarga un JSON con todo menos los secretos: el secreto de firma de los webhooks y el valor de todas sus cabeceras, que es donde van las credenciales del destino (viajan los nombres, para saber cuáles rellenar). Cada tipo de acción decide qué no sale de la instalación (`Action_Type::portable_settings()`). La dirección del webhook sí viaja: si lleva un identificador secreto en la ruta, el fichero exportado hay que tratarlo como tal.
+
+Cambio a raíz de la revisión de seguridad de su commit: la exportación decidía por el nombre qué cabeceras llevaban credenciales, y una con otro nombre se habría escapado. Ahora no viaja el valor de ninguna.
 - **Importar** crea siempre un formulario nuevo. El fichero es entrada no fiable: pasa por el mismo saneado que el constructor, sus acciones quedan en pausa hasta que alguien las revise, no trae secretos aunque el fichero los lleve, y una redirección a un dominio que esta web no permite se desactiva en vez de impedir la importación. Un fichero de una versión posterior del formato se rechaza.
 - **Reorganizado**: `Default_Definition` desaparece; la plantilla de contacto es ahora la primera de `Form_Templates`.
 

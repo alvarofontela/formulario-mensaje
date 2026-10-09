@@ -47,11 +47,6 @@ final class Webhook_Action implements Action_Type {
 	private const OWN_HEADER_PREFIX = 'x-formulario-mensaje-';
 
 	/**
-	 * Cabeceras cuyo valor no sale de esta instalación al exportar: por su nombre, llevan credenciales.
-	 */
-	private const CREDENTIAL_HEADER = '/auth|token|key|secret|password|cookie|signature/i';
-
-	/**
 	 * Constructor.
 	 *
 	 * @param Webhook_Sender $sender Envío de webhooks.
@@ -84,7 +79,11 @@ final class Webhook_Action implements Action_Type {
 	}
 
 	/**
-	 * Ajustes sin el secreto de firma ni el valor de las cabeceras que suelen llevar credenciales.
+	 * Ajustes sin el secreto de firma ni el valor de ninguna cabecera.
+	 *
+	 * Las cabeceras son donde van las credenciales del destino, con el nombre que cada servicio
+	 * quiera darles: adivinar por el nombre cuáles son secretas dejaría escapar alguna. Viajan los
+	 * nombres, para saber cuáles hay que volver a rellenar.
 	 *
 	 * @param array<string, mixed> $settings Ajustes guardados de la acción.
 	 * @return array<string, mixed>
@@ -93,7 +92,7 @@ final class Webhook_Action implements Action_Type {
 		$settings['secret'] = '';
 
 		foreach ( is_array( $settings['headers'] ?? null ) ? $settings['headers'] : array() as $index => $header ) {
-			if ( is_array( $header ) && 1 === preg_match( self::CREDENTIAL_HEADER, (string) ( $header['name'] ?? '' ) ) ) {
+			if ( is_array( $header ) ) {
 				$settings['headers'][ $index ]['value'] = '';
 			}
 		}

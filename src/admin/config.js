@@ -19,6 +19,7 @@ export const templates = config.templates?.length
 			},
 		];
 export const fieldWidths = config.fieldWidths || [ 100 ];
+export const styleSchema = config.styleSchema || [];
 export const can = config.can || {};
 export const urls = config.urls || {};
 export const siteHost = config.siteHost || '';
