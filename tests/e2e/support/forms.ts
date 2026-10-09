@@ -10,7 +10,14 @@ export interface FormField {
 export interface FormDefinition {
   fields: FormField[];
   settings: Record<string, unknown>;
-  actions: { id: string; type: string; enabled: boolean; settings: Record<string, unknown> }[];
+  actions: {
+    id: string;
+    type: string;
+    enabled: boolean;
+    name?: string;
+    condition?: { match: 'all' | 'any'; rules: { field: string; operator: string; value: string }[] };
+    settings: Record<string, unknown>;
+  }[];
 }
 
 /** Dirección a la que llegan las notificaciones de los formularios de prueba. */
@@ -30,7 +37,8 @@ export function contactDefinition(overrides: Partial<FormDefinition> = {}): Form
         id: 'aviso',
         type: 'email',
         enabled: true,
-        settings: { to: [notifyTo], subject: 'Nuevo envío: {form_title}', body: '{all_fields}', reply_to_field: 'correo' },
+        // En texto plano: el correo en HTML tiene sus propios tests.
+        settings: { to: [notifyTo], subject: 'Nuevo envío: {form_title}', body: '{all_fields}', format: 'text', reply_to_field: 'correo' },
       },
     ],
     ...overrides,
@@ -86,6 +94,13 @@ export class AdminApi {
 
   async saveSettings(settings: Record<string, unknown>): Promise<void> {
     await this.send('put', '/formulario-mensaje/v1/settings', settings);
+  }
+
+  /** Guarda los ajustes de correo. Las credenciales que no se indican se borran, para no arrastrarlas entre tests. */
+  async saveMailSettings(settings: Record<string, unknown>, secrets: Record<string, string> = {}): Promise<void> {
+    const clear = ['smtp_password', 'resend_api_key'].filter((name) => !secrets[name]);
+
+    await this.send('put', '/formulario-mensaje/v1/settings/mail', { settings, secrets, clear });
   }
 
   async dispose(): Promise<void> {

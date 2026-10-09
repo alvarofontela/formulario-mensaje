@@ -226,7 +226,7 @@ Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fa
 | --- | --- |
 | 1. Núcleo | Hecha |
 | 2. Envíos y privacidad | Hecha |
-| 3. Correo avanzado | Pendiente |
+| 3. Correo avanzado | Hecha |
 | 4. Webhooks | Pendiente |
 | 5. Captchas | Pendiente |
 | 6. Constructor avanzado | Pendiente |
@@ -268,6 +268,29 @@ Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel
 - **Desinstalar** borra formularios, tablas y opciones solo con el ajuste activado; si no, retira capabilities y la tarea programada.
 - **Pantallas y permisos**: «Envíos» exige `formulario_mensaje_view_submissions`, que es independiente de gestionar formularios. El menú aparece para quien tenga cualquiera de las tres capabilities.
 - **Hooks nuevos**: acción `formulario_mensaje_submissions_deleted` (identificadores borrados) y `formulario_mensaje_daily_maintenance`; el filtro `formulario_mensaje_rate_limit` recibe además la vía del envío.
+
+### Fase 3: lo que se decidió al hacerla
+
+- **Varias notificaciones por formulario.** La pestaña pasa a llamarse «Notificaciones»; cada una tiene nombre, interruptor, destinatarios, formato y condición, y se puede duplicar. Así se resuelve «a quién se avisa según lo que se responda»: una notificación por destinatario, cada una con su condición.
+- **Motor de reglas** (`Rules`): una condición es `{ match: all|any, rules: [{ field, operator, value }] }`. Operadores: es, no es, contiene, no contiene, está vacío, no está vacío, mayor que y menor que. Compara sin distinguir mayúsculas; en los campos con varios valores, «es» significa «alguno es». Una condición sin reglas se cumple siempre y un campo que ya no existe cuenta como vacío. Lo usan las acciones; las fases 8 y 9 lo reutilizan para campos y pasos, con el mismo editor (`src/admin/condition-editor.js`).
+- **Una acción cuya condición no se cumple no se ejecuta ni se anota** en el registro de entregas: no es un fallo.
+- **Formato del correo**: HTML con la marca del sitio (por defecto en las notificaciones nuevas) o texto plano. El HTML siempre lleva su versión en texto. El cuerpo sigue escribiéndose como texto con etiquetas: en HTML se escapa, se respetan los saltos de línea y `{all_fields}` se pinta como una tabla. No hay editor visual del cuerpo.
+- **Marca**: logotipo (URL o biblioteca de medios), color y texto del pie, en Ajustes → Correo electrónico. Sin logotipo se muestra el nombre del sitio.
+- **Transportes**: `wp_mail()` (por defecto; respeta a cualquier plugin de SMTP del sitio), servidor SMTP propio y Resend. El SMTP usa una instancia propia del PHPMailer de WordPress, así que no cambia el correo del resto del sitio ni otro plugin cambia el suyo. Añadir un transporte es una clase y una línea en `Mail_Provider`.
+- **Remitente**: dirección y nombre opcionales. Sin dirección, `wp_mail` usa la del sitio y el SMTP la misma que usaría WordPress (filtro `wp_mail_from`); Resend exige indicarla, porque solo envía desde dominios verificados.
+- **Secretos** (`Secrets`): la contraseña de SMTP y la clave de Resend se cifran con `sodium_crypto_secretbox` y una clave derivada de las salts de WordPress, en la opción `formulario_mensaje_secrets` (sin carga automática). Una constante `FORMULARIO_MENSAJE_SMTP_PASSWORD` o `FORMULARIO_MENSAJE_RESEND_API_KEY` en `wp-config.php` tiene prioridad y bloquea el campo. La REST API nunca devuelve un secreto: solo si está definido y de dónde sale. Si cambian las salts, los secretos guardados dejan de poder leerse y hay que volver a escribirlos.
+- **Las credenciales se borran siempre al desinstalar**, aunque el ajuste de borrar datos esté desactivado.
+- **Correos de prueba**: uno genérico desde los ajustes, con los ajustes guardados, que muestra el error del transporte si falla; y el de cada notificación desde el constructor, con datos de ejemplo que aporta cada tipo de campo (`sample_value()`), sin necesidad de guardar el formulario y solo a la dirección que se indique.
+- **Hooks**: el filtro `formulario_mensaje_email_message` recibe ahora un mensaje que puede llevar HTML.
+
+No verificado contra servicios reales: Resend se ha probado con un doble de la HTTP API (petición, cabecera de autorización, errores) y el SMTP contra Mailpit, que no cifra ni pide credenciales. Quedan sin probar STARTTLS, SSL y la autenticación contra un servidor real.
+
+Cambios sobre la fase 2, a raíz de la revisión de seguridad de su commit:
+
+- **Borrar los envíos junto con un formulario** exige también el permiso de ver envíos; sin él la petición se rechaza entera, y los envíos se borran antes que el formulario.
+- **Reintentar una acción desactivada** se rechaza: desactivarla es la forma de parar una notificación.
+- **Límite por IP con la base de datos caída**: en vez de dejar pasar, cuenta con un transient de respaldo.
+- **Borrado de los envíos de un formulario** sin tope de lotes, para que no queden restos.
 
 Cambios sobre la fase 1, a raíz de la revisión de seguridad de su commit:
 

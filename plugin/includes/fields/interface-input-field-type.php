@@ -43,4 +43,12 @@ interface Input_Field_Type extends Field_Type {
 	 * @param string|string[] $value Valor saneado.
 	 */
 	public function format_value( Field $field, string|array $value ): string;
+
+	/**
+	 * Valor de ejemplo, válido para el campo, con el que probar notificaciones y otras acciones.
+	 *
+	 * @param Field $field Campo.
+	 * @return string|string[] Valor con la misma forma que devuelve sanitize_value().
+	 */
+	public function sample_value( Field $field ): string|array;
 }

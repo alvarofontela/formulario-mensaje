@@ -10,6 +10,7 @@ namespace Formulario_Mensaje\Forms;
 use Formulario_Mensaje\Actions\Action_Type_Registry;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Fields\Settings_Schema_Sanitizer;
+use Formulario_Mensaje\Rules\Condition_Sanitizer;
 use Formulario_Mensaje\Storage\Submission_Journal;
 use Formulario_Mensaje\Submissions\Submission_Result;
 use Formulario_Mensaje\Support\Inline_Html;
@@ -41,12 +42,14 @@ final class Form_Definition_Sanitizer {
 	 * @param Action_Type_Registry      $action_types     Tipos de acción.
 	 * @param Settings_Schema_Sanitizer $schema_sanitizer Saneado de opciones según esquema.
 	 * @param Inline_Html               $inline_html      Filtro del HTML permitido en los textos.
+	 * @param Condition_Sanitizer       $conditions       Saneado de condiciones.
 	 */
 	public function __construct(
 		private readonly Field_Type_Registry $field_types,
 		private readonly Action_Type_Registry $action_types,
 		private readonly Settings_Schema_Sanitizer $schema_sanitizer,
-		private readonly Inline_Html $inline_html
+		private readonly Inline_Html $inline_html,
+		private readonly Condition_Sanitizer $conditions
 	) {}
 
 	/**
@@ -164,7 +167,7 @@ final class Form_Definition_Sanitizer {
 	 * Sanea la lista de acciones. Se descartan las de tipos no registrados.
 	 *
 	 * @param mixed $raw Lista de acciones sin validar.
-	 * @return array<int, array{id: string, type: string, enabled: bool, settings: array<string, mixed>}>
+	 * @return array<int, array{id: string, type: string, enabled: bool, name: string, condition: array<string, mixed>, settings: array<string, mixed>}>
 	 */
 	private function sanitize_actions( mixed $raw ): array {
 		$actions = array();
@@ -178,10 +181,12 @@ final class Form_Definition_Sanitizer {
 			}
 
 			$actions[] = array(
-				'id'       => $this->unique_id( $item['id'] ?? null, 'a_', $ids ),
-				'type'     => $type->get_type(),
-				'enabled'  => ! empty( $item['enabled'] ),
-				'settings' => $type->sanitize_settings( $item['settings'] ?? array() ),
+				'id'        => $this->unique_id( $item['id'] ?? null, 'a_', $ids ),
+				'type'      => $type->get_type(),
+				'enabled'   => ! empty( $item['enabled'] ),
+				'name'      => is_scalar( $item['name'] ?? null ) ? mb_substr( sanitize_text_field( (string) $item['name'] ), 0, 100 ) : '',
+				'condition' => $this->conditions->sanitize( $item['condition'] ?? array() ),
+				'settings'  => $type->sanitize_settings( $item['settings'] ?? array() ),
 			);
 		}
 

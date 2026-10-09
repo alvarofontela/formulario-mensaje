@@ -9,6 +9,8 @@ use Formulario_Mensaje\Forms\Form;
 use Formulario_Mensaje\Forms\Form_Definition;
 use Formulario_Mensaje\Mail\Email_Action;
 use Formulario_Mensaje\Mail\Email_Message;
+use Formulario_Mensaje\Mail\Email_Template;
+use Formulario_Mensaje\Rules\Rule_Evaluator;
 use Formulario_Mensaje\Settings\Settings;
 use Formulario_Mensaje\Submissions\Redirect_Policy;
 use Formulario_Mensaje\Submissions\Redirect_Resolver;
@@ -212,7 +214,7 @@ class EnvioTest extends Caso_Formulario {
 
 	public function test_la_notificacion_usa_el_transporte_inyectado_y_admite_el_filtro_del_correo() {
 		$transporte = new Transporte_Espia();
-		$accion     = new Email_Action( $transporte, new Tag_Replacer() );
+		$accion     = new Email_Action( $transporte, new Tag_Replacer(), new Email_Template( new Ajustes_Correo_En_Memoria() ) );
 		$envio      = $this->envio( array( 'nombre' => 'Ana', 'correo' => 'ana@example.org' ) );
 		$ajustes    = array( 'to' => array( 'ventas@example.org', 'no-valido' ), 'subject' => 'Aviso {reference}', 'body' => '{field:nombre}', 'reply_to_field' => 'correo' );
 
@@ -238,7 +240,7 @@ class EnvioTest extends Caso_Formulario {
 		$falla->falla = true;
 
 		$registro = new Action_Type_Registry();
-		$registro->register( new Email_Action( $falla, new Tag_Replacer() ) );
+		$registro->register( new Email_Action( $falla, new Tag_Replacer(), new Email_Template( new Ajustes_Correo_En_Memoria() ) ) );
 
 		$formulario = new Form(
 			5,
@@ -255,7 +257,7 @@ class EnvioTest extends Caso_Formulario {
 			)
 		);
 
-		$resultados = ( new Action_Runner( $registro ) )->run( $formulario, $this->envio( array( 'nombre' => 'Dato personal' ) ) );
+		$resultados = ( new Action_Runner( $registro, new Rule_Evaluator() ) )->run( $formulario, $this->envio( array( 'nombre' => 'Dato personal' ) ) );
 
 		$this->assertCount( 1, $resultados, 'Las acciones desconocidas o desactivadas no se ejecutan.' );
 		$this->assertFalse( $resultados[0]->success );

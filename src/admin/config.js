@@ -15,6 +15,8 @@ export const defaultDefinition = config.defaultDefinition || {
 export const can = config.can || {};
 export const urls = config.urls || {};
 export const siteHost = config.siteHost || '';
+export const operators = config.operators || [];
+export const userEmail = config.userEmail || '';
 export const restBase = `/${ config.restNamespace || 'formulario-mensaje/v1' }`;
 
 /**

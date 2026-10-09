@@ -96,9 +96,9 @@ test('la notificación y el comportamiento tras el envío se configuran y se gua
 
   await page.goto(`${formsScreen}&form=${formId}`);
 
-  await page.getByRole('tab', { name: 'Notificación' }).click();
-  await page.getByLabel('Enviar a').fill('uno@example.test, no-es-correo, dos@example.test');
-  await page.getByLabel('Asunto').fill('Aviso de {form_title}');
+  await page.getByRole('tab', { name: 'Notificaciones' }).click();
+  await page.getByLabel('Enviar a', { exact: true }).fill('uno@example.test, no-es-correo, dos@example.test');
+  await page.getByLabel('Asunto', { exact: true }).fill('Aviso de {form_title}');
 
   await page.getByRole('tab', { name: 'Tras el envío' }).click();
   await page.getByLabel('Texto del botón').fill('Pedir presupuesto');
@@ -114,10 +114,10 @@ test('la notificación y el comportamiento tras el envío se configuran y se gua
   await expect(page.locator('.components-notice')).toContainText('Formulario guardado.');
 
   await page.reload();
-  await page.getByRole('tab', { name: 'Notificación' }).click();
+  await page.getByRole('tab', { name: 'Notificaciones' }).click();
   // El servidor se queda solo con las direcciones válidas.
-  await expect(page.getByLabel('Enviar a')).toHaveValue('uno@example.test, dos@example.test');
-  await expect(page.getByLabel('Asunto')).toHaveValue('Aviso de {form_title}');
+  await expect(page.getByLabel('Enviar a', { exact: true })).toHaveValue('uno@example.test, dos@example.test');
+  await expect(page.getByLabel('Asunto', { exact: true })).toHaveValue('Aviso de {form_title}');
 
   await page.getByRole('tab', { name: 'Tras el envío' }).click();
   await expect(page.getByLabel('Texto del botón')).toHaveValue('Pedir presupuesto');

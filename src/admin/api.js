@@ -69,3 +69,11 @@ export const getSettings = () => request( '/settings' );
 export const saveSettings = ( settings ) =>
 	request( '/settings', 'PUT', settings );
 export const runMaintenance = () => request( '/maintenance', 'POST' );
+
+export const getMailSettings = () => request( '/settings/mail' );
+export const saveMailSettings = ( data ) =>
+	request( '/settings/mail', 'PUT', data );
+export const sendMailTest = ( to ) =>
+	request( '/settings/mail/test', 'POST', { to } );
+export const sendTestEmail = ( data ) =>
+	request( '/forms/test-email', 'POST', data );

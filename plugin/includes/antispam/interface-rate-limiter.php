@@ -22,7 +22,8 @@ interface Rate_Limiter {
 	 *
 	 * @param string $key    Clave del contador.
 	 * @param int    $window Duración de la ventana, en segundos, si con este suceso empieza una nueva.
-	 * @return int Sucesos contados en la ventana; 0 si no se pudo contar.
+	 * @return int Sucesos contados en la ventana, al menos 1. Si el almacenamiento falla, la implementación
+	 *             debe seguir contando por otra vía: devolver 0 dejaría el límite sin efecto.
 	 */
 	public function hit( string $key, int $window ): int;
 

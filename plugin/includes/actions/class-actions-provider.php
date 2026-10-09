@@ -8,6 +8,7 @@
 namespace Formulario_Mensaje\Actions;
 
 use Formulario_Mensaje\Container;
+use Formulario_Mensaje\Rules\Rule_Evaluator;
 use Formulario_Mensaje\Service_Provider;
 
 defined( 'ABSPATH' ) || exit;
@@ -50,7 +51,7 @@ final class Actions_Provider implements Service_Provider {
 
 		$container->set(
 			Action_Runner::class,
-			static fn ( Container $c ): Action_Runner => new Action_Runner( $c->get( Action_Type_Registry::class ) )
+			static fn ( Container $c ): Action_Runner => new Action_Runner( $c->get( Action_Type_Registry::class ), $c->get( Rule_Evaluator::class ) )
 		);
 	}
 }

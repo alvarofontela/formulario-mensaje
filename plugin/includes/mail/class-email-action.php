@@ -29,6 +29,9 @@ final class Email_Action implements Action_Type {
 	 */
 	public const TYPE = 'email';
 
+	public const FORMAT_HTML = 'html';
+	public const FORMAT_TEXT = 'text';
+
 	/**
 	 * Máximo de destinatarios de una notificación.
 	 */
@@ -39,10 +42,12 @@ final class Email_Action implements Action_Type {
 	 *
 	 * @param Mail_Transport $transport Transporte de correo.
 	 * @param Tag_Replacer   $tags      Etiquetas de los textos.
+	 * @param Email_Template $template  Plantilla HTML con la marca.
 	 */
 	public function __construct(
 		private readonly Mail_Transport $transport,
-		private readonly Tag_Replacer $tags
+		private readonly Tag_Replacer $tags,
+		private readonly Email_Template $template
 	) {}
 
 	/**
@@ -71,6 +76,7 @@ final class Email_Action implements Action_Type {
 			'subject'        => __( 'New submission: {form_title}', 'formulario-mensaje' ),
 			/* translators: {all_fields}, {reference}, {page_url} and {date} are tags replaced by data of the submission; keep them as they are. */
 			'body'           => __( "{all_fields}\n\n--\nReference: {reference}\nPage: {page_url}\nDate: {date}", 'formulario-mensaje' ),
+			'format'         => self::FORMAT_HTML,
 			'reply_to_field' => '',
 		);
 	}
@@ -90,6 +96,7 @@ final class Email_Action implements Action_Type {
 			'to'             => $this->sanitize_recipients( $raw['to'] ?? array() ),
 			'subject'        => is_scalar( $raw['subject'] ?? null ) ? mb_substr( sanitize_text_field( (string) $raw['subject'] ), 0, 300 ) : $defaults['subject'],
 			'body'           => is_scalar( $raw['body'] ?? null ) ? mb_substr( sanitize_textarea_field( (string) $raw['body'] ), 0, 20000 ) : $defaults['body'],
+			'format'         => self::FORMAT_TEXT === ( $raw['format'] ?? null ) ? self::FORMAT_TEXT : self::FORMAT_HTML,
 			'reply_to_field' => 1 === preg_match( Field::ID_PATTERN, $reply_to ) ? $reply_to : '',
 		);
 	}
@@ -109,11 +116,21 @@ final class Email_Action implements Action_Type {
 			return new WP_Error( 'formulario_mensaje_no_recipients', __( 'The notification has no valid recipients.', 'formulario-mensaje' ) );
 		}
 
+		$body    = is_string( $settings['body'] ?? null ) ? $settings['body'] : '';
+		$subject = $this->tags->to_text( is_string( $settings['subject'] ?? null ) ? $settings['subject'] : '', $submission, $form );
+		$html    = '';
+
+		if ( self::FORMAT_TEXT !== ( $settings['format'] ?? self::FORMAT_HTML ) ) {
+			// La plantilla se escapa antes de sustituir las etiquetas: los datos del envío entran después, ya escapados.
+			$html = $this->template->render( $this->tags->to_email_html( nl2br( esc_html( $body ) ), $submission, $form ), $subject );
+		}
+
 		$message = new Email_Message(
 			$recipients,
-			$this->tags->to_text( is_string( $settings['subject'] ?? null ) ? $settings['subject'] : '', $submission, $form ),
-			$this->tags->to_text( is_string( $settings['body'] ?? null ) ? $settings['body'] : '', $submission, $form ),
-			$this->reply_to( $settings, $submission )
+			$subject,
+			$this->tags->to_text( $body, $submission, $form ),
+			$this->reply_to( $settings, $submission ),
+			$html
 		);
 
 		/**
@@ -131,7 +148,9 @@ final class Email_Action implements Action_Type {
 	}
 
 	/**
-	 * Dirección de respuesta: la que el visitante escribió en el campo elegido, si es una dirección válida.
+	 * Dirección de respuesta: la que el visitante escribió en el campo elegido.
+	 *
+	 * Su validación como dirección de correo la hace el mensaje justo antes de usarla.
 	 *
 	 * @param array<string, mixed> $settings   Ajustes de la acción.
 	 * @param Submission           $submission Envío.
@@ -139,9 +158,8 @@ final class Email_Action implements Action_Type {
 	private function reply_to( array $settings, Submission $submission ): string {
 		$field_id = is_string( $settings['reply_to_field'] ?? null ) ? $settings['reply_to_field'] : '';
 		$entry    = '' === $field_id ? null : $submission->entry( $field_id );
-		$address  = null !== $entry && is_string( $entry->value ) ? $entry->value : '';
 
-		return '' !== $address && false !== is_email( $address ) && 1 !== preg_match( '/[\r\n]/', $address ) ? $address : '';
+		return null !== $entry && is_string( $entry->value ) ? $entry->value : '';
 	}
 
 	/**

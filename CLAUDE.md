@@ -241,6 +241,8 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 | `src/` | Fuentes de lo que sí se compila: la aplicación de administración (`src/admin/`) y el bloque (`src/blocks/form/`) |
 | `plugin/build/`, `plugin/languages/` | Generados (ver «Qué no se edita a mano») |
 
+Para añadir un transporte de correo: una clase en `plugin/includes/mail/` que implemente `Mail_Transport` y una línea en `Mail_Provider`. Un secreto nuevo (clave de API, contraseña) se guarda con `Secret_Vault`, nunca en una opción en claro, y ninguna ruta lo devuelve.
+
 Para añadir un tipo de campo: una clase en `plugin/includes/fields/types/` que implemente `Field_Type` (o `Input_Field_Type` si recoge datos) y una línea en `Fields_Provider`. El constructor pinta sus ajustes a partir del esquema que declara, sin tocar el JavaScript. Un tipo de acción se añade igual, con `Action_Type` y su proveedor.
 
 ## Tests
@@ -253,6 +255,7 @@ Para añadir un tipo de campo: una clase en `plugin/includes/fields/types/` que 
 - El tiempo mínimo de relleno (3 s) es real en Playwright: cada envío tarda al menos eso. En PHPUnit lo anula `Caso_Formulario`. Para crear envíos rápido en los tests de administración, `submitWithoutJs()` (dos por formulario cada diez minutos, que es el límite de esa vía).
 - Las tablas del plugin se crean una vez en `tests/phpunit/bootstrap.php`. Dentro de un test WordPress convierte `CREATE TABLE` y `DROP TABLE` en operaciones sobre tablas temporales, así que el borrado de tablas al desinstalar no se puede comprobar con PHPUnit.
 - Los controladores y servicios viven todo el proceso de PHPUnit: no guardes en ellos nada que dependa de la petición (un recuento, el usuario), o un test verá datos de otro.
+- Los servicios externos se sustituyen por dobles: las peticiones HTTP, con el filtro `pre_http_request`; el SMTP se prueba contra Mailpit (`127.0.0.1:1025`, sin cifrado ni credenciales). Los tests de Playwright que cambian los ajustes de correo los devuelven a los de fábrica al terminar (`AdminApi.saveMailSettings({})`).
 - `tests/phpunit/EntornoTest.php` y `tests/e2e/entorno.spec.ts` solo comprueban el entorno; sirven de plantilla.
 
 ## A tener en cuenta

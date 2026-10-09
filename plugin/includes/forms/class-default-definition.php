@@ -70,6 +70,7 @@ final class Default_Definition {
 						'id'       => 'notification',
 						'type'     => $email->get_type(),
 						'enabled'  => true,
+						'name'     => __( 'Notification', 'formulario-mensaje' ),
 						'settings' => array_merge( $email->default_settings(), array( 'reply_to_field' => 'email' ) ),
 					),
 				),

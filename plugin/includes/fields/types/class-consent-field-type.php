@@ -152,4 +152,14 @@ final class Consent_Field_Type implements Input_Field_Type {
 			wp_strip_all_tags( $field->text( 'text' ) )
 		);
 	}
+
+	/**
+	 * Valor de ejemplo para probar notificaciones y otras acciones.
+	 *
+	 * @param Field $field Campo.
+	 * @return string|string[]
+	 */
+	public function sample_value( Field $field ): string|array {
+		return self::ACCEPTED;
+	}
 }

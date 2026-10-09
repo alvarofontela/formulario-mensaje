@@ -39,6 +39,8 @@ final class Plugin {
 		return array(
 			new Database\Database_Provider(),
 			new Lifecycle\Lifecycle_Provider(),
+			new Secrets\Secrets_Provider(),
+			new Rules\Rules_Provider(),
 			new Settings\Settings_Provider(),
 			new Fields\Fields_Provider(),
 			new Actions\Actions_Provider(),

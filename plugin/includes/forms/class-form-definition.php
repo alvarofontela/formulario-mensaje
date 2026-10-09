@@ -22,9 +22,9 @@ final class Form_Definition {
 	/**
 	 * Constructor.
 	 *
-	 * @param Field[]                                                                                    $fields   Campos, en orden.
-	 * @param array<string, mixed>                                                                       $settings Ajustes del formulario.
-	 * @param array<int, array{id: string, type: string, enabled: bool, settings: array<string, mixed>}> $actions  Acciones de cada envío.
+	 * @param Field[]                                                                                                                                   $fields   Campos, en orden.
+	 * @param array<string, mixed>                                                                                                                      $settings Ajustes del formulario.
+	 * @param array<int, array{id: string, type: string, enabled: bool, name: string, condition: array<string, mixed>, settings: array<string, mixed>}> $actions  Acciones de cada envío.
 	 */
 	public function __construct(
 		public readonly array $fields = array(),
@@ -58,10 +58,12 @@ final class Form_Definition {
 			}
 
 			$actions[] = array(
-				'id'       => $action['id'],
-				'type'     => $action['type'],
-				'enabled'  => ! empty( $action['enabled'] ),
-				'settings' => is_array( $action['settings'] ?? null ) ? $action['settings'] : array(),
+				'id'        => $action['id'],
+				'type'      => $action['type'],
+				'enabled'   => ! empty( $action['enabled'] ),
+				'name'      => is_string( $action['name'] ?? null ) ? $action['name'] : '',
+				'condition' => is_array( $action['condition'] ?? null ) ? $action['condition'] : array(),
+				'settings'  => is_array( $action['settings'] ?? null ) ? $action['settings'] : array(),
 			);
 		}
 

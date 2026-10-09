@@ -61,6 +61,15 @@ final class Submissions_Provider implements Service_Provider {
 		);
 
 		$container->set(
+			Sample_Submission_Factory::class,
+			static fn ( Container $c ): Sample_Submission_Factory => new Sample_Submission_Factory(
+				$c->get( Field_Type_Registry::class ),
+				$c->get( Reference_Generator::class ),
+				$c->get( Clock::class )
+			)
+		);
+
+		$container->set(
 			Submission_Request_Factory::class,
 			static fn ( Container $c ): Submission_Request_Factory => new Submission_Request_Factory(
 				$c->get( Client_Ip_Resolver::class ),

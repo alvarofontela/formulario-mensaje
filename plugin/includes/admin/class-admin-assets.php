@@ -70,6 +70,11 @@ final class Admin_Assets {
 
 		wp_set_script_translations( self::HANDLE, Translations::DOMAIN, $this->translations->directory() );
 
+		// La pantalla de ajustes abre la biblioteca de medios para elegir el logotipo de los correos.
+		if ( 'settings' === $view ) {
+			wp_enqueue_media();
+		}
+
 		wp_add_inline_script(
 			self::HANDLE,
 			'window.formularioMensajeAdmin = ' . wp_json_encode( $this->data->get( $view ) ) . ';',

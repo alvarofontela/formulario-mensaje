@@ -4,6 +4,8 @@
  */
 
 use Formulario_Mensaje\Mail\Email_Message;
+use Formulario_Mensaje\Mail\Mail_Settings;
+use Formulario_Mensaje\Mail\Mail_Settings_Repository;
 use Formulario_Mensaje\Mail\Mail_Transport;
 use Formulario_Mensaje\Settings\Settings;
 use Formulario_Mensaje\Settings\Settings_Repository;
@@ -57,6 +59,19 @@ final class Ajustes_En_Memoria implements Settings_Repository {
 	}
 }
 
+/** Ajustes de correo en memoria. */
+final class Ajustes_Correo_En_Memoria implements Mail_Settings_Repository {
+	public function __construct( public Mail_Settings $ajustes = new Mail_Settings() ) {}
+
+	public function get(): Mail_Settings {
+		return $this->ajustes;
+	}
+
+	public function save( Mail_Settings $settings ): void {
+		$this->ajustes = $settings;
+	}
+}
+
 /** Transporte que guarda los correos en vez de enviarlos, y puede simular un fallo. */
 final class Transporte_Espia implements Mail_Transport {
 	/** @var Email_Message[] */
@@ -88,6 +103,13 @@ abstract class Caso_Formulario extends WP_UnitTestCase {
 		// Los tests no esperan el tiempo mínimo de relleno salvo los que lo comprueban expresamente.
 		add_filter( 'formulario_mensaje_min_fill_seconds', '__return_zero' );
 		reset_phpmailer_instance();
+	}
+
+	public function tear_down() {
+		// El buzón simulado es global: se vacía para que el siguiente test no lea correos de este.
+		reset_phpmailer_instance();
+
+		parent::tear_down();
 	}
 
 	/** Esquema de las tablas del plugin sobre la base de datos de tests. */

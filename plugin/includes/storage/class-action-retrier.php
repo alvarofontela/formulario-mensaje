@@ -61,20 +61,27 @@ final class Action_Retrier {
 			return $this->error( 'formulario_mensaje_delivery_not_retryable', __( 'The submission or its form no longer exists.', 'formulario-mensaje' ), 404 );
 		}
 
-		$settings = null;
+		$current = null;
 
 		foreach ( $form->definition->actions as $action ) {
 			if ( $action['id'] === $delivery->action_id && $action['type'] === $delivery->action_type ) {
-				$settings = $action['settings'];
+				$current = $action;
 				break;
 			}
 		}
 
 		$type = $this->action_types->get( $delivery->action_type );
 
-		if ( null === $settings || null === $type ) {
+		if ( null === $current || null === $type ) {
 			return $this->error( 'formulario_mensaje_action_not_found', __( 'The form no longer has this action.', 'formulario-mensaje' ), 409 );
 		}
+
+		// Quien desactivó la acción decidió que dejara de ejecutarse: reintentar no puede saltárselo.
+		if ( ! $current['enabled'] ) {
+			return $this->error( 'formulario_mensaje_action_disabled', __( 'This action is turned off in the form. Turn it on to retry.', 'formulario-mensaje' ), 409 );
+		}
+
+		$settings = $current['settings'];
 
 		$outcome = $type->execute( $settings, $stored->to_submission(), $form );
 

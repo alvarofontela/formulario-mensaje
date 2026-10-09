@@ -125,4 +125,14 @@ abstract class Abstract_Choice_Field_Type implements Input_Field_Type {
 
 		return implode( ', ', $labels );
 	}
+
+	/**
+	 * Valor de ejemplo para probar notificaciones y otras acciones.
+	 *
+	 * @param Field $field Campo.
+	 * @return string|string[]
+	 */
+	public function sample_value( Field $field ): string|array {
+		return (string) ( array_key_first( $this->options( $field ) ) ?? '' );
+	}
 }

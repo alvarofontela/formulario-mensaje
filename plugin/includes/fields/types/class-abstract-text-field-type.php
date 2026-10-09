@@ -154,4 +154,14 @@ abstract class Abstract_Text_Field_Type implements Input_Field_Type {
 	public function format_value( Field $field, string|array $value ): string {
 		return is_array( $value ) ? implode( ', ', $value ) : $value;
 	}
+
+	/**
+	 * Valor de ejemplo para probar notificaciones y otras acciones.
+	 *
+	 * @param Field $field Campo.
+	 * @return string|string[]
+	 */
+	public function sample_value( Field $field ): string|array {
+		return __( 'Sample text', 'formulario-mensaje' );
+	}
 }

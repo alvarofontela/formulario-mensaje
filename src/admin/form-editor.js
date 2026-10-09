@@ -18,7 +18,10 @@ import StoragePanel from './storage-panel';
 
 const TABS = [
 	{ name: 'fields', title: __( 'Fields', 'formulario-mensaje' ) },
-	{ name: 'notification', title: __( 'Notification', 'formulario-mensaje' ) },
+	{
+		name: 'notification',
+		title: __( 'Notifications', 'formulario-mensaje' ),
+	},
 	{ name: 'storage', title: __( 'Storage', 'formulario-mensaje' ) },
 	{ name: 'settings', title: __( 'After sending', 'formulario-mensaje' ) },
 ];
@@ -224,8 +227,8 @@ export default function FormEditor( { formId, onClose, onCreated } ) {
 								) }
 								{ tab.name === 'notification' && (
 									<NotificationPanel
-										actions={ definition.actions }
-										fields={ definition.fields }
+										title={ title }
+										definition={ definition }
 										onChange={ ( actions ) =>
 											change( { actions } )
 										}

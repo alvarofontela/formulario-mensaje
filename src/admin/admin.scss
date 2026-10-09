@@ -151,6 +151,15 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		margin: 16px 0 0;
 		font-size: 12px;
 	}
+
+	&__tabs {
+		margin-bottom: 16px;
+
+		> .components-tab-panel__tabs {
+			margin-bottom: 16px;
+			border-bottom: 1px solid $border;
+		}
+	}
 }
 
 // Constructor
@@ -385,6 +394,90 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		margin: 0 0 8px;
 		color: $muted;
 		font-size: 12px;
+	}
+
+	&__columns {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+		gap: 16px;
+	}
+}
+
+// Condiciones, pruebas de correo y credenciales
+
+.fm-condition {
+	padding-top: 16px;
+	border-top: 1px solid $border;
+
+	&__match {
+		max-width: 320px;
+		margin-bottom: 12px;
+	}
+
+	&__rule {
+		flex-wrap: wrap;
+
+		> .components-base-control {
+			flex: 1 1 140px;
+		}
+	}
+}
+
+.fm-test {
+	padding-top: 16px;
+	border-top: 1px solid $border;
+
+	.fm-options__row {
+		align-items: flex-start;
+		gap: 8px;
+	}
+
+	// Sin separador cuando solo se usa para alinear un campo con su botón.
+	&--plain {
+		padding-top: 0;
+		border-top: 0;
+	}
+
+	// El botón se alinea con el campo, que lleva su etiqueta encima.
+	&__button {
+		flex: none;
+		margin-top: 23px;
+	}
+
+	.components-notice {
+		margin: 8px 0 0;
+	}
+}
+
+.fm-secret {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+
+	> .components-base-control {
+		width: 100%;
+	}
+}
+
+.fm-color {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+
+	label {
+		font-size: 11px;
+		font-weight: 500;
+		text-transform: uppercase;
+	}
+
+	input {
+		width: 48px;
+		height: 32px;
+		padding: 0;
+		border: 1px solid $border;
+		background: none;
+		cursor: pointer;
 	}
 }
 

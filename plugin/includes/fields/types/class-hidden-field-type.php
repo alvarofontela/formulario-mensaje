@@ -204,4 +204,14 @@ final class Hidden_Field_Type implements Input_Field_Type {
 	private function source( Field $field ): string {
 		return $field->text( 'source', Context_Resolver::SOURCE_PAGE_URL );
 	}
+
+	/**
+	 * Valor de ejemplo para probar notificaciones y otras acciones.
+	 *
+	 * @param Field $field Campo.
+	 * @return string|string[]
+	 */
+	public function sample_value( Field $field ): string|array {
+		return Context_Resolver::SOURCE_FIXED === $this->source( $field ) ? $field->text( 'value' ) : home_url( '/' );
+	}
 }

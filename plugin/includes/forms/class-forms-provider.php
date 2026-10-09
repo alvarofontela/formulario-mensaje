@@ -11,6 +11,7 @@ use Formulario_Mensaje\Actions\Action_Type_Registry;
 use Formulario_Mensaje\Container;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Fields\Settings_Schema_Sanitizer;
+use Formulario_Mensaje\Rules\Condition_Sanitizer;
 use Formulario_Mensaje\Service_Provider;
 use Formulario_Mensaje\Submissions\Redirect_Policy;
 use Formulario_Mensaje\Support\Inline_Html;
@@ -37,7 +38,8 @@ final class Forms_Provider implements Service_Provider {
 				$c->get( Field_Type_Registry::class ),
 				$c->get( Action_Type_Registry::class ),
 				$c->get( Settings_Schema_Sanitizer::class ),
-				$c->get( Inline_Html::class )
+				$c->get( Inline_Html::class ),
+				$c->get( Condition_Sanitizer::class )
 			)
 		);
 

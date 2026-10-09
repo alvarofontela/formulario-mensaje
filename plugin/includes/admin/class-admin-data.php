@@ -15,6 +15,7 @@ use Formulario_Mensaje\Fields\Input_Field_Type;
 use Formulario_Mensaje\Forms\Default_Definition;
 use Formulario_Mensaje\Lifecycle\Capabilities;
 use Formulario_Mensaje\Rest\Rest_Provider;
+use Formulario_Mensaje\Rules\Operator;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -75,6 +76,16 @@ final class Admin_Data {
 				$this->action_types->all()
 			),
 			'defaultDefinition' => $this->default_definition->create()->to_array(),
+			// Operadores del motor de reglas, para el editor de condiciones.
+			'operators'         => array_map(
+				static fn ( Operator $operator ): array => array(
+					'value'      => $operator->value,
+					'label'      => $operator->label(),
+					'needsValue' => $operator->needs_value(),
+				),
+				Operator::cases()
+			),
+			'userEmail'         => wp_get_current_user()->user_email,
 			'can'               => array(
 				'manageForms'     => current_user_can( Capabilities::MANAGE_FORMS ),
 				'viewSubmissions' => current_user_can( Capabilities::VIEW_SUBMISSIONS ),

@@ -24,44 +24,44 @@ msgstr "Constructor de formularios ligero y auditable: formularios con sus propi
 msgid "Álvaro Fontela"
 msgstr "Álvaro Fontela"
 
-#: includes/admin/class-admin-data.php:64
+#: includes/admin/class-admin-data.php:65
 msgid "Basic fields"
 msgstr "Campos básicos"
 
-#: includes/admin/class-admin-data.php:65
+#: includes/admin/class-admin-data.php:66
 msgid "Choice fields"
 msgstr "Campos de opciones"
 
-#: includes/admin/class-admin-data.php:66
+#: includes/admin/class-admin-data.php:67
 msgid "Advanced fields"
 msgstr "Campos avanzados"
 
-#: includes/admin/class-admin-data.php:67
+#: includes/admin/class-admin-data.php:68
 msgid "Layout"
 msgstr "Presentación"
 
 #: includes/admin/class-admin-menu.php:71
 #: includes/admin/class-admin-menu.php:72
 #: includes/admin/class-admin-menu.php:117
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Forms"
 msgstr "Formularios"
 
 #: includes/admin/class-admin-menu.php:118
-#: build/admin/index.js:21
+#: build/admin/index.js:27
 msgid "All forms"
 msgstr "Todos los formularios"
 
 #: includes/admin/class-admin-menu.php:124
 #: includes/admin/class-admin-menu.php:125
-#: build/admin/index.js:6
-#: build/admin/index.js:16
-#: build/admin/index.js:21
+#: build/admin/index.js:10
+#: build/admin/index.js:22
+#: build/admin/index.js:27
 msgid "Submissions"
 msgstr "Envíos"
 
 #: includes/admin/class-admin-menu.php:131
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "Forms settings"
 msgstr "Ajustes de formularios"
 
@@ -89,7 +89,8 @@ msgstr "Lo siento, no tienes permisos para ver los envíos."
 #: includes/admin/class-export-controller.php:51
 #: includes/forms/class-form-service.php:193
 #: includes/forms/class-post-form-repository.php:86
-#: includes/rest/class-forms-controller.php:220
+#: includes/rest/class-forms-controller.php:246
+#: includes/rest/class-forms-controller.php:301
 msgid "The form does not exist."
 msgstr "El formulario no existe."
 
@@ -153,6 +154,7 @@ msgstr "Apellidos"
 #: includes/fields/class-common-settings.php:157
 #: includes/fields/types/class-email-field-type.php:30
 #: includes/forms/class-default-definition.php:53
+#: build/admin/index.js:19
 msgid "Email"
 msgstr "Correo electrónico"
 
@@ -191,6 +193,7 @@ msgid "Prefill"
 msgstr "Prellenado"
 
 #: includes/fields/class-common-settings.php:132
+#: build/admin/index.js:18
 msgid "None"
 msgstr "Ninguno"
 
@@ -238,6 +241,10 @@ msgstr "Opción 2"
 msgid "Choose one of the available options."
 msgstr "Elige una de las opciones disponibles."
 
+#: includes/fields/types/class-abstract-text-field-type.php:165
+msgid "Sample text"
+msgstr "Texto de ejemplo"
+
 #: includes/fields/types/class-checkboxes-field-type.php:31
 msgid "Checkboxes"
 msgstr "Casillas"
@@ -278,8 +285,8 @@ msgstr "Aceptado: %s"
 
 #: includes/fields/types/class-date-field-type.php:30
 #: includes/storage/class-csv-exporter.php:63
-#: build/admin/index.js:17
-#: build/admin/index.js:22
+#: build/admin/index.js:23
+#: build/admin/index.js:28
 msgid "Date"
 msgstr "Fecha"
 
@@ -342,6 +349,7 @@ msgid "Other URL parameter"
 msgstr "Otro parámetro de la URL"
 
 #: includes/fields/types/class-hidden-field-type.php:91
+#: build/admin/index.js:6
 msgid "Value"
 msgstr "Valor"
 
@@ -379,6 +387,7 @@ msgid "Empty option text"
 msgstr "Texto de la opción vacía"
 
 #: includes/fields/types/class-select-field-type.php:65
+#: build/admin/index.js:6
 msgid "Select an option"
 msgstr "Elige una opción"
 
@@ -390,26 +399,34 @@ msgstr "Escribe un número de teléfono válido."
 msgid "Text area"
 msgstr "Área de texto"
 
+#: includes/fields/types/class-textarea-field-type.php:151
+msgid "This is a sample message.\nIt has two lines."
+msgstr "Este es un mensaje de ejemplo.\nTiene dos líneas."
+
 #: includes/fields/types/class-url-field-type.php:97
 msgid "Enter a valid web address."
 msgstr "Escribe una dirección web válida."
 
 #: includes/forms/class-default-definition.php:44
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Name"
 msgstr "Nombre"
 
 #: includes/forms/class-default-definition.php:62
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Message"
 msgstr "Mensaje"
 
-#: includes/forms/class-form-definition-sanitizer.php:103
+#: includes/forms/class-default-definition.php:73
+msgid "Notification"
+msgstr "Notificación"
+
+#: includes/forms/class-form-definition-sanitizer.php:106
 #: includes/frontend/class-form-renderer.php:120
 msgid "Send"
 msgstr "Enviar"
 
-#: includes/forms/class-form-definition-sanitizer.php:106
+#: includes/forms/class-form-definition-sanitizer.php:109
 #: includes/submissions/class-confirmation-builder.php:62
 msgid "Thank you. Your message has been sent."
 msgstr "Gracias. Hemos recibido tu mensaje."
@@ -461,57 +478,129 @@ msgstr "Formulario Mensaje no se puede activar para toda la red. Actívalo en ca
 msgid "Plugin activation error"
 msgstr "Error al activar el plugin"
 
-#: includes/mail/class-email-action.php:59
+#: includes/mail/class-email-action.php:64
 msgid "Email notification"
 msgstr "Notificación por correo"
 
 #. translators: {form_title} is a tag replaced by the name of the form; keep it as is.
-#: includes/mail/class-email-action.php:71
+#: includes/mail/class-email-action.php:76
 msgid "New submission: {form_title}"
 msgstr "Nuevo envío: {form_title}"
 
 #. translators: {all_fields}, {reference}, {page_url} and {date} are tags replaced by data of the submission; keep them as they are.
-#: includes/mail/class-email-action.php:73
+#: includes/mail/class-email-action.php:78
 msgid "{all_fields}\n\n--\nReference: {reference}\nPage: {page_url}\nDate: {date}"
 msgstr "{all_fields}\n\n--\nReferencia: {reference}\nPágina: {page_url}\nFecha: {date}"
 
-#: includes/mail/class-email-action.php:109
+#: includes/mail/class-email-action.php:116
 msgid "The notification has no valid recipients."
 msgstr "La notificación no tiene destinatarios válidos."
 
-#: includes/mail/class-wp-mail-transport.php:60
+#. translators: %s: name of the site.
+#: includes/mail/class-mail-tester.php:53
+#, php-format
+msgid "Test email from %s"
+msgstr "Correo de prueba de %s"
+
+#: includes/mail/class-mail-tester.php:56
+msgid "If you are reading this, the emails of Formulario Mensaje are being delivered with the current settings."
+msgstr "Si estás leyendo esto, los correos de Formulario Mensaje se están entregando con los ajustes actuales."
+
+#. translators: %s: subject of the notification.
+#: includes/mail/class-mail-tester.php:87
+#, php-format
+msgid "[Test] %s"
+msgstr "[Prueba] %s"
+
+#: includes/mail/class-mail-tester.php:94
+msgid "The form has no notification with that identifier."
+msgstr "El formulario no tiene ninguna notificación con ese identificador."
+
+#: includes/mail/class-mail-tester.php:101
+msgid "Enter a valid email address for the test."
+msgstr "Escribe una dirección de correo válida para la prueba."
+
+#: includes/mail/class-resend-transport.php:54
+msgid "Resend needs an API key and a sender address of a domain verified in Resend."
+msgstr "Resend necesita una clave de API y una dirección de remitente de un dominio verificado en Resend."
+
+#. translators: 1: HTTP status code, 2: error message returned by Resend.
+#: includes/mail/class-resend-transport.php:105
+#, php-format
+msgid "Resend answered with error %1$d. %2$s"
+msgstr "Resend ha respondido con el error %1$d. %2$s"
+
+#: includes/mail/class-selected-transport.php:43
+msgid "The email transport chosen in the settings is not available."
+msgstr "El método de envío de correo elegido en los ajustes no está disponible."
+
+#: includes/mail/class-smtp-transport.php:51
+msgid "The SMTP server is not configured."
+msgstr "El servidor SMTP no está configurado."
+
+#: includes/mail/class-smtp-transport.php:57
+msgid "Set a sender address in the email settings: the default one of this site is not a valid email address."
+msgstr "Indica una dirección de remitente en los ajustes de correo: la que este sitio usa por defecto no es una dirección de correo válida."
+
+#: includes/mail/class-wp-mail-transport.php:84
 msgid "The email could not be sent."
 msgstr "No se ha podido enviar el correo."
 
-#: includes/rest/class-forms-controller.php:54
+#: includes/rest/class-forms-controller.php:57
 msgid "Form name."
 msgstr "Nombre del formulario."
 
-#: includes/rest/class-forms-controller.php:59
+#: includes/rest/class-forms-controller.php:62
 msgid "Fields, settings and actions of the form."
 msgstr "Campos, ajustes y acciones del formulario."
 
-#: includes/rest/class-forms-controller.php:67
+#: includes/rest/class-forms-controller.php:70
 #: includes/rest/class-submissions-controller.php:52
 msgid "Form identifier."
 msgstr "Identificador del formulario."
 
-#: includes/rest/class-forms-controller.php:84
+#: includes/rest/class-forms-controller.php:87
 msgid "Status of the forms to list."
 msgstr "Estado de los formularios que se listan."
 
-#: includes/rest/class-forms-controller.php:133
+#: includes/rest/class-forms-controller.php:123
+msgid "Identifier of the notification to test."
+msgstr "Identificador de la notificación que se prueba."
+
+#: includes/rest/class-forms-controller.php:128
+#: includes/rest/class-mail-settings-controller.php:102
+msgid "Address the test email is sent to."
+msgstr "Dirección a la que se envía el correo de prueba."
+
+#: includes/rest/class-forms-controller.php:159
 msgid "Delete permanently instead of moving to the trash."
 msgstr "Borrar definitivamente en vez de enviar a la papelera."
 
-#: includes/rest/class-forms-controller.php:138
+#: includes/rest/class-forms-controller.php:164
 msgid "When deleting permanently, delete the stored submissions of the form too."
 msgstr "Al borrar definitivamente, borrar también los envíos guardados del formulario."
 
-#: includes/rest/class-forms-controller.php:171
+#: includes/rest/class-forms-controller.php:197
 msgid "Sorry, you are not allowed to manage forms."
 msgstr "Lo siento, no tienes permisos para gestionar formularios."
 
+#: includes/rest/class-forms-controller.php:295
+msgid "Sorry, you are not allowed to delete submissions."
+msgstr "Lo siento, no tienes permiso para borrar envíos."
+
+#: includes/rest/class-mail-settings-controller.php:70
+msgid "Transport, sender and brand of the emails."
+msgstr "Método de envío, remitente y marca de los correos."
+
+#: includes/rest/class-mail-settings-controller.php:75
+msgid "New values for the credentials. An empty value keeps the stored one."
+msgstr "Valores nuevos de las credenciales. Un valor vacío conserva el guardado."
+
+#: includes/rest/class-mail-settings-controller.php:80
+msgid "Names of the stored credentials to delete."
+msgstr "Nombres de las credenciales guardadas que se borran."
+
+#: includes/rest/class-mail-settings-controller.php:124
 #: includes/rest/class-maintenance-controller.php:50
 #: includes/rest/class-settings-controller.php:104
 msgid "Sorry, you are not allowed to manage the plugin settings."
@@ -574,6 +663,38 @@ msgstr "Tiene que estar vacío."
 msgid "This form is no longer available."
 msgstr "Este formulario ya no está disponible."
 
+#: includes/rules/enum-operator.php:38
+msgid "is"
+msgstr "es"
+
+#: includes/rules/enum-operator.php:39
+msgid "is not"
+msgstr "no es"
+
+#: includes/rules/enum-operator.php:40
+msgid "contains"
+msgstr "contiene"
+
+#: includes/rules/enum-operator.php:41
+msgid "does not contain"
+msgstr "no contiene"
+
+#: includes/rules/enum-operator.php:42
+msgid "is empty"
+msgstr "está vacío"
+
+#: includes/rules/enum-operator.php:43
+msgid "is not empty"
+msgstr "no está vacío"
+
+#: includes/rules/enum-operator.php:44
+msgid "is greater than"
+msgstr "es mayor que"
+
+#: includes/rules/enum-operator.php:45
+msgid "is less than"
+msgstr "es menor que"
+
 #: includes/storage/class-action-retrier.php:54
 msgid "This delivery cannot be retried."
 msgstr "Esta entrega no se puede reintentar."
@@ -586,28 +707,32 @@ msgstr "El envío o su formulario ya no existen."
 msgid "The form no longer has this action."
 msgstr "El formulario ya no tiene esta acción."
 
+#: includes/storage/class-action-retrier.php:81
+msgid "This action is turned off in the form. Turn it on to retry."
+msgstr "Esta acción está desactivada en el formulario. Actívala para reintentar."
+
 #: includes/storage/class-csv-exporter.php:63
-#: build/admin/index.js:22
+#: build/admin/index.js:28
 msgid "Reference"
 msgstr "Referencia"
 
 #: includes/storage/class-csv-exporter.php:63
-#: build/admin/index.js:17
+#: build/admin/index.js:23
 msgid "Page"
 msgstr "Página"
 
 #: includes/storage/class-csv-exporter.php:66
-#: build/admin/index.js:6
-#: build/admin/index.js:17
+#: build/admin/index.js:10
+#: build/admin/index.js:23
 msgid "IP address"
 msgstr "Dirección IP"
 
 #: includes/storage/class-csv-exporter.php:70
-#: build/admin/index.js:17
+#: build/admin/index.js:23
 msgid "Browser"
 msgstr "Navegador"
 
-#: includes/storage/class-submission-service.php:162
+#: includes/storage/class-submission-service.php:169
 msgid "There is no failed delivery with that identifier."
 msgstr "No hay ninguna entrega fallida con ese identificador."
 
@@ -675,13 +800,17 @@ msgid "Move “%s” down"
 msgstr "Bajar «%s»"
 
 #. translators: %s: name of a field.
+#. translators: %s: name of a notification.
 #: build/admin/index.js:5
+#: build/admin/index.js:9
 #, js-format
 msgid "Duplicate “%s”"
 msgstr "Duplicar «%s»"
 
 #. translators: %s: name of a field.
+#. translators: %s: name of a notification.
 #: build/admin/index.js:6
+#: build/admin/index.js:10
 #, js-format
 msgid "Delete “%s”"
 msgstr "Borrar «%s»"
@@ -799,608 +928,856 @@ msgid "Fires a JavaScript event and pushes “formulario_mensaje_submit” to da
 msgstr "Lanza un evento de JavaScript y añade «formulario_mensaje_submit» a dataLayer (Google Tag Manager). No incluye ningún dato personal."
 
 #: build/admin/index.js:6
+msgid "Without rules, it always applies."
+msgstr "Sin reglas, se aplica siempre."
+
+#: build/admin/index.js:6
+msgid "It applies when"
+msgstr "Se aplica cuando"
+
+#: build/admin/index.js:6
+msgid "all the rules are met"
+msgstr "se cumplen todas las reglas"
+
+#: build/admin/index.js:6
+msgid "any of the rules is met"
+msgstr "se cumple alguna de las reglas"
+
+#: build/admin/index.js:6
+msgid "Comparison"
+msgstr "Comparación"
+
+#: build/admin/index.js:6
+msgid "Remove rule"
+msgstr "Quitar regla"
+
+#: build/admin/index.js:6
+msgid "Add rule"
+msgstr "Añadir regla"
+
+#: build/admin/index.js:6
+msgid "Send a test to"
+msgstr "Enviar una prueba a"
+
+#: build/admin/index.js:6
+msgid "It is sent with sample data and only to this address, not to the recipients of the notification."
+msgstr "Se envía con datos de ejemplo y solo a esta dirección, no a los destinatarios de la notificación."
+
+#. translators: %s: email address.
+#: build/admin/index.js:7
+#: build/admin/index.js:19
+#, js-format
+msgid "Test sent to %s."
+msgstr "Prueba enviada a %s."
+
+#: build/admin/index.js:7
+#: build/admin/index.js:19
+msgid "Send test"
+msgstr "Enviar prueba"
+
+#: build/admin/index.js:7
 msgid "Email notifications are not available."
 msgstr "Las notificaciones por correo no están disponibles."
 
-#: build/admin/index.js:6
+#: build/admin/index.js:7
 msgid "This form does not send any notification."
 msgstr "Este formulario no envía ninguna notificación."
 
-#: build/admin/index.js:6
-msgid "Add email notification"
-msgstr "Añadir notificación por correo"
+#. translators: %d: position of a notification in the list, starting at 1.
+#: build/admin/index.js:8
+#, js-format
+msgid "Notification %d"
+msgstr "Notificación %d"
 
-#: build/admin/index.js:6
-msgid "Send an email with each submission"
-msgstr "Enviar un correo con cada envío"
+#: build/admin/index.js:8
+msgid "No recipients"
+msgstr "Sin destinatarios"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:8
+msgid "Turned off"
+msgstr "Desactivada"
+
+#: build/admin/index.js:8
+msgid "With condition"
+msgstr "Con condición"
+
+#: build/admin/index.js:10
+msgid "Only to tell this notification apart from the others."
+msgstr "Solo sirve para distinguir esta notificación de las demás."
+
+#: build/admin/index.js:10
+msgid "Turned on"
+msgstr "Activada"
+
+#: build/admin/index.js:10
 msgid "Send to"
 msgstr "Enviar a"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "One or more email addresses, separated by commas."
 msgstr "Una o varias direcciones de correo, separadas por comas."
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Subject"
 msgstr "Asunto"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
+msgid "Format"
+msgstr "Formato"
+
+#: build/admin/index.js:10
+msgid "The HTML email uses the logo, colour and footer of the plugin settings, and always includes a plain text version."
+msgstr "El correo en HTML usa el logotipo, el color y el pie de los ajustes del plugin, y siempre incluye una versión en texto plano."
+
+#: build/admin/index.js:10
+msgid "HTML with the brand of the site"
+msgstr "HTML con la marca del sitio"
+
+#: build/admin/index.js:10
+msgid "Plain text"
+msgstr "Texto plano"
+
+#: build/admin/index.js:10
 msgid "Reply to"
 msgstr "Responder a"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Replying to the notification writes to the address the visitor entered in this field."
 msgstr "Al responder a la notificación se escribe a la dirección que el visitante puso en este campo."
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Nobody"
 msgstr "Nadie"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
+msgid "Send only if"
+msgstr "Enviar solo si"
+
+#: build/admin/index.js:10
+msgid "Add notification"
+msgstr "Añadir notificación"
+
+#: build/admin/index.js:10
 msgid "The preview could not be loaded."
 msgstr "No se ha podido cargar la vista previa."
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Preview"
 msgstr "Vista previa"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Form preview"
 msgstr "Vista previa del formulario"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Store the submissions"
 msgstr "Guardar los envíos"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Stored submissions can be read, searched and exported in the Submissions screen, and a failed notification can be sent again. Without storage, a submission only exists in the notifications it sends."
 msgstr "Los envíos guardados se pueden leer, buscar y exportar en la pantalla Envíos, y una notificación que falle se puede volver a enviar. Sin guardado, un envío solo existe en las notificaciones que manda."
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "The date, the form and the address of the page are always stored."
 msgstr "La fecha, el formulario y la dirección de la página se guardan siempre."
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "An anonymized address loses its last part: it no longer identifies a person, but still shows roughly where the submission came from."
 msgstr "Una dirección anonimizada pierde su última parte: deja de identificar a una persona, pero sigue indicando de forma aproximada de dónde vino el envío."
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Do not store it"
 msgstr "No guardarla"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Store it anonymized"
 msgstr "Guardarla anonimizada"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Store it complete"
 msgstr "Guardarla completa"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Store the browser (user agent)"
 msgstr "Guardar el navegador (user agent)"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Delete submissions after (days)"
 msgstr "Borrar los envíos pasados (días)"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "0 keeps them until someone deletes them. The cleanup runs once a day."
 msgstr "Con 0 se conservan hasta que alguien los borre. La limpieza se ejecuta una vez al día."
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Fields"
 msgstr "Campos"
 
-#: build/admin/index.js:6
-msgid "Notification"
-msgstr "Notificación"
+#: build/admin/index.js:10
+msgid "Notifications"
+msgstr "Notificaciones"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Storage"
 msgstr "Guardado"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "After sending"
 msgstr "Tras el envío"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Back to forms"
 msgstr "Volver a los formularios"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "You have unsaved changes. Leave without saving?"
 msgstr "Tienes cambios sin guardar. ¿Salir sin guardar?"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Edit form"
 msgstr "Editar formulario"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "New form"
 msgstr "Formulario nuevo"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Form name"
 msgstr "Nombre del formulario"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Form saved."
 msgstr "Formulario guardado."
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Save"
 msgstr "Guardar"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Create form"
 msgstr "Crear formulario"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Published"
 msgstr "Publicados"
 
-#: build/admin/index.js:6
 #: build/admin/index.js:10
+#: build/admin/index.js:14
 msgid "Trash"
 msgstr "Papelera"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Add form"
 msgstr "Añadir formulario"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "The trash is empty."
 msgstr "La papelera está vacía."
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Create your first form"
 msgstr "Crea tu primer formulario"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "A new form starts as a contact form with name, email and message. You can change everything."
 msgstr "Un formulario nuevo empieza como un formulario de contacto con nombre, correo y mensaje. Puedes cambiarlo todo."
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Shortcode"
 msgstr "Shortcode"
 
-#: build/admin/index.js:6
+#: build/admin/index.js:10
 msgid "Last modified"
 msgstr "Última modificación"
 
 #. translators: %s: name of a form.
-#: build/admin/index.js:7
+#: build/admin/index.js:11
 #, js-format
 msgid "Restore “%s”"
 msgstr "Restaurar «%s»"
 
-#: build/admin/index.js:7
+#: build/admin/index.js:11
 msgid "Form restored."
 msgstr "Formulario restaurado."
 
-#: build/admin/index.js:7
+#: build/admin/index.js:11
 msgid "Restore"
 msgstr "Restaurar"
 
 #. translators: %s: name of a form.
-#: build/admin/index.js:8
+#: build/admin/index.js:12
 #, js-format
 msgid "Delete “%s” permanently"
 msgstr "Borrar «%s» definitivamente"
 
-#: build/admin/index.js:8
-#: build/admin/index.js:13
+#: build/admin/index.js:12
+#: build/admin/index.js:17
 msgid "Delete permanently"
 msgstr "Borrar definitivamente"
 
 #. translators: %s: name of a form.
-#: build/admin/index.js:9
+#: build/admin/index.js:13
 #, js-format
 msgid "Edit “%s”"
 msgstr "Editar «%s»"
 
-#: build/admin/index.js:9
+#: build/admin/index.js:13
 msgid "Edit"
 msgstr "Editar"
 
 #. translators: %s: name of a form.
-#: build/admin/index.js:10
+#: build/admin/index.js:14
 #, js-format
 msgid "Move “%s” to the trash"
 msgstr "Enviar «%s» a la papelera"
 
-#: build/admin/index.js:10
+#: build/admin/index.js:14
 msgid "Form moved to the trash."
 msgstr "Formulario enviado a la papelera."
 
-#: build/admin/index.js:10
+#: build/admin/index.js:14
 msgid "Copied"
 msgstr "Copiado"
 
-#: build/admin/index.js:10
+#: build/admin/index.js:14
 msgid "Copy"
 msgstr "Copiar"
 
 #. translators: %d: number of fields in a form.
-#: build/admin/index.js:11
+#: build/admin/index.js:15
 #, js-format
 msgid "%d field"
 msgid_plural "%d fields"
 msgstr[0] "%d campo"
 msgstr[1] "%d campos"
 
-#: build/admin/index.js:11
+#: build/admin/index.js:15
 msgid "Delete form permanently?"
 msgstr "¿Borrar el formulario definitivamente?"
 
 #. translators: %s: name of a form.
-#: build/admin/index.js:12
+#: build/admin/index.js:16
 #, js-format
 msgid "“%s” will be deleted and cannot be recovered."
 msgstr "«%s» se borrará y no se podrá recuperar."
 
 #. translators: %d: number of stored submissions of the form.
-#: build/admin/index.js:13
+#: build/admin/index.js:17
 #, js-format
 msgid "Delete also its %d stored submission"
 msgid_plural "Delete also its %d stored submissions"
 msgstr[0] "Borrar también su envío guardado (%d)"
 msgstr[1] "Borrar también sus %d envíos guardados"
 
-#: build/admin/index.js:13
+#: build/admin/index.js:17
 msgid "If you keep them, they stay in the Submissions screen without a form."
 msgstr "Si los conservas, siguen en la pantalla Envíos sin formulario."
 
-#: build/admin/index.js:13
-#: build/admin/index.js:18
-#: build/admin/index.js:21
+#: build/admin/index.js:17
 #: build/admin/index.js:24
+#: build/admin/index.js:27
+#: build/admin/index.js:30
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: build/admin/index.js:13
+#: build/admin/index.js:17
 msgid "Form deleted."
 msgstr "Formulario borrado."
 
-#: build/admin/index.js:13
+#. translators: %s: name of a PHP constant.
+#: build/admin/index.js:18
+#, js-format
+msgid "Defined in wp-config.php with the constant %s. It cannot be changed here."
+msgstr "Definida en wp-config.php con la constante %s. No se puede cambiar aquí."
+
+#: build/admin/index.js:18
+msgid "Stored. Write to replace it"
+msgstr "Guardada. Escribe para sustituirla"
+
+#: build/admin/index.js:18
+msgid "It is stored encrypted and is never shown again."
+msgstr "Se guarda cifrada y no se vuelve a mostrar."
+
+#: build/admin/index.js:18
+msgid "It will be stored encrypted."
+msgstr "Se guardará cifrada."
+
+#: build/admin/index.js:18
+msgid "Keep the stored one"
+msgstr "Conservar la guardada"
+
+#: build/admin/index.js:18
+msgid "Delete the stored one"
+msgstr "Borrar la guardada"
+
+#: build/admin/index.js:18
+msgid "Email delivery"
+msgstr "Envío de correo"
+
+#: build/admin/index.js:18
+msgid "How the emails of the forms are sent. It only affects the emails of this plugin: the rest of the email of the site does not change."
+msgstr "Cómo se envían los correos de los formularios. Solo afecta a los correos de este plugin: el resto del correo del sitio no cambia."
+
+#: build/admin/index.js:18
+msgid "Send with"
+msgstr "Enviar con"
+
+#: build/admin/index.js:18
+msgid "WordPress, like the rest of the site"
+msgstr "WordPress, como el resto del sitio"
+
+#: build/admin/index.js:18
+msgid "An SMTP server"
+msgstr "Un servidor SMTP"
+
+#: build/admin/index.js:18
+msgid "Resend"
+msgstr "Resend"
+
+#: build/admin/index.js:18
+msgid "Server"
+msgstr "Servidor"
+
+#: build/admin/index.js:18
+msgid "Port"
+msgstr "Puerto"
+
+#: build/admin/index.js:18
+msgid "Encryption"
+msgstr "Cifrado"
+
+#: build/admin/index.js:18
+msgid "STARTTLS (usually port 587)"
+msgstr "STARTTLS (normalmente, puerto 587)"
+
+#: build/admin/index.js:18
+msgid "SSL/TLS (usually port 465)"
+msgstr "SSL/TLS (normalmente, puerto 465)"
+
+#: build/admin/index.js:18
+msgid "The server asks for user and password"
+msgstr "El servidor pide usuario y contraseña"
+
+#: build/admin/index.js:18
+msgid "User"
+msgstr "Usuario"
+
+#: build/admin/index.js:18
+msgid "Password"
+msgstr "Contraseña"
+
+#: build/admin/index.js:18
+msgid "Resend API key"
+msgstr "Clave de API de Resend"
+
+#: build/admin/index.js:18
+msgid "Resend only sends from an address of a domain verified in your Resend account: fill in the sender address below."
+msgstr "Resend solo envía desde una dirección de un dominio verificado en tu cuenta de Resend: rellena abajo la dirección del remitente."
+
+#: build/admin/index.js:18
+msgid "Sender address"
+msgstr "Dirección del remitente"
+
+#: build/admin/index.js:18
+msgid "Empty to use the one of the site."
+msgstr "Vacío para usar la del sitio."
+
+#: build/admin/index.js:18
+msgid "Sender name"
+msgstr "Nombre del remitente"
+
+#: build/admin/index.js:18
+msgid "Empty to use the name of the site."
+msgstr "Vacío para usar el nombre del sitio."
+
+#: build/admin/index.js:18
+msgid "Send a test email to"
+msgstr "Enviar un correo de prueba a"
+
+#: build/admin/index.js:18
+msgid "Save the settings first: the test uses the saved ones."
+msgstr "Guarda primero los ajustes: la prueba usa los guardados."
+
+#: build/admin/index.js:18
+msgid "Checks that the emails are delivered with these settings."
+msgstr "Comprueba que los correos se entregan con estos ajustes."
+
+#: build/admin/index.js:19
+msgid "Email appearance"
+msgstr "Aspecto de los correos"
+
+#: build/admin/index.js:19
+msgid "Brand of the notifications sent in HTML format."
+msgstr "Marca de las notificaciones que se envían en formato HTML."
+
+#: build/admin/index.js:19
+msgid "Logo"
+msgstr "Logotipo"
+
+#: build/admin/index.js:19
+msgid "Address of the image. Without a logo, the emails show the name of the site."
+msgstr "Dirección de la imagen. Sin logotipo, los correos muestran el nombre del sitio."
+
+#: build/admin/index.js:19
+msgid "Email logo"
+msgstr "Logotipo de los correos"
+
+#: build/admin/index.js:19
+msgid "Choose image"
+msgstr "Elegir imagen"
+
+#: build/admin/index.js:19
+msgid "Brand colour"
+msgstr "Color de marca"
+
+#: build/admin/index.js:19
+msgid "Footer text"
+msgstr "Texto del pie"
+
+#: build/admin/index.js:19
+msgid "For example, the name and address of the company. Without it, the footer shows the name of the site."
+msgstr "Por ejemplo, el nombre y la dirección de la empresa. Sin él, el pie muestra el nombre del sitio."
+
+#: build/admin/index.js:19
+msgid "General"
+msgstr "General"
+
+#: build/admin/index.js:19
+msgid "Cleanup done."
+msgstr "Limpieza hecha."
+
+#: build/admin/index.js:19
 msgid "Settings saved."
 msgstr "Ajustes guardados."
 
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "Spam protection"
 msgstr "Protección antispam"
 
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "Every form is protected by a hidden trap field, a minimum time to fill it in and a limit of submissions per IP address. None of them needs configuration."
 msgstr "Cada formulario está protegido por un campo trampa oculto, un tiempo mínimo de relleno y un límite de envíos por dirección IP. Ninguno necesita configuración."
 
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "Accept submissions without JavaScript"
 msgstr "Aceptar envíos sin JavaScript"
 
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "Forms keep working in browsers without JavaScript, but those submissions cannot prove a minimum filling time, so they only have the trap field and a stricter limit per IP address. Turn it off if you receive spam through this path."
 msgstr "Los formularios siguen funcionando en navegadores sin JavaScript, pero esos envíos no pueden demostrar un tiempo mínimo de relleno, así que solo cuentan con el campo trampa y con un límite por dirección IP más estricto. Desactívalo si te llega spam por esta vía."
 
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "Visitor IP address"
 msgstr "Dirección IP del visitante"
 
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "The plugin limits how many submissions an IP address can send. If the site is behind a proxy or CDN, every visitor seems to come from the proxy unless you say which one it is."
 msgstr "El plugin limita cuántos envíos puede hacer una misma dirección IP. Si el sitio está detrás de un proxy o de una CDN, todos los visitantes parecen llegar desde el proxy salvo que indiques cuál es."
 
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "The site is behind"
 msgstr "El sitio está detrás de"
 
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "Nothing: visitors connect directly to the server"
 msgstr "Nada: los visitantes conectan directamente con el servidor"
 
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "Cloudflare"
 msgstr "Cloudflare"
 
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "My own proxy or load balancer"
 msgstr "Mi propio proxy o balanceador de carga"
 
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "IP addresses of the proxy"
 msgstr "Direcciones IP del proxy"
 
-#: build/admin/index.js:13
+#: build/admin/index.js:19
 msgid "One per line. IPv4, IPv6 and CIDR ranges such as 10.0.0.0/8. The X-Forwarded-For header is only trusted when the connection comes from one of them."
 msgstr "Una por línea. IPv4, IPv6 y rangos CIDR como 10.0.0.0/8. Solo se confía en la cabecera X-Forwarded-For cuando la conexión llega desde una de ellas."
 
 #. translators: 1: IP address the plugin detects for the current user, 2: IP address of the connection to the server.
-#: build/admin/index.js:14
+#: build/admin/index.js:20
 #, js-format
 msgid "Your IP address as the plugin sees it: %1$s (connection: %2$s)."
 msgstr "Tu dirección IP tal como la ve el plugin: %1$s (conexión: %2$s)."
 
-#: build/admin/index.js:14
+#: build/admin/index.js:20
 msgid "Allowed redirect domains"
 msgstr "Dominios de redirección permitidos"
 
 #. translators: %s: domain of the site.
-#: build/admin/index.js:15
+#: build/admin/index.js:21
 #, js-format
 msgid "After a submission, a form can redirect to any address of this site (%s). To redirect to another site, add its domain here."
 msgstr "Tras un envío, un formulario puede redirigir a cualquier dirección de este sitio (%s). Para redirigir a otro sitio, añade aquí su dominio."
 
-#: build/admin/index.js:15
+#: build/admin/index.js:21
 msgid "Domains"
 msgstr "Dominios"
 
-#: build/admin/index.js:15
+#: build/admin/index.js:21
 msgid "One per line, without https://. For example: pay.example.com"
 msgstr "Uno por línea, sin https://. Por ejemplo: pagos.ejemplo.com"
 
-#: build/admin/index.js:15
+#: build/admin/index.js:21
 msgid "Data"
 msgstr "Datos"
 
-#: build/admin/index.js:15
+#: build/admin/index.js:21
 msgid "Once a day the plugin deletes the submissions that have exceeded the retention period of their form. You can run that cleanup now."
 msgstr "Una vez al día el plugin borra los envíos que han superado el periodo de retención de su formulario. Puedes ejecutar esa limpieza ahora."
 
-#: build/admin/index.js:15
-msgid "Cleanup done."
-msgstr "Limpieza hecha."
-
-#: build/admin/index.js:15
+#: build/admin/index.js:21
 msgid "Run cleanup now"
 msgstr "Ejecutar la limpieza ahora"
 
-#: build/admin/index.js:15
+#: build/admin/index.js:21
 msgid "Delete all data when the plugin is uninstalled"
 msgstr "Borrar todos los datos al desinstalar el plugin"
 
-#: build/admin/index.js:15
+#: build/admin/index.js:21
 msgid "Forms, submissions and settings are deleted when the plugin is deleted from the Plugins screen. Deactivating it never deletes anything."
 msgstr "Los formularios, los envíos y los ajustes se borran al borrar el plugin desde la pantalla Plugins. Desactivarlo nunca borra nada."
 
-#: build/admin/index.js:15
+#: build/admin/index.js:21
 msgid "Save settings"
 msgstr "Guardar ajustes"
 
-#: build/admin/index.js:15
+#: build/admin/index.js:21
 msgid "Delivered"
 msgstr "Entregada"
 
-#: build/admin/index.js:15
+#: build/admin/index.js:21
 msgid "Failed"
 msgstr "Fallida"
 
-#: build/admin/index.js:15
+#: build/admin/index.js:21
 msgid "Failed (dismissed)"
 msgstr "Fallida (descartada)"
 
 #. translators: %s: error returned by the action.
-#: build/admin/index.js:16
-#: build/admin/index.js:19
+#: build/admin/index.js:22
+#: build/admin/index.js:25
 #, js-format
 msgid "It failed again: %s"
 msgstr "Ha vuelto a fallar: %s"
 
 #. translators: %s: reference number of a submission.
-#: build/admin/index.js:17
+#: build/admin/index.js:23
 #, js-format
 msgid "Submission %s"
 msgstr "Envío %s"
 
-#: build/admin/index.js:17
-#: build/admin/index.js:18
-#: build/admin/index.js:25
+#: build/admin/index.js:23
+#: build/admin/index.js:24
+#: build/admin/index.js:31
 msgid "Delete"
 msgstr "Borrar"
 
-#: build/admin/index.js:17
+#: build/admin/index.js:23
 msgid "Data received"
 msgstr "Datos recibidos"
 
-#: build/admin/index.js:17
+#: build/admin/index.js:23
 msgid "(empty)"
 msgstr "(vacío)"
 
-#: build/admin/index.js:17
+#: build/admin/index.js:23
 msgid "Details"
 msgstr "Detalles"
 
-#: build/admin/index.js:17
-#: build/admin/index.js:19
-#: build/admin/index.js:21
-#: build/admin/index.js:22
+#: build/admin/index.js:23
+#: build/admin/index.js:25
+#: build/admin/index.js:27
+#: build/admin/index.js:28
 #: build/blocks/form/index.js:1
 msgid "Form"
 msgstr "Formulario"
 
-#: build/admin/index.js:17
-#: build/admin/index.js:19
 #: build/admin/index.js:23
+#: build/admin/index.js:25
+#: build/admin/index.js:29
 msgid "(deleted form)"
 msgstr "(formulario borrado)"
 
-#: build/admin/index.js:17
-#: build/admin/index.js:19
+#: build/admin/index.js:23
+#: build/admin/index.js:25
 msgid "Actions"
 msgstr "Acciones"
 
-#: build/admin/index.js:17
+#: build/admin/index.js:23
 msgid "This form did not run any action with this submission."
 msgstr "Este formulario no ejecutó ninguna acción con este envío."
 
 #. translators: 1: number of attempts, 2: date and time of the last attempt.
-#: build/admin/index.js:18
+#: build/admin/index.js:24
 #, js-format
 msgid "Attempts: %1$d · Last: %2$s"
 msgstr "Intentos: %1$d · Último: %2$s"
 
-#: build/admin/index.js:18
-#: build/admin/index.js:20
+#: build/admin/index.js:24
+#: build/admin/index.js:26
 msgid "Delivered."
 msgstr "Entregada."
 
-#: build/admin/index.js:18
-#: build/admin/index.js:20
+#: build/admin/index.js:24
+#: build/admin/index.js:26
 msgid "Retry"
 msgstr "Reintentar"
 
-#: build/admin/index.js:18
-#: build/admin/index.js:20
+#: build/admin/index.js:24
+#: build/admin/index.js:26
 msgid "Failure dismissed."
 msgstr "Fallo descartado."
 
-#: build/admin/index.js:18
-#: build/admin/index.js:20
+#: build/admin/index.js:24
+#: build/admin/index.js:26
 msgid "Dismiss"
 msgstr "Descartar"
 
-#: build/admin/index.js:18
+#: build/admin/index.js:24
 msgid "Delete submission?"
 msgstr "¿Borrar el envío?"
 
-#: build/admin/index.js:18
+#: build/admin/index.js:24
 msgid "The submission will be deleted and cannot be recovered."
 msgstr "El envío se borrará y no se podrá recuperar."
 
-#: build/admin/index.js:19
+#: build/admin/index.js:25
 msgid "There are no failed deliveries. Everything has been delivered."
 msgstr "No hay entregas fallidas. Todo se ha entregado."
 
-#: build/admin/index.js:19
+#: build/admin/index.js:25
 msgid "Action"
 msgstr "Acción"
 
-#: build/admin/index.js:19
-#: build/admin/index.js:23
+#: build/admin/index.js:25
+#: build/admin/index.js:29
 msgid "Error"
 msgstr "Error"
 
-#: build/admin/index.js:19
+#: build/admin/index.js:25
 msgid "Last attempt"
 msgstr "Último intento"
 
-#: build/admin/index.js:19
+#: build/admin/index.js:25
 msgid "View submission"
 msgstr "Ver el envío"
 
-#: build/admin/index.js:19
+#: build/admin/index.js:25
 msgid "Submission not stored"
 msgstr "Envío no guardado"
 
 #. translators: %d: number of attempts.
-#: build/admin/index.js:20
+#: build/admin/index.js:26
 #, js-format
 msgid "Attempts: %d"
 msgstr "Intentos: %d"
 
-#: build/admin/index.js:20
-#: build/admin/index.js:23
+#: build/admin/index.js:26
+#: build/admin/index.js:29
 msgid "Previous"
 msgstr "Anterior"
 
 #. translators: 1: current page, 2: total number of pages.
-#: build/admin/index.js:21
-#: build/admin/index.js:24
+#: build/admin/index.js:27
+#: build/admin/index.js:30
 #, js-format
 msgid "Page %1$d of %2$d"
 msgstr "Página %1$d de %2$d"
 
-#: build/admin/index.js:21
-#: build/admin/index.js:24
+#: build/admin/index.js:27
+#: build/admin/index.js:30
 msgid "Next"
 msgstr "Siguiente"
 
-#: build/admin/index.js:21
+#: build/admin/index.js:27
 msgid "Failed deliveries"
 msgstr "Entregas fallidas"
 
-#: build/admin/index.js:21
+#: build/admin/index.js:27
 msgid "Export submissions"
 msgstr "Exportar envíos"
 
-#: build/admin/index.js:21
+#: build/admin/index.js:27
 msgid "Downloads a CSV file with the submissions of the selected form. Leave the dates empty to export all of them."
 msgstr "Descarga un fichero CSV con los envíos del formulario elegido. Deja las fechas vacías para exportarlos todos."
 
-#: build/admin/index.js:21
+#: build/admin/index.js:27
 msgid "From"
 msgstr "Desde"
 
-#: build/admin/index.js:21
+#: build/admin/index.js:27
 msgid "To"
 msgstr "Hasta"
 
-#: build/admin/index.js:21
+#: build/admin/index.js:27
 msgid "Download CSV"
 msgstr "Descargar CSV"
 
-#: build/admin/index.js:21
+#: build/admin/index.js:27
 msgid "Search submissions"
 msgstr "Buscar envíos"
 
-#: build/admin/index.js:21
+#: build/admin/index.js:27
 msgid "Search by reference or content"
 msgstr "Buscar por referencia o contenido"
 
-#: build/admin/index.js:21
+#: build/admin/index.js:27
 msgid "Only with errors"
 msgstr "Solo con errores"
 
 #. translators: %d: number of selected submissions.
-#: build/admin/index.js:22
+#: build/admin/index.js:28
 #, js-format
 msgid "Delete %d submission"
 msgid_plural "Delete %d submissions"
 msgstr[0] "Borrar %d envío"
 msgstr[1] "Borrar %d envíos"
 
-#: build/admin/index.js:22
+#: build/admin/index.js:28
 msgid "Choose a form to export its submissions"
 msgstr "Elige un formulario para exportar sus envíos"
 
-#: build/admin/index.js:22
+#: build/admin/index.js:28
 msgid "Export CSV"
 msgstr "Exportar CSV"
 
-#: build/admin/index.js:22
+#: build/admin/index.js:28
 msgid "No submissions match these filters."
 msgstr "Ningún envío cumple estos filtros."
 
-#: build/admin/index.js:22
+#: build/admin/index.js:28
 msgid "There are no submissions yet. They will appear here as soon as someone sends a form."
 msgstr "Todavía no hay envíos. Aparecerán aquí en cuanto alguien envíe un formulario."
 
-#: build/admin/index.js:22
+#: build/admin/index.js:28
 msgid "Select all"
 msgstr "Seleccionar todos"
 
-#: build/admin/index.js:22
+#: build/admin/index.js:28
 msgid "Content"
 msgstr "Contenido"
 
 #. translators: %s: reference number of a submission.
-#: build/admin/index.js:23
+#: build/admin/index.js:29
 #, js-format
 msgid "Select submission %s"
 msgstr "Seleccionar el envío %s"
 
-#: build/admin/index.js:24
+#: build/admin/index.js:30
 msgid "Delete submissions?"
 msgstr "¿Borrar los envíos?"
 
-#: build/admin/index.js:24
+#: build/admin/index.js:30
 msgid "The selected submissions will be deleted and cannot be recovered."
 msgstr "Los envíos seleccionados se borrarán y no se podrán recuperar."
 
 #. translators: %d: number of submissions deleted.
-#: build/admin/index.js:25
+#: build/admin/index.js:31
 #, js-format
 msgid "%d submission deleted."
 msgid_plural "%d submissions deleted."

@@ -9,6 +9,8 @@ namespace Formulario_Mensaje\Lifecycle;
 
 use Formulario_Mensaje\Database\Schema;
 use Formulario_Mensaje\Forms\Form_Post_Type;
+use Formulario_Mensaje\Mail\Option_Mail_Settings_Repository;
+use Formulario_Mensaje\Secrets\Secret_Vault;
 use Formulario_Mensaje\Settings\Option_Settings_Repository;
 use Formulario_Mensaje\Storage\Failure_Counter;
 
@@ -17,9 +19,10 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Limpia lo que el plugin dejó en el sitio.
  *
- * Siempre retira las capabilities y la tarea programada. Los formularios, los envíos y los ajustes
- * solo se borran si el usuario activó expresamente ese ajuste: por defecto se conservan, para que
- * reinstalar el plugin no suponga perderlos.
+ * Siempre retira las capabilities, la tarea programada y las credenciales guardadas (contraseña de
+ * SMTP, claves de API): no deben quedar en la base de datos de un sitio que ya no usa el plugin. Los
+ * formularios, los envíos y los ajustes solo se borran si el usuario activó expresamente ese ajuste:
+ * por defecto se conservan, para que reinstalar el plugin no suponga perderlos.
  */
 final class Uninstaller {
 
@@ -47,6 +50,7 @@ final class Uninstaller {
 	public function uninstall(): void {
 		$this->capabilities->remove_from_all_roles();
 		$this->maintenance->clear();
+		delete_option( Secret_Vault::OPTION );
 
 		$settings = get_option( Option_Settings_Repository::OPTION, array() );
 
@@ -82,6 +86,7 @@ final class Uninstaller {
 		$this->schema->drop();
 
 		delete_option( Option_Settings_Repository::OPTION );
+		delete_option( Option_Mail_Settings_Repository::OPTION );
 		delete_option( Failure_Counter::OPTION );
 	}
 }

@@ -62,4 +62,14 @@ final class Email_Field_Type extends Abstract_Text_Field_Type {
 			? null
 			: __( 'Enter a valid email address.', 'formulario-mensaje' );
 	}
+
+	/**
+	 * Valor de ejemplo para probar notificaciones y otras acciones.
+	 *
+	 * @param Field $field Campo.
+	 * @return string|string[]
+	 */
+	public function sample_value( Field $field ): string|array {
+		return 'name@example.com';
+	}
 }

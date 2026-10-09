@@ -104,4 +104,14 @@ final class Checkboxes_Field_Type extends Abstract_Choice_Field_Type {
 
 		return array_values( array_unique( $values ) );
 	}
+
+	/**
+	 * Valor de ejemplo para probar notificaciones y otras acciones.
+	 *
+	 * @param Field $field Campo.
+	 * @return string|string[]
+	 */
+	public function sample_value( Field $field ): string|array {
+		return array_slice( array_map( 'strval', array_keys( $this->options( $field ) ) ), 0, 1 );
+	}
 }

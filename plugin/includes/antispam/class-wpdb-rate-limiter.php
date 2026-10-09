@@ -24,8 +24,16 @@ defined( 'ABSPATH' ) || exit;
  *
  * Un transient obligaría a leer, sumar y escribir en tres pasos, y dos peticiones simultáneas leerían
  * el mismo valor. Aquí la base de datos hace la suma, que es atómica en cualquier alojamiento.
+ *
+ * Si la tabla no responde (no existe, está dañada), el límite no se desactiva: se cuenta con un
+ * transient. Es menos preciso ante envíos simultáneos, pero sigue limitando.
  */
 final class Wpdb_Rate_Limiter implements Rate_Limiter {
+
+	/**
+	 * Prefijo de los transients del contador de respaldo.
+	 */
+	private const FALLBACK_PREFIX = 'formulario_mensaje_rl_';
 
 	/**
 	 * Constructor.
@@ -45,7 +53,7 @@ final class Wpdb_Rate_Limiter implements Rate_Limiter {
 	 *
 	 * @param string $key    Clave del contador.
 	 * @param int    $window Duración de la ventana, en segundos, si con este suceso empieza una nueva.
-	 * @return int Sucesos contados en la ventana; 0 si no se pudo contar.
+	 * @return int Sucesos contados en la ventana; siempre al menos 1.
 	 */
 	public function hit( string $key, int $window ): int {
 		$wpdb = $this->wpdb;
@@ -74,13 +82,38 @@ final class Wpdb_Rate_Limiter implements Rate_Limiter {
 			)
 		);
 
-		if ( false === $result ) {
-			return 0;
-		}
+		$hits = false === $result
+			? null
+			: $wpdb->get_var( $wpdb->prepare( 'SELECT hits FROM %i WHERE bucket = %s', $this->schema->rate_limits_table(), $key ) );
 
-		return (int) $wpdb->get_var(
-			$wpdb->prepare( 'SELECT hits FROM %i WHERE bucket = %s', $this->schema->rate_limits_table(), $key )
+		// Fallar aquí no puede equivaler a «sin límite»: se cuenta por la vía de respaldo.
+		return null === $hits ? $this->fallback_hit( $key, max( 1, $window ), $now ) : max( 1, (int) $hits );
+	}
+
+	/**
+	 * Cuenta un suceso con un transient, cuando la tabla no responde.
+	 *
+	 * @param string $key    Clave del contador.
+	 * @param int    $window Duración de la ventana, en segundos.
+	 * @param int    $now    Marca de tiempo actual.
+	 * @return int Sucesos contados en la ventana.
+	 */
+	private function fallback_hit( string $key, int $window, int $now ): int {
+		$state  = get_transient( self::FALLBACK_PREFIX . $key );
+		$active = is_array( $state ) && isset( $state['count'], $state['expires'] ) && (int) $state['expires'] > $now;
+		$count  = $active ? (int) $state['count'] + 1 : 1;
+		$until  = $active ? (int) $state['expires'] : $now + $window;
+
+		set_transient(
+			self::FALLBACK_PREFIX . $key,
+			array(
+				'count'   => $count,
+				'expires' => $until,
+			),
+			max( 1, $until - $now )
 		);
+
+		return $count;
 	}
 
 	/**
@@ -94,6 +127,15 @@ final class Wpdb_Rate_Limiter implements Rate_Limiter {
 		$wpdb->query(
 			$wpdb->prepare( 'UPDATE %i SET hits = hits - 1 WHERE bucket = %s AND hits > 0', $this->schema->rate_limits_table(), $key )
 		);
+
+		// Si el suceso se contó por la vía de respaldo, se descuenta también ahí.
+		$state = get_transient( self::FALLBACK_PREFIX . $key );
+
+		if ( is_array( $state ) && isset( $state['count'], $state['expires'] ) && (int) $state['count'] > 0 ) {
+			$state['count'] = (int) $state['count'] - 1;
+
+			set_transient( self::FALLBACK_PREFIX . $key, $state, max( 1, (int) $state['expires'] - $this->clock->now() ) );
+		}
 	}
 
 	/**

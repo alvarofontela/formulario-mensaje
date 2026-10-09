@@ -96,4 +96,14 @@ final class Url_Field_Type extends Abstract_Text_Field_Type {
 
 		return $valid ? null : __( 'Enter a valid web address.', 'formulario-mensaje' );
 	}
+
+	/**
+	 * Valor de ejemplo para probar notificaciones y otras acciones.
+	 *
+	 * @param Field $field Campo.
+	 * @return string|string[]
+	 */
+	public function sample_value( Field $field ): string|array {
+		return 'https://example.com/';
+	}
 }

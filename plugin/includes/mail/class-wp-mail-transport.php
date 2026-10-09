@@ -17,20 +17,34 @@ defined( 'ABSPATH' ) || exit;
 final class Wp_Mail_Transport implements Mail_Transport {
 
 	/**
+	 * Constructor.
+	 *
+	 * @param Mail_Settings_Repository $settings Ajustes de correo.
+	 */
+	public function __construct( private readonly Mail_Settings_Repository $settings ) {}
+
+	/**
 	 * Envía un correo.
 	 *
 	 * @param Email_Message $message Correo ya compuesto.
 	 * @return true|WP_Error True si el transporte lo aceptó.
 	 */
 	public function send( Email_Message $message ): bool|WP_Error {
-		$headers = array();
+		$settings = $this->settings->get();
+		$headers  = array();
+		$reply_to = $message->safe_reply_to();
 
-		/*
-		 * La dirección de respuesta es el único dato del visitante que llega a una cabecera. Se vuelve
-		 * a validar aquí, justo antes de usarla, y se rechaza si lleva saltos de línea.
-		 */
-		if ( '' !== $message->reply_to && false !== is_email( $message->reply_to ) && 1 !== preg_match( '/[\r\n]/', $message->reply_to ) ) {
-			$headers[] = 'Reply-To: <' . $message->reply_to . '>';
+		if ( '' !== $reply_to ) {
+			$headers[] = 'Reply-To: <' . $reply_to . '>';
+		}
+
+		// El remitente sale de los ajustes del plugin, nunca del visitante.
+		if ( '' !== $settings->from_email ) {
+			$headers[] = sprintf( 'From: "%s" <%s>', str_replace( '"', '', $settings->sender_name() ), $settings->from_email );
+		}
+
+		if ( $message->has_html() ) {
+			$headers[] = 'Content-Type: text/html; charset=UTF-8';
 		}
 
 		$failure = null;
@@ -38,17 +52,27 @@ final class Wp_Mail_Transport implements Mail_Transport {
 			$failure = $error;
 		};
 
+		// wp_mail() no tiene parámetro para la versión en texto de un correo HTML: se añade al prepararlo.
+		$alternative = static function ( $phpmailer ) use ( $message ): void {
+			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Propiedad de PHPMailer.
+			$phpmailer->AltBody = $message->body;
+		};
+
 		add_action( 'wp_mail_failed', $capture );
 
+		if ( $message->has_html() ) {
+			add_action( 'phpmailer_init', $alternative );
+		}
+
 		$sent = wp_mail(
-			array_values( array_filter( $message->to, 'is_email' ) ),
-			// Un asunto con saltos de línea permitiría inyectar cabeceras.
-			trim( (string) preg_replace( '/[\r\n]+/', ' ', $message->subject ) ),
-			$message->body,
+			$message->safe_recipients(),
+			$message->safe_subject(),
+			$message->has_html() ? $message->html : $message->body,
 			$headers
 		);
 
 		remove_action( 'wp_mail_failed', $capture );
+		remove_action( 'phpmailer_init', $alternative );
 
 		if ( $sent ) {
 			return true;

@@ -128,22 +128,29 @@ final class Submission_Service {
 	/**
 	 * Borra los envíos de un formulario anteriores a una fecha, por lotes.
 	 *
+	 * Sin tope de lotes borra todos, por muchos que sean: es lo que espera quien pide borrar los envíos
+	 * de un formulario. La retención sí pone un tope, porque se repite a diario y puede seguir mañana.
+	 *
 	 * @param int    $form_id     Identificador del formulario.
 	 * @param string $before_gmt  Fecha límite en GMT (formato MySQL); cadena vacía para todos.
-	 * @param int    $max_batches Lotes como máximo, para acotar lo que tarda una ejecución.
+	 * @param int    $max_batches Lotes como máximo; 0 para no parar hasta borrarlos todos.
 	 * @return int Envíos borrados.
 	 */
-	public function delete_for_form( int $form_id, string $before_gmt = '', int $max_batches = 50 ): int {
+	public function delete_for_form( int $form_id, string $before_gmt = '', int $max_batches = 0 ): int {
 		$deleted = 0;
+		$batch   = 0;
 
-		for ( $batch = 0; $batch < $max_batches; $batch++ ) {
-			$ids = $this->submissions->ids_before( $form_id, $before_gmt, self::BATCH_SIZE );
+		while ( 0 === $max_batches || $batch < $max_batches ) {
+			$ids     = $this->submissions->ids_before( $form_id, $before_gmt, self::BATCH_SIZE );
+			$removed = array() === $ids ? 0 : $this->delete( $ids );
 
-			if ( array() === $ids ) {
+			// Si un lote no borra nada, insistir sería un bucle sin fin.
+			if ( 0 === $removed ) {
 				break;
 			}
 
-			$deleted += $this->delete( $ids );
+			$deleted += $removed;
+			++$batch;
 		}
 
 		return $deleted;
