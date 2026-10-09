@@ -16,6 +16,7 @@ use Formulario_Mensaje\Queue\Queue_Schedule;
 use Formulario_Mensaje\Secrets\Secret_Vault;
 use Formulario_Mensaje\Settings\Option_Settings_Repository;
 use Formulario_Mensaje\Storage\Failure_Counter;
+use Formulario_Mensaje\Uploads\Upload_Directory;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -41,12 +42,14 @@ final class Uninstaller {
 	 * @param Schema               $schema       Esquema de las tablas del plugin.
 	 * @param Maintenance_Schedule $maintenance  Programación del mantenimiento diario.
 	 * @param Queue_Schedule       $queue        Programación de la cola.
+	 * @param Upload_Directory     $uploads      Almacén privado de ficheros.
 	 */
 	public function __construct(
 		private readonly Capabilities $capabilities,
 		private readonly Schema $schema,
 		private readonly Maintenance_Schedule $maintenance,
-		private readonly Queue_Schedule $queue
+		private readonly Queue_Schedule $queue,
+		private readonly Upload_Directory $uploads
 	) {}
 
 	/**
@@ -91,6 +94,7 @@ final class Uninstaller {
 		} while ( self::BATCH_SIZE === $found );
 
 		$this->schema->drop();
+		$this->uploads->remove();
 
 		delete_option( Option_Settings_Repository::OPTION );
 		delete_option( Option_Mail_Settings_Repository::OPTION );

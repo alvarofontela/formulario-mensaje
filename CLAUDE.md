@@ -187,7 +187,7 @@ Hace falta Windows con PowerShell 7, Node.js, git y Python 3.10 o posterior (el 
 
 Límites que conviene conocer al tocar esos ficheros:
 
-- Las reglas comparten un máximo de 8192 caracteres con las de usuario (`~/.claude/claude-security-guidance.md`), que van delante: lo que sobra se corta por el final. Hoy ocupan unos 7600. Se envían al modelo en cada revisión, así que no llevan secretos.
+- Las reglas comparten un máximo de 8192 caracteres con las de usuario (`~/.claude/claude-security-guidance.md`), que van delante: lo que sobra se corta por el final. Hoy ocupan unos 8175, así que casi no queda margen: al añadir texto hay que recortar otro, y medirlo. Se envían al modelo en cada revisión, así que no llevan secretos.
 - Como mucho 50 patrones, con avisos de hasta 1024 caracteres. Un patrón mal formado o con una expresión regular que el plugin considere lenta se descarta sin avisar: tras cambiarlos, mira `~/.claude/security/log.txt`. Cada aviso sale una vez por fichero y sesión, y solo mira el texto que se escribe en esa edición.
 - La revisión de commits no lee las reglas del proyecto; tiene las suyas y puede leer otros ficheros del repositorio para seguir el flujo de los datos.
 - Las revisiones con modelo no miran nada dentro de `vendor/`, `node_modules/`, `build/` ni `dist/`, ni los ficheros `.min.js`: se revisan los fuentes, no lo compilado. Tampoco miran los ficheros que git ignora.
@@ -248,6 +248,8 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 
 Para añadir un tipo de acción (como el correo o el webhook): una clase que implemente `Action_Type` y su proveedor. `is_deferred()` decide si se ejecuta mientras el visitante espera o en segundo plano, por la cola (`plugin/includes/queue/`), con reintentos. La cola no es una tabla aparte: son las filas en estado pendiente del registro de entregas.
 
+Los ficheros de los envíos (`plugin/includes/uploads/`): un tipo de campo que los recibe implementa `Upload_Field_Type` y su dato son los ficheros, no un valor de la petición. `Upload_Store` los guarda en el almacén privado y los borra; `Download_Links` y `Download_Controller` son la única vía de descarga. Para admitir un tipo de fichero nuevo se añade a un grupo de `File_Types`, y nunca nada que un servidor o un navegador ejecute o interprete.
+
 Un formulario por pasos no tiene una estructura propia: el tipo de campo «Paso» (`Section_Field_Type`) parte la lista y `Step_Layout` reparte los campos. En el navegador, `plugin/assets/js/steps.js` los muestra de uno en uno.
 
 Para tocar el motor de reglas (un operador nuevo, un cambio de criterio): se cambia en PHP (`plugin/includes/rules/`) y en el navegador (`plugin/assets/js/rules.js`) a la vez, y se añade el caso a `tests/fixtures/reglas.json`, que es lo que comprueba que los dos lados coinciden.
@@ -276,6 +278,8 @@ Para añadir un tipo de campo: una clase en `plugin/includes/fields/types/` que 
 - Elementor (4.3.4) está instalado e inactivo en el entorno. `tests/e2e/estilo.spec.ts` lo activa para su test y lo desactiva al terminar; la página de Elementor se monta con la ruta del entorno `rt/v1/elementor-page`. Para probar con Elementor 3: `rt wp plugin install elementor --version=3.35.9 --force`, `rt e2e estilo` y volver a instalar la 4.3.4.
 - El captcha tiene un doble en los dos lados: en Playwright el script del servicio se sustituye con `context.route()` (`tests/e2e/captcha.spec.ts`), y en el servidor el entorno responde él mismo a la verificación de los testigos que empiezan por `rt-` (`rt-valido` es bueno). Los demás testigos van al servicio real, para poder probarlo a mano con sus claves públicas de prueba.
 - Los servicios externos se sustituyen por dobles: las peticiones HTTP, con el filtro `pre_http_request`; el SMTP se prueba contra Mailpit (`127.0.0.1:1025`, sin cifrado ni credenciales). Los tests de Playwright que cambian los ajustes de correo los devuelven a los de fábrica al terminar (`AdminApi.saveMailSettings({})`).
+- En PHPUnit no hay subidas HTTP, así que `wp_handle_upload()` rechazaría cualquier fichero: los tests de ficheros componen el servicio de envío con `Movedor_De_Pruebas` (`tests/phpunit/FicherosTest.php`). La subida de verdad la prueba Playwright con `setInputFiles()`.
+- Dentro de un test de Playwright, `request.newContext()` hereda la sesión de administrador de la configuración: una petición anónima necesita `storageState: { cookies: [], origins: [] }`.
 - `tests/phpunit/EntornoTest.php` y `tests/e2e/entorno.spec.ts` solo comprueban el entorno; sirven de plantilla.
 
 ## A tener en cuenta

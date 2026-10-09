@@ -75,6 +75,7 @@ final class Plugin {
 			new Forms\Forms_Provider(),
 			new Captcha\Captcha_Module_Provider(),
 			new Antispam\Antispam_Provider(),
+			new Uploads\Uploads_Provider(),
 			new Mail\Mail_Provider(),
 			new Storage\Storage_Provider(),
 			new Queue\Queue_Provider(),

@@ -466,7 +466,10 @@ class AlmacenTest extends Caso_Formulario {
 		$formulario   = $this->crear_formulario();
 		$capabilities = new Capabilities();
 		$capabilities->grant_to_administrator();
-		$desinstalar  = new Uninstaller( $capabilities, $this->esquema(), new Maintenance_Schedule(), new Queue_Schedule( new Reloj_Falso() ) );
+		$ficheros     = new Formulario_Mensaje\Uploads\Upload_Directory();
+		$desinstalar  = new Uninstaller( $capabilities, $this->esquema(), new Maintenance_Schedule(), new Queue_Schedule( new Reloj_Falso() ), $ficheros );
+
+		$this->assertNotNull( $ficheros->prepare( 'ab/abcd.dat' ) );
 
 		update_option( Option_Settings_Repository::OPTION, array( 'delete_data_on_uninstall' => false ) );
 		$desinstalar->uninstall();
@@ -475,6 +478,7 @@ class AlmacenTest extends Caso_Formulario {
 		$this->assertFalse( wp_next_scheduled( Maintenance_Schedule::HOOK ) );
 		$this->assertSame( Form_Post_Type::NAME, get_post_type( $formulario ), 'Los formularios se conservan.' );
 		$this->assertIsArray( get_option( Option_Settings_Repository::OPTION ) );
+		$this->assertDirectoryExists( $ficheros->base(), 'Los ficheros de los envíos también se conservan.' );
 
 		update_option( Option_Settings_Repository::OPTION, array( 'delete_data_on_uninstall' => true ) );
 		wp_trash_post( $formulario );
@@ -482,6 +486,7 @@ class AlmacenTest extends Caso_Formulario {
 
 		$this->assertNull( get_post( $formulario ), 'También se borran los formularios de la papelera.' );
 		$this->assertFalse( get_option( Option_Settings_Repository::OPTION ) );
+		$this->assertDirectoryDoesNotExist( $ficheros->base(), 'El almacén de ficheros se borra con los datos.' );
 		$this->assertSame( 0, (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE meta_key = %s', $wpdb->postmeta, Post_Form_Repository::DEFINITION_META ) ) );
 	}
 }

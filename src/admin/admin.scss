@@ -559,6 +559,30 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 	}
 }
 
+.fm-checklist {
+	margin: 0;
+	padding: 0;
+	border: 0;
+
+	&__legend {
+		margin-bottom: 8px;
+		padding: 0;
+		font-size: 11px;
+		font-weight: 500;
+		text-transform: uppercase;
+	}
+
+	.components-base-control {
+		margin-bottom: 8px;
+	}
+
+	&__help {
+		margin: 0;
+		color: $muted;
+		font-size: 12px;
+	}
+}
+
 .fm-options {
 	margin: 0;
 	padding: 0;
@@ -751,6 +775,28 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 			margin: 0;
 			overflow-wrap: anywhere;
 			white-space: pre-wrap;
+		}
+	}
+
+	&__files {
+		margin-top: 12px;
+		padding-top: 12px;
+		border-top: 1px solid $border;
+
+		h3 {
+			margin: 0 0 8px;
+			color: $muted;
+			font-size: 12px;
+			font-weight: 600;
+		}
+
+		ul {
+			margin: 0;
+		}
+
+		li {
+			margin: 0 0 4px;
+			overflow-wrap: anywhere;
 		}
 	}
 

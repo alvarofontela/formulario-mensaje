@@ -48,8 +48,9 @@ final class Submission_Request_Factory {
 	 * @param mixed              $token    Token antispam.
 	 * @param Submission_Channel $channel  Vía por la que ha llegado.
 	 * @param mixed              $captcha_token Testigo del captcha, sin validar.
+	 * @param mixed              $files         Elemento de `$_FILES` con los ficheros del formulario, sin validar.
 	 */
-	public function create( int $form_id, mixed $values, mixed $honeypot, mixed $token, Submission_Channel $channel, mixed $captcha_token = '' ): Submission_Request {
+	public function create( int $form_id, mixed $values, mixed $honeypot, mixed $token, Submission_Channel $channel, mixed $captcha_token = '', mixed $files = array() ): Submission_Request {
 		return new Submission_Request(
 			$form_id,
 			is_array( $values ) ? $values : array(),
@@ -59,8 +60,22 @@ final class Submission_Request_Factory {
 			$this->ip_resolver->resolve(),
 			$this->page_url(),
 			mb_substr( $this->server->get( 'HTTP_USER_AGENT' ), 0, 255 ),
-			is_scalar( $captcha_token ) ? mb_substr( (string) $captcha_token, 0, self::MAX_CAPTCHA_LENGTH ) : ''
+			is_scalar( $captcha_token ) ? mb_substr( (string) $captcha_token, 0, self::MAX_CAPTCHA_LENGTH ) : '',
+			is_array( $files ) ? $files : array(),
+			$this->is_truncated()
 		);
+	}
+
+	/**
+	 * Indica si la petición superaba el tamaño que acepta el servidor.
+	 *
+	 * En ese caso PHP no entrega ni los valores ni los ficheros: sin esta comprobación, el visitante
+	 * vería un error del token antispam en vez de saber que sus ficheros pesan demasiado.
+	 */
+	private function is_truncated(): bool {
+		$limit = wp_convert_hr_to_bytes( (string) ini_get( 'post_max_size' ) );
+
+		return $limit > 0 && (int) $this->server->get( 'CONTENT_LENGTH' ) > $limit;
 	}
 
 	/**

@@ -15,6 +15,7 @@ use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Queue\Queue_Dispatcher;
 use Formulario_Mensaje\Storage\Submission_Journal;
 use Formulario_Mensaje\Support\Clock;
+use Formulario_Mensaje\Uploads\Submission_Uploads;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -36,6 +37,7 @@ final class Submission_Handler {
 	 * @param Submission_Journal   $journal      Guardado del envío y registro de sus acciones.
 	 * @param Action_Runner        $actions      Ejecución de las acciones.
 	 * @param Queue_Dispatcher     $queue        Entrada de las acciones en segundo plano en la cola.
+	 * @param Submission_Uploads   $uploads      Ficheros de los envíos.
 	 * @param Confirmation_Builder $confirmation Confirmación para el visitante.
 	 * @param Reference_Generator  $references   Números de referencia.
 	 * @param Clock                $clock        Reloj.
@@ -47,6 +49,7 @@ final class Submission_Handler {
 		private readonly Submission_Journal $journal,
 		private readonly Action_Runner $actions,
 		private readonly Queue_Dispatcher $queue,
+		private readonly Submission_Uploads $uploads,
 		private readonly Confirmation_Builder $confirmation,
 		private readonly Reference_Generator $references,
 		private readonly Clock $clock
@@ -71,13 +74,22 @@ final class Submission_Handler {
 			);
 		}
 
+		if ( $request->truncated ) {
+			return new WP_Error(
+				'formulario_mensaje_request_too_large',
+				__( 'The files are too large to be sent. Please choose smaller files and try again.', 'formulario-mensaje' ),
+				array( 'status' => 413 )
+			);
+		}
+
 		$rejection = $this->spam_guard->inspect( $request, $form );
 
 		if ( null !== $rejection ) {
 			return $rejection;
 		}
 
-		$validated = $this->validator->validate( $form, $request->raw_values );
+		$uploads   = $this->uploads->collect( $form, $request->files );
+		$validated = $this->validator->validate( $form, $request->raw_values, $uploads );
 
 		if ( array() !== $validated['errors'] ) {
 			// El envío no se acepta: no ocupa hueco en el límite por IP.
@@ -93,12 +105,27 @@ final class Submission_Handler {
 			);
 		}
 
+		$reference = $this->references->generate();
+
+		// Los ficheros, ya validados, pasan al almacén privado: las acciones se ejecutan después.
+		$entries = $this->uploads->attach( $form, $reference, $validated['entries'], $uploads );
+
+		if ( is_wp_error( $entries ) ) {
+			$this->spam_guard->release( $request, $form );
+
+			return new WP_Error(
+				'formulario_mensaje_upload_failed',
+				__( 'The files could not be stored. Please try again later.', 'formulario-mensaje' ),
+				array( 'status' => 500 )
+			);
+		}
+
 		$submission = new Submission(
 			$form->id,
-			$this->references->generate(),
+			$reference,
 			$this->clock->now(),
 			$request->page_url,
-			$validated['entries'],
+			$entries,
 			$request->client_ip,
 			$request->user_agent
 		);
@@ -115,15 +142,21 @@ final class Submission_Handler {
 
 		// Primero se guarda: si una acción falla después, el envío ya está a salvo y se puede reintentar.
 		$stored_id = $this->journal->record_submission( $form, $submission );
-		$results   = $this->actions->run( $form, $submission );
+
+		$this->uploads->link( $form, $reference, $stored_id );
+
+		// Las acciones reciben el envío con los enlaces de descarga de sus ficheros, que no se guardan con él.
+		$for_actions = $submission->with_entries( $this->uploads->with_links( $form, $reference, $stored_id, $entries ) );
+		$results     = $this->actions->run( $form, $for_actions );
 
 		$this->journal->record_results( $form, $stored_id, $results );
 
 		// Las acciones en segundo plano quedan en la cola, que tiene su propia copia del envío si no se guarda.
-		$queued = $this->queue->dispatch( $form, $submission, $stored_id, $results );
+		$queued = $this->queue->dispatch( $form, $for_actions, $stored_id, $results );
 
 		if ( 0 === $stored_id && 0 === $queued && $this->nothing_succeeded( $form, $results ) ) {
 			$this->spam_guard->release( $request, $form );
+			$this->uploads->discard( $form, $reference );
 
 			return new WP_Error(
 				'formulario_mensaje_delivery_failed',
@@ -142,6 +175,9 @@ final class Submission_Handler {
 		 * @param Action_Result[] $results    Resultado de cada acción ejecutada.
 		 */
 		do_action( 'formulario_mensaje_submission_completed', $submission, $form, $results );
+
+		// Hechas las acciones, los ficheros que solo hacían falta para ellas se borran.
+		$this->uploads->finish( $form, $reference, $stored_id );
 
 		return $this->confirmation->build( $form, $submission );
 	}

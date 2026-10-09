@@ -68,7 +68,8 @@ final class Wp_Mail_Transport implements Mail_Transport {
 			$message->safe_recipients(),
 			$message->safe_subject(),
 			$message->has_html() ? $message->html : $message->body,
-			$headers
+			$headers,
+			$message->safe_attachments()
 		);
 
 		remove_action( 'wp_mail_failed', $capture );

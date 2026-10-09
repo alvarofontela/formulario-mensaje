@@ -127,7 +127,8 @@ export class AdminApi {
  * Esta vía admite dos envíos por formulario e IP cada diez minutos.
  */
 export async function submitWithoutJs(formId: number, values: Record<string, string>): Promise<void> {
-  const context = await playwrightRequest.newContext({ baseURL: env.baseUrl });
+  // Con el estado vacío: dentro de un test, un contexto nuevo hereda la sesión de la configuración.
+  const context = await playwrightRequest.newContext({ baseURL: env.baseUrl, storageState: { cookies: [], origins: [] } });
   const form: Record<string, string> = { action: 'formulario_mensaje_submit', fm_form_id: String(formId) };
 
   for (const [field, value] of Object.entries(values)) {

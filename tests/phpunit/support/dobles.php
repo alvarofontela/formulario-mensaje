@@ -12,6 +12,11 @@ use Formulario_Mensaje\Settings\Settings_Repository;
 use Formulario_Mensaje\Support\Clock;
 use Formulario_Mensaje\Support\Request_Query;
 use Formulario_Mensaje\Support\Server_Vars;
+use Formulario_Mensaje\Forms\Form;
+use Formulario_Mensaje\Mail\Attachment_Source;
+use Formulario_Mensaje\Submissions\Submission;
+use Formulario_Mensaje\Uploads\Upload_Mover;
+use Formulario_Mensaje\Uploads\Uploaded_File;
 
 /** Reloj que se puede adelantar a voluntad. */
 final class Reloj_Falso implements Clock {
@@ -87,6 +92,32 @@ final class Transporte_Espia implements Mail_Transport {
 		$this->enviados[] = $message;
 
 		return true;
+	}
+}
+
+/** Adjuntos fijados por el test; por defecto, ninguno. */
+final class Adjuntos_Fijos implements Attachment_Source {
+	/** @param array<int, array{path: string, name: string}> $adjuntos */
+	public function __construct( public array $adjuntos = array() ) {}
+
+	public function attachments( Submission $submission, Form $form ): array {
+		return $this->adjuntos;
+	}
+}
+
+/**
+ * Mueve ficheros como el de WordPress, pero sin exigir que hayan llegado por una subida HTTP, que
+ * en PHPUnit no existe. La comprobación del contenido es la misma: wp_check_filetype_and_ext().
+ */
+final class Movedor_De_Pruebas implements Upload_Mover {
+	public function move( Uploaded_File $file, string $directory, string $filename, array $mimes ): array|WP_Error {
+		$tipo = wp_check_filetype_and_ext( $file->tmp_name, $file->name, $mimes );
+
+		if ( empty( $tipo['type'] ) || ! copy( $file->tmp_name, $directory . '/' . $filename ) ) {
+			return new WP_Error( 'formulario_mensaje_upload_failed', 'No se pudo guardar.' );
+		}
+
+		return array( 'path' => $directory . '/' . $filename, 'type' => $tipo['type'] );
 	}
 }
 

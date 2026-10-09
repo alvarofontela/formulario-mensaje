@@ -10,6 +10,7 @@ namespace Formulario_Mensaje\Fields;
 use Formulario_Mensaje\Container;
 use Formulario_Mensaje\Service_Provider;
 use Formulario_Mensaje\Support\Inline_Html;
+use Formulario_Mensaje\Uploads\File_Types;
 use Formulario_Mensaje\Support\Php_Request_Query;
 use Formulario_Mensaje\Support\Request_Query;
 
@@ -108,6 +109,7 @@ final class Fields_Provider implements Service_Provider {
 			new Types\Number_Field_Type( $markup, $common, $prefill ),
 			new Types\Date_Field_Type( $markup, $common, $prefill ),
 			new Types\Url_Field_Type( $markup, $common, $prefill ),
+			new Types\File_Field_Type( $markup, $common, $container->get( File_Types::class ) ),
 			new Types\Hidden_Field_Type( $markup, $common, $container->get( Context_Resolver::class ) ),
 			new Types\Step_Field_Type( $common ),
 			new Types\Heading_Field_Type( $markup, $common ),

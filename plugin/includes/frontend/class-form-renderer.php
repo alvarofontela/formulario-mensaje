@@ -106,8 +106,11 @@ final class Form_Renderer {
 		$fields       = '';
 		$has_required = false;
 
+		$has_uploads = false;
+
 		foreach ( $form->definition->fields as $field ) {
 			$has_required = $has_required || $field->is_required();
+			$has_uploads  = $has_uploads || null !== $this->field_types->get_upload( $field->type );
 		}
 
 		if ( array() === $steps ) {
@@ -131,8 +134,15 @@ final class Form_Renderer {
 			'aria-label' => $form->title,
 		);
 
+		// Sin esto, el envío sin JavaScript mandaría el nombre de los ficheros y no los ficheros.
+		if ( $has_uploads ) {
+			$attributes['enctype'] = 'multipart/form-data';
+		}
+
 		if ( $interactive && array() !== $steps ) {
-			$attributes['data-fm-steps'] = count( $steps );
+			// Lo único de un paso que se comprueba en el navegador: que un fichero obligatorio esté elegido.
+			$attributes['data-fm-required-message'] = __( 'This field is required.', 'formulario-mensaje' );
+			$attributes['data-fm-steps']            = count( $steps );
 			/* translators: {current} and {total} are replaced by the number of the current step and the number of steps; keep them as they are. */
 			$attributes['data-fm-step-text'] = __( 'Step {current} of {total}', 'formulario-mensaje' );
 		}

@@ -85,6 +85,11 @@ final class Settings_Schema_Sanitizer {
 
 				return in_array( $value, $allowed, true ) ? $value : $default;
 
+			case 'checklist':
+				$allowed = array_map( 'strval', array_column( is_array( $control['choices'] ?? null ) ? $control['choices'] : array(), 'value' ) );
+
+				// Los elegidos, en el orden de la lista y sin nada que no esté en ella.
+				return array_values( array_intersect( $allowed, array_map( 'strval', array_filter( is_array( $value ) ? $value : array(), 'is_scalar' ) ) ) );
 			case 'options':
 				return $this->sanitize_options( $value );
 

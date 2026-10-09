@@ -106,6 +106,10 @@ final class Smtp_Transport implements Mail_Transport {
 				$mailer->addReplyTo( $reply_to );
 			}
 
+			foreach ( $message->safe_attachments() as $name => $path ) {
+				$mailer->addAttachment( $path, $name );
+			}
+
 			$mailer->Subject = $message->safe_subject();
 
 			if ( $message->has_html() ) {

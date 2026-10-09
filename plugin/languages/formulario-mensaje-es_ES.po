@@ -82,7 +82,7 @@ msgid "This screen needs JavaScript."
 msgstr "Esta pantalla necesita JavaScript."
 
 #: includes/admin/class-export-controller.php:43
-#: includes/rest/class-submission-records-controller.php:186
+#: includes/rest/class-submission-records-controller.php:193
 msgid "Sorry, you are not allowed to view submissions."
 msgstr "Lo siento, no tienes permisos para ver los envíos."
 
@@ -126,7 +126,7 @@ msgid "This form needs JavaScript to be sent. Enable it in your browser and try 
 msgstr "Este formulario necesita JavaScript para enviarse. Actívalo en tu navegador e inténtalo de nuevo."
 
 #: includes/captcha/class-captcha-check.php:57
-#: includes/frontend/class-form-renderer.php:153
+#: includes/frontend/class-form-renderer.php:163
 msgid "Complete the security check before sending the form."
 msgstr "Completa la comprobación de seguridad antes de enviar el formulario."
 
@@ -458,6 +458,106 @@ msgstr "Separador"
 msgid "Enter a valid email address."
 msgstr "Escribe una dirección de correo válida."
 
+#: includes/fields/types/class-file-field-type.php:56
+msgid "File upload"
+msgstr "Subida de ficheros"
+
+#: includes/fields/types/class-file-field-type.php:85
+msgid "Allowed file types"
+msgstr "Tipos de fichero permitidos"
+
+#: includes/fields/types/class-file-field-type.php:86
+msgid "If none is selected, images and PDF are accepted."
+msgstr "Si no se marca ninguno, se aceptan imágenes y PDF."
+
+#: includes/fields/types/class-file-field-type.php:93
+msgid "Maximum number of files"
+msgstr "Número máximo de ficheros"
+
+#: includes/fields/types/class-file-field-type.php:100
+msgid "Maximum total size"
+msgstr "Tamaño máximo en total"
+
+#. translators: %d: number of megabytes.
+#: includes/fields/types/class-file-field-type.php:104
+#, php-format
+msgid "%d MB"
+msgstr "%d MB"
+
+#: includes/fields/types/class-file-field-type.php:111
+msgid "Attach the files to the email notifications"
+msgstr "Adjuntar los ficheros a las notificaciones por correo"
+
+#: includes/fields/types/class-file-field-type.php:117
+msgid "Keep the files with the stored submission"
+msgstr "Conservar los ficheros con el envío guardado"
+
+#: includes/fields/types/class-file-field-type.php:118
+msgid "They are downloaded from the Submissions screen and are deleted with the submission. If the form does not store its submissions, the files are not kept either."
+msgstr "Se descargan desde la pantalla de Envíos y se borran con el envío. Si el formulario no guarda sus envíos, tampoco se conservan los ficheros."
+
+#: includes/fields/types/class-file-field-type.php:124
+msgid "Include a download link in the notifications"
+msgstr "Incluir un enlace de descarga en las notificaciones"
+
+#: includes/fields/types/class-file-field-type.php:125
+msgid "Anyone with the link can download the file until it expires, without logging in."
+msgstr "Cualquiera que tenga el enlace puede descargar el fichero hasta que caduque, sin iniciar sesión."
+
+#: includes/fields/types/class-file-field-type.php:135
+msgid "The link expires after"
+msgstr "El enlace caduca tras"
+
+#. translators: %d: number of days.
+#: includes/fields/types/class-file-field-type.php:139
+#, php-format
+msgid "%d day"
+msgid_plural "%d days"
+msgstr[0] "%d día"
+msgstr[1] "%d días"
+
+#. translators: %s: maximum file size, for example "2 MB".
+#: includes/fields/types/class-file-field-type.php:240
+#, php-format
+msgid "The file is too large. This site accepts files of up to %s."
+msgstr "El fichero pesa demasiado. Este sitio acepta ficheros de hasta %s."
+
+#: includes/fields/types/class-file-field-type.php:246
+msgid "The file could not be uploaded. Please try again."
+msgstr "No se ha podido subir el fichero. Inténtalo de nuevo."
+
+#. translators: %s: list of allowed file extensions.
+#: includes/fields/types/class-file-field-type.php:258
+#, php-format
+msgid "This type of file is not allowed. Allowed: %s."
+msgstr "Este tipo de fichero no está permitido. Permitidos: %s."
+
+#: includes/fields/types/class-file-field-type.php:294
+msgid "sample-document.pdf"
+msgstr "documento-de-ejemplo.pdf"
+
+#. translators: 1: list of allowed file extensions, 2: maximum number of files, 3: maximum total size in megabytes.
+#: includes/fields/types/class-file-field-type.php:350
+#, php-format
+msgid "Allowed: %1$s. %2$d file, up to %3$d MB."
+msgid_plural "Allowed: %1$s. Up to %2$d files, %3$d MB in total."
+msgstr[0] "Permitidos: %1$s. %2$d fichero, hasta %3$d MB."
+msgstr[1] "Permitidos: %1$s. Hasta %2$d ficheros, %3$d MB en total."
+
+#. translators: %d: maximum number of files.
+#: includes/fields/types/class-file-field-type.php:372
+#, php-format
+msgid "You can upload %d file at most."
+msgid_plural "You can upload %d files at most."
+msgstr[0] "Puedes subir %d fichero como máximo."
+msgstr[1] "Puedes subir %d ficheros como máximo."
+
+#. translators: %d: maximum size in megabytes.
+#: includes/fields/types/class-file-field-type.php:385
+#, php-format
+msgid "The files are too large. The maximum is %d MB in total."
+msgstr "Los ficheros pesan demasiado. El máximo es de %d MB en total."
+
 #: includes/fields/types/class-heading-field-type.php:50
 msgid "Section title"
 msgstr "Título de sección"
@@ -573,7 +673,7 @@ msgid "Enter a valid web address."
 msgstr "Escribe una dirección web válida."
 
 #: includes/forms/class-form-definition-sanitizer.php:140
-#: includes/frontend/class-form-renderer.php:163
+#: includes/frontend/class-form-renderer.php:173
 msgid "Send"
 msgstr "Enviar"
 
@@ -689,7 +789,7 @@ msgid "Notification"
 msgstr "Notificación"
 
 #: includes/frontend/class-fallback-controller.php:56
-#: includes/frontend/class-fallback-controller.php:162
+#: includes/frontend/class-fallback-controller.php:166
 msgid "The form could not be sent"
 msgstr "No se ha podido enviar el formulario"
 
@@ -697,34 +797,39 @@ msgstr "No se ha podido enviar el formulario"
 msgid "This form does not exist or is in the trash."
 msgstr "Este formulario no existe o está en la papelera."
 
+#: includes/frontend/class-form-renderer.php:144
+#: includes/submissions/class-submission-validator.php:91
+msgid "This field is required."
+msgstr "Este campo es obligatorio."
+
 #. translators: {current} and {total} are replaced by the number of the current step and the number of steps; keep them as they are.
-#: includes/frontend/class-form-renderer.php:137
+#: includes/frontend/class-form-renderer.php:147
 msgid "Step {current} of {total}"
 msgstr "Paso {current} de {total}"
 
-#: includes/frontend/class-form-renderer.php:144
+#: includes/frontend/class-form-renderer.php:154
 msgid "Your message could not be sent. Check your connection and try again."
 msgstr "No se ha podido enviar tu mensaje. Comprueba tu conexión e inténtalo de nuevo."
 
-#: includes/frontend/class-form-renderer.php:202
+#: includes/frontend/class-form-renderer.php:212
 #: build/admin/index.js:32
 #: build/admin/index.js:35
 msgid "Previous"
 msgstr "Anterior"
 
-#: includes/frontend/class-form-renderer.php:203
+#: includes/frontend/class-form-renderer.php:213
 #: build/admin/index.js:33
 #: build/admin/index.js:36
 msgid "Next"
 msgstr "Siguiente"
 
 #. translators: %s: the asterisk that marks required fields.
-#: includes/frontend/class-form-renderer.php:215
+#: includes/frontend/class-form-renderer.php:225
 #, php-format
 msgid "Fields marked with %s are required."
 msgstr "Los campos marcados con %s son obligatorios."
 
-#: includes/frontend/class-form-renderer.php:233
+#: includes/frontend/class-form-renderer.php:243
 msgid "Leave this field empty"
 msgstr "Deja este campo vacío"
 
@@ -736,21 +841,21 @@ msgstr "Formulario Mensaje no se puede activar para toda la red. Actívalo en ca
 msgid "Plugin activation error"
 msgstr "Error al activar el plugin"
 
-#: includes/mail/class-email-action.php:64
+#: includes/mail/class-email-action.php:71
 msgid "Email notification"
 msgstr "Notificación por correo"
 
 #. translators: {form_title} is a tag replaced by the name of the form; keep it as is.
-#: includes/mail/class-email-action.php:93
+#: includes/mail/class-email-action.php:100
 msgid "New submission: {form_title}"
 msgstr "Nuevo envío: {form_title}"
 
 #. translators: {all_fields}, {reference}, {page_url} and {date} are tags replaced by data of the submission; keep them as they are.
-#: includes/mail/class-email-action.php:95
+#: includes/mail/class-email-action.php:102
 msgid "{all_fields}\n\n--\nReference: {reference}\nPage: {page_url}\nDate: {date}"
 msgstr "{all_fields}\n\n--\nReferencia: {reference}\nPágina: {page_url}\nFecha: {date}"
 
-#: includes/mail/class-email-action.php:133
+#: includes/mail/class-email-action.php:140
 msgid "The notification has no valid recipients."
 msgstr "La notificación no tiene destinatarios válidos."
 
@@ -787,7 +892,7 @@ msgid "Resend needs an API key and a sender address of a domain verified in Rese
 msgstr "Resend necesita una clave de API y una dirección de remitente de un dominio verificado en Resend."
 
 #. translators: 1: HTTP status code, 2: error message returned by Resend.
-#: includes/mail/class-resend-transport.php:105
+#: includes/mail/class-resend-transport.php:118
 #, php-format
 msgid "Resend answered with error %1$d. %2$s"
 msgstr "Resend ha respondido con el error %1$d. %2$s"
@@ -804,7 +909,7 @@ msgstr "El servidor SMTP no está configurado."
 msgid "Set a sender address in the email settings: the default one of this site is not a valid email address."
 msgstr "Indica una dirección de remitente en los ajustes de correo: la que este sitio usa por defecto no es una dirección de correo válida."
 
-#: includes/mail/class-wp-mail-transport.php:84
+#: includes/mail/class-wp-mail-transport.php:85
 msgid "The email could not be sent."
 msgstr "No se ha podido enviar el correo."
 
@@ -932,23 +1037,23 @@ msgstr "Dirección que recibe esos correos. Vacía para usar la del administrado
 msgid "Days the delivery log is kept."
 msgstr "Días que se conserva el registro de entregas."
 
-#: includes/rest/class-submission-records-controller.php:83
+#: includes/rest/class-submission-records-controller.php:90
 msgid "Limit the list to the submissions of this form."
 msgstr "Limitar el listado a los envíos de este formulario."
 
-#: includes/rest/class-submission-records-controller.php:89
+#: includes/rest/class-submission-records-controller.php:96
 msgid "Text to look for in the reference and in the values."
 msgstr "Texto que se busca en la referencia y en los valores."
 
-#: includes/rest/class-submission-records-controller.php:94
+#: includes/rest/class-submission-records-controller.php:101
 msgid "Only submissions with failed deliveries."
 msgstr "Solo envíos con entregas fallidas."
 
-#: includes/rest/class-submission-records-controller.php:111
+#: includes/rest/class-submission-records-controller.php:118
 msgid "Identifiers of the submissions to delete."
 msgstr "Identificadores de los envíos que se borran."
 
-#: includes/rest/class-submission-records-controller.php:380
+#: includes/rest/class-submission-records-controller.php:397
 msgid "The submission does not exist."
 msgstr "El envío no existe."
 
@@ -975,12 +1080,12 @@ msgstr "Tiene que estar vacío."
 
 #: includes/rest/class-submissions-controller.php:145
 #: includes/rest/class-submissions-controller.php:175
-#: includes/submissions/class-submission-handler.php:69
+#: includes/submissions/class-submission-handler.php:72
 msgid "This form is no longer available."
 msgstr "Este formulario ya no está disponible."
 
 #: includes/rest/class-submissions-controller.php:154
-#: includes/submissions/class-submission-handler.php:88
+#: includes/submissions/class-submission-handler.php:100
 msgid "Please review the highlighted fields."
 msgstr "Revisa los campos marcados."
 
@@ -1053,13 +1158,43 @@ msgstr "Esta acción está desactivada en el formulario. Actívala para reintent
 msgid "There is no failed delivery with that identifier."
 msgstr "No hay ninguna entrega fallida con ese identificador."
 
-#: includes/submissions/class-submission-handler.php:130
+#: includes/submissions/class-submission-handler.php:80
+msgid "The files are too large to be sent. Please choose smaller files and try again."
+msgstr "Los ficheros pesan demasiado para enviarlos. Elige ficheros más pequeños e inténtalo de nuevo."
+
+#: includes/submissions/class-submission-handler.php:118
+msgid "The files could not be stored. Please try again later."
+msgstr "No se han podido guardar los ficheros. Inténtalo de nuevo más tarde."
+
+#: includes/submissions/class-submission-handler.php:163
 msgid "Your message could not be sent. Please try again later."
 msgstr "No se ha podido enviar tu mensaje. Inténtalo de nuevo más tarde."
 
-#: includes/submissions/class-submission-validator.php:86
-msgid "This field is required."
-msgstr "Este campo es obligatorio."
+#: includes/uploads/class-download-controller.php:96
+msgid "This download link is not valid or has expired."
+msgstr "Este enlace de descarga no es válido o ha caducado."
+
+#: includes/uploads/class-download-controller.php:97
+msgid "File not available"
+msgstr "Fichero no disponible"
+
+#: includes/uploads/class-file-types.php:58
+msgid "Images (JPG, PNG, GIF, WebP)"
+msgstr "Imágenes (JPG, PNG, GIF, WebP)"
+
+#: includes/uploads/class-file-types.php:59
+msgid "PDF"
+msgstr "PDF"
+
+#: includes/uploads/class-file-types.php:60
+msgid "Office documents (Word, Excel, PowerPoint, OpenDocument, TXT, CSV)"
+msgstr "Documentos de oficina (Word, Excel, PowerPoint, OpenDocument, TXT, CSV)"
+
+#: includes/uploads/class-upload-store.php:244
+#: includes/uploads/class-upload-store.php:259
+#: includes/uploads/class-wp-upload-mover.php:60
+msgid "The file could not be stored."
+msgstr "No se ha podido guardar el fichero."
 
 #: includes/webhooks/class-webhook-action.php:71
 msgid "Webhook"
@@ -2254,6 +2389,10 @@ msgstr "Datos recibidos"
 #: build/admin/index.js:28
 msgid "(empty)"
 msgstr "(vacío)"
+
+#: build/admin/index.js:28
+msgid "Files"
+msgstr "Ficheros"
 
 #: build/admin/index.js:28
 msgid "Details"

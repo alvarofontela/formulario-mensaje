@@ -70,6 +70,19 @@ final class Resend_Transport implements Mail_Transport {
 			$payload['reply_to'] = $message->safe_reply_to();
 		}
 
+		foreach ( $message->safe_attachments() as $name => $path ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Fichero local del almacén del plugin, no una URL.
+			$content = file_get_contents( $path );
+
+			if ( false !== $content ) {
+				$payload['attachments'][] = array(
+					'filename' => $name,
+					// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Es el formato en el que la API de Resend recibe los adjuntos.
+					'content'  => base64_encode( $content ),
+				);
+			}
+		}
+
 		// La dirección es fija, pero se usa la variante segura por sistema; no se siguen redirecciones.
 		$response = wp_safe_remote_post(
 			self::ENDPOINT,

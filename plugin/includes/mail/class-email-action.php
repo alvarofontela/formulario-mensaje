@@ -38,16 +38,23 @@ final class Email_Action implements Action_Type {
 	private const MAX_RECIPIENTS = 20;
 
 	/**
+	 * Tamaño máximo, en bytes, de los adjuntos de un correo: por encima, muchos servidores lo rechazan.
+	 */
+	private const MAX_ATTACHMENT_BYTES = 20 * MB_IN_BYTES;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param Mail_Transport $transport Transporte de correo.
-	 * @param Tag_Replacer   $tags      Etiquetas de los textos.
-	 * @param Email_Template $template  Plantilla HTML con la marca.
+	 * @param Mail_Transport    $transport Transporte de correo.
+	 * @param Tag_Replacer      $tags      Etiquetas de los textos.
+	 * @param Email_Template    $template    Plantilla HTML con la marca.
+	 * @param Attachment_Source $attachments Ficheros del envío que se adjuntan.
 	 */
 	public function __construct(
 		private readonly Mail_Transport $transport,
 		private readonly Tag_Replacer $tags,
-		private readonly Email_Template $template
+		private readonly Email_Template $template,
+		private readonly Attachment_Source $attachments
 	) {}
 
 	/**
@@ -147,7 +154,8 @@ final class Email_Action implements Action_Type {
 			$subject,
 			$this->tags->to_text( $body, $submission, $form ),
 			$this->reply_to( $settings, $submission ),
-			$html
+			$html,
+			$this->attachments( $submission, $form )
 		);
 
 		/**
@@ -162,6 +170,31 @@ final class Email_Action implements Action_Type {
 		$filtered = apply_filters( 'formulario_mensaje_email_message', $message, $submission, $form );
 
 		return $this->transport->send( $filtered instanceof Email_Message ? $filtered : $message );
+	}
+
+	/**
+	 * Ficheros que se adjuntan, hasta el tope de tamaño de un correo. Los que no caben se quedan
+	 * fuera: siguen estando en el envío guardado, si el formulario los conserva.
+	 *
+	 * @param Submission $submission Envío.
+	 * @param Form       $form       Formulario.
+	 * @return array<int, array{path: string, name: string}>
+	 */
+	private function attachments( Submission $submission, Form $form ): array {
+		$attachments = array();
+		$total       = 0;
+
+		foreach ( $this->attachments->attachments( $submission, $form ) as $attachment ) {
+			$total += (int) filesize( $attachment['path'] );
+
+			if ( $total > self::MAX_ATTACHMENT_BYTES ) {
+				break;
+			}
+
+			$attachments[] = $attachment;
+		}
+
+		return $attachments;
 	}
 
 	/**

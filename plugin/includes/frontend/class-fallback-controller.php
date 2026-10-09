@@ -99,9 +99,13 @@ final class Fallback_Controller {
 		 */
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$values = isset( $_POST[ Render_Context::VALUES_PARAM ] ) && is_array( $_POST[ Render_Context::VALUES_PARAM ] ) ? wp_unslash( $_POST[ Render_Context::VALUES_PARAM ] ) : array();
+
+		// Con los ficheros pasa lo mismo: solo se leen los de los campos de subida del formulario, y cada uno se comprueba antes de moverlo.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$files = isset( $_FILES[ Render_Context::VALUES_PARAM ] ) && is_array( $_FILES[ Render_Context::VALUES_PARAM ] ) ? $_FILES[ Render_Context::VALUES_PARAM ] : array();
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
-		return $this->requests->create( $form_id, $values, $honeypot, '', Submission_Channel::Fallback );
+		return $this->requests->create( $form_id, $values, $honeypot, '', Submission_Channel::Fallback, '', $files );
 	}
 
 	/**

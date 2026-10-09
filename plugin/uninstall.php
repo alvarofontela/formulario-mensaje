@@ -20,5 +20,6 @@ global $wpdb;
 	new Formulario_Mensaje\Lifecycle\Capabilities(),
 	new Formulario_Mensaje\Database\Schema( $wpdb ),
 	new Formulario_Mensaje\Lifecycle\Maintenance_Schedule(),
-	new Formulario_Mensaje\Queue\Queue_Schedule( new Formulario_Mensaje\Support\System_Clock() )
+	new Formulario_Mensaje\Queue\Queue_Schedule( new Formulario_Mensaje\Support\System_Clock() ),
+	new Formulario_Mensaje\Uploads\Upload_Directory()
 ) )->uninstall();

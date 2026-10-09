@@ -7,8 +7,8 @@
 
 namespace Formulario_Mensaje\Submissions;
 
+use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Fields\Step_Layout;
-use Formulario_Mensaje\Forms\Field;
 use Formulario_Mensaje\Forms\Form;
 
 defined( 'ABSPATH' ) || exit;
@@ -25,11 +25,13 @@ final class Step_Validator {
 	 * Constructor.
 	 *
 	 * @param Submission_Validator $validator Validación de envíos.
-	 * @param Step_Layout          $layout    Pasos de los formularios.
+	 * @param Step_Layout          $layout      Pasos de los formularios.
+	 * @param Field_Type_Registry  $field_types Tipos de campo.
 	 */
 	public function __construct(
 		private readonly Submission_Validator $validator,
-		private readonly Step_Layout $layout
+		private readonly Step_Layout $layout,
+		private readonly Field_Type_Registry $field_types
 	) {}
 
 	/**
@@ -47,7 +49,14 @@ final class Step_Validator {
 			return array();
 		}
 
-		$ids = array_map( static fn ( Field $field ): string => $field->id, $steps[ $step ]['fields'] );
+		$ids = array();
+
+		foreach ( $steps[ $step ]['fields'] as $field ) {
+			// Los ficheros no se suben para validar un paso: se comprueban al enviar el formulario.
+			if ( null === $this->field_types->get_upload( $field->type ) ) {
+				$ids[] = $field->id;
+			}
+		}
 
 		// Se valida el envío entero, con sus condiciones, y se devuelven solo los errores de este paso.
 		return array_intersect_key( $this->validator->validate( $form, $raw_values )['errors'], array_flip( $ids ) );

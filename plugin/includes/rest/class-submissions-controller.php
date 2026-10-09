@@ -203,7 +203,9 @@ final class Submissions_Controller {
 				$request->get_param( Honeypot_Check::FIELD_NAME ),
 				$request->get_param( 'token' ),
 				Submission_Channel::Rest,
-				$request->get_param( 'captcha' )
+				$request->get_param( 'captcha' ),
+				// Los ficheros se entregan sin validar: solo se leen los de los campos de subida del formulario.
+				$request->get_file_params()[ Render_Context::VALUES_PARAM ] ?? array()
 			)
 		);
 

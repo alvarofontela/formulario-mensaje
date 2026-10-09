@@ -12,6 +12,7 @@ use Formulario_Mensaje\Antispam\Client_Ip_Resolver;
 use Formulario_Mensaje\Antispam\Spam_Guard;
 use Formulario_Mensaje\Container;
 use Formulario_Mensaje\Queue\Queue_Dispatcher;
+use Formulario_Mensaje\Uploads\Submission_Uploads;
 use Formulario_Mensaje\Rules\Visibility_Resolver;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Fields\Step_Layout;
@@ -60,7 +61,7 @@ final class Submissions_Provider implements Service_Provider {
 
 		$container->set(
 			Step_Validator::class,
-			static fn ( Container $c ): Step_Validator => new Step_Validator( $c->get( Submission_Validator::class ), $c->get( Step_Layout::class ) )
+			static fn ( Container $c ): Step_Validator => new Step_Validator( $c->get( Submission_Validator::class ), $c->get( Step_Layout::class ), $c->get( Field_Type_Registry::class ) )
 		);
 
 		$container->set(
@@ -98,6 +99,7 @@ final class Submissions_Provider implements Service_Provider {
 				$c->get( Submission_Journal::class ),
 				$c->get( Action_Runner::class ),
 				$c->get( Queue_Dispatcher::class ),
+				$c->get( Submission_Uploads::class ),
 				$c->get( Confirmation_Builder::class ),
 				$c->get( Reference_Generator::class ),
 				$c->get( Clock::class )

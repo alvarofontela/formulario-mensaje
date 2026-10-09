@@ -19,6 +19,7 @@ export interface MailDetail {
   ReplyTo: Address[];
   Text: string;
   HTML: string;
+  Attachments: { FileName: string; ContentType: string; Size: number }[];
 }
 
 const api = `${env.mailpit.url}/api/v1`;
@@ -32,7 +33,7 @@ export async function listMail(): Promise<MailSummary[]> {
   return (await response.json()).messages;
 }
 
-/** Mensaje completo: destinatarios, dirección de respuesta y cuerpo en texto y en HTML. */
+/** Mensaje completo: destinatarios, dirección de respuesta, cuerpo en texto y en HTML, y adjuntos. */
 export async function getMail(id: string): Promise<MailDetail> {
   return (await fetch(`${api}/message/${id}`)).json();
 }

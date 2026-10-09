@@ -77,7 +77,8 @@ final class Mail_Provider implements Service_Provider {
 			static fn ( Container $c ): Email_Action => new Email_Action(
 				$c->get( Mail_Transport::class ),
 				$c->get( Tag_Replacer::class ),
-				$c->get( Email_Template::class )
+				$c->get( Email_Template::class ),
+				$c->get( Attachment_Source::class )
 			)
 		);
 

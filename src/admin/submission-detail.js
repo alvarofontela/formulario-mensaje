@@ -167,6 +167,22 @@ export default function SubmissionDetail( { submissionId, onClose } ) {
 							</div>
 						) ) }
 					</dl>
+
+					{ submission.files?.length > 0 && (
+						<div className="fm-detail__files">
+							<h3>{ __( 'Files', 'formulario-mensaje' ) }</h3>
+							<ul>
+								{ submission.files.map( ( file ) => (
+									<li key={ file.url }>
+										<a href={ file.url }>{ file.name }</a>{ ' ' }
+										<span className="fm-admin__muted">
+											{ file.size }
+										</span>
+									</li>
+								) ) }
+							</ul>
+						</div>
+					) }
 				</section>
 
 				<div>

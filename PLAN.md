@@ -233,7 +233,7 @@ Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fa
 | 7. Estilo, bloque y Elementor | Hecha |
 | 8. Lógica condicional en campos | Hecha |
 | 9. Formularios por pasos | Hecha |
-| 10. Ficheros | Pendiente |
+| 10. Ficheros | Hecha |
 | 11. Extensión | Pendiente |
 
 ### Fase 1: lo que se decidió al hacerla
@@ -284,6 +284,30 @@ Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel
 - **Hooks**: el filtro `formulario_mensaje_email_message` recibe ahora un mensaje que puede llevar HTML.
 
 No verificado contra servicios reales: Resend se ha probado con un doble de la HTTP API (petición, cabecera de autorización, errores) y el SMTP contra Mailpit, que no cifra ni pide credenciales. Quedan sin probar STARTTLS, SSL y la autenticación contra un servidor real.
+
+### Fase 10: lo que se decidió al hacerla
+
+- **Tipo de campo «Subida de ficheros»**, con sus ajustes: tipos permitidos (casillas de los tres grupos cerrados: imágenes, PDF y documentos de oficina), número máximo de ficheros (1, 2, 3, 5 o 10), tamaño máximo de todos juntos (1, 2, 5, 10 o 20 MB), adjuntar al correo, conservar con el envío guardado e incluir un enlace de descarga en las notificaciones, con su caducidad (1, 7 o 30 días). Sin extensiones libres.
+- **Lo que cuenta es el contenido del fichero.** Se valida con `wp_check_filetype_and_ext()` contra los tipos del campo, y `wp_handle_upload()` lo vuelve a comprobar al moverlo. El nombre y el tipo que declara el navegador no cuentan, y el tamaño se mide en el servidor. Un fichero rechazado rechaza el envío, con su mensaje junto al campo.
+- **Almacén privado**: `wp-content/uploads/formulario-mensaje-private/`, con un `.htaccess` que prohíbe servirlo. Cada fichero se guarda con un nombre aleatorio de 32 caracteres hexadecimales y extensión `.dat`: nada del nombre original llega al disco, que solo se guarda en la base de datos (tabla nueva `formulario_mensaje_files`, esquema versión 3) para mostrarlo y para la descarga.
+- **Descarga solo a través del plugin** (`admin-post.php?action=formulario_mensaje_file`), siempre como descarga y con un tipo genérico, para que el navegador no interprete lo que subió un desconocido. Se entra con sesión y la capability de ver envíos (más un nonce), desde el detalle del envío, o con el enlace firmado de una notificación: una firma HMAC del identificador del fichero y de su caducidad, con una clave derivada de las salts del sitio. Todos los rechazos responden lo mismo.
+- **El enlace firmado no se guarda con el envío**: va solo en la copia que reciben las acciones (correos y webhooks). Solo se genera si el fichero se va a conservar: el campo lo pide y el formulario guarda sus envíos.
+- **Todos los ficheros aceptados pasan por el almacén**, también los que solo se adjuntan: las acciones se ejecutan después y necesitan el fichero. Al terminar el envío se borran los que no hay que conservar (el campo no lo pide, o el formulario no guarda sus envíos). Si el envío fracasa, se borran todos.
+- **Se borran con su envío**, por la vía que sea (a mano, retención, al vaciar la papelera de formularios), enganchados a la acción `formulario_mensaje_submissions_deleted`. Los restos de envíos que no llegaron a completarse se limpian en el mantenimiento diario, pasadas 24 horas. Al desinstalar con borrado de datos se elimina el almacén entero.
+- **Adjuntos**: los tres transportes los envían (`wp_mail`, SMTP y Resend). Un correo lleva como mucho 20 MB de adjuntos; los que no caben se quedan fuera y siguen en el envío guardado si el campo los conserva.
+- **En los formularios por pasos** los ficheros viajan una sola vez, con el envío final: la validación de un paso no los sube, y el navegador solo comprueba que los obligatorios estén elegidos. El navegador avisa también del exceso de número o de tamaño antes de subir nada; el servidor lo comprueba todo otra vez.
+- **Sin JavaScript** el formulario se envía como `multipart/form-data` y funciona igual.
+- **Si la petición supera `post_max_size`**, PHP descarta su contenido entero; el plugin lo detecta y lo explica al visitante, en vez de responder con un error del token antispam.
+- **Un campo de ficheros oculto por su condición** no forma parte del envío, como cualquier otro: lo que llegue para él se descarta sin guardarlo.
+
+Límites conocidos:
+
+- Donde el servidor no aplica `.htaccess` (nginx), el almacén no está prohibido por configuración: la protección es que el nombre del fichero no se puede adivinar ni sale en ninguna página, y que su extensión no se ejecuta. Conviene añadir en nginx una regla `deny` para la carpeta.
+- Sin la extensión `fileinfo` de PHP, WordPress solo puede comprobar el contenido de las imágenes; del resto se fía de la extensión. Aun así los ficheros ni se ejecutan ni se sirven en línea.
+- Reintentar desde la administración una notificación fallida vuelve a adjuntar los ficheros solo si se conservan, y no lleva enlace firmado.
+- El límite de subida de PHP (`upload_max_filesize`) es por fichero y puede ser menor que el del campo: en ese caso el visitante recibe un mensaje con el límite del servidor.
+
+Probado con subidas reales en Playwright (envío normal, por pasos y sin JavaScript), con Apache. No se ha probado en nginx, ni con Resend real, ni con ficheros de oficina de verdad (los tests usan PDF e imágenes).
 
 ### Fase 9: lo que se decidió al hacerla
 

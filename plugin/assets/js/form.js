@@ -209,29 +209,90 @@ class FormController {
 	async validateStep( step ) {
 		this.clearErrors();
 
+		// Los ficheros no se suben para validar un paso: viajan una sola vez, con el envío. Aquí se comprueban en el navegador.
+		const fileErrors = this.checkFiles(
+			this.form.querySelectorAll( '.fm-step' )[ step ],
+			true
+		);
+
 		try {
 			const data = new FormData( this.form );
 
 			data.delete( 'action' );
 			data.delete( 'fm_form_id' );
 			data.set( 'step', String( step ) );
+			this.form
+				.querySelectorAll( 'input[type="file"]' )
+				.forEach( ( input ) => data.delete( input.name ) );
 
 			const response = await fetch( `${ this.endpoint }/validate`, {
 				method: 'POST',
 				headers: { Accept: 'application/json' },
 				body: data,
 			} );
+			const error = response.ok
+				? null
+				: await response.json().catch( () => null );
 
-			if ( response.ok ) {
+			if ( response.ok && ! Object.keys( fileErrors ).length ) {
 				return true;
 			}
 
-			this.onError( await response.json().catch( () => null ) );
+			this.onError( {
+				message: error?.message,
+				data: {
+					errors: { ...( error?.data?.errors || {} ), ...fileErrors },
+				},
+			} );
 		} catch {
 			this.onError( null );
 		}
 
 		return false;
+	}
+
+	/**
+	 * Comprueba en el navegador los ficheros elegidos, para no subir lo que el servidor va a
+	 * rechazar. El servidor lo comprueba todo otra vez, y además mira qué son de verdad.
+	 *
+	 * @param {?Element} scope    Parte del formulario que se comprueba; por defecto, todo.
+	 * @param {boolean}  required Si se comprueba también que los obligatorios estén elegidos.
+	 * @return {Object<string, string>} Mensajes de error, por identificador de campo.
+	 */
+	checkFiles( scope = this.form, required = false ) {
+		const errors = {};
+
+		( scope || this.form )
+			.querySelectorAll( 'input[type="file"]:not(:disabled)' )
+			.forEach( ( input ) => {
+				const fieldId =
+					input.closest( '[data-fm-field]' )?.dataset.fmField;
+
+				if ( ! fieldId ) {
+					return;
+				}
+
+				const files = Array.from( input.files || [] );
+				const size = files.reduce(
+					( total, file ) => total + file.size,
+					0
+				);
+
+				if ( required && input.required && ! files.length ) {
+					errors[ fieldId ] = this.form.dataset.fmRequiredMessage;
+				} else if (
+					files.length >
+					Number( input.dataset.fmMaxFiles || Infinity )
+				) {
+					errors[ fieldId ] = input.dataset.fmCountMessage;
+				} else if (
+					size > Number( input.dataset.fmMaxBytes || Infinity )
+				) {
+					errors[ fieldId ] = input.dataset.fmSizeMessage;
+				}
+			} );
+
+		return errors;
 	}
 
 	/**
@@ -339,8 +400,16 @@ class FormController {
 			return;
 		}
 
-		this.setBusy( true );
 		this.clearErrors();
+
+		const fileErrors = this.checkFiles();
+
+		if ( Object.keys( fileErrors ).length ) {
+			this.onError( { data: { errors: fileErrors } } );
+			return;
+		}
+
+		this.setBusy( true );
 
 		try {
 			let result = await this.send();

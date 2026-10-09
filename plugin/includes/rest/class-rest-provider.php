@@ -33,6 +33,8 @@ use Formulario_Mensaje\Submissions\Step_Validator;
 use Formulario_Mensaje\Submissions\Submission_Handler;
 use Formulario_Mensaje\Submissions\Submission_Request_Factory;
 use Formulario_Mensaje\Support\Server_Vars;
+use Formulario_Mensaje\Uploads\Download_Links;
+use Formulario_Mensaje\Uploads\Upload_Store;
 use Formulario_Mensaje\Webhooks\Webhook_Tester;
 
 defined( 'ABSPATH' ) || exit;
@@ -114,7 +116,9 @@ final class Rest_Provider implements Service_Provider {
 				$c->get( Submission_Service::class ),
 				$c->get( Action_Retrier::class ),
 				$c->get( Form_Service::class ),
-				$c->get( Action_Type_Registry::class )
+				$c->get( Action_Type_Registry::class ),
+				$c->get( Upload_Store::class ),
+				$c->get( Download_Links::class )
 			)
 		);
 

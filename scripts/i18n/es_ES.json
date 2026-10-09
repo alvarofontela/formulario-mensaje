@@ -579,5 +579,43 @@
   "Step title": "Título del paso",
   "Step {current} of {total}": "Paso {current} de {total}",
   "Position of the step to validate, starting at 0.": "Posición del paso que se valida, empezando en 0.",
-  "A field can only depend on the fields placed before it.": "Un campo solo puede depender de los campos que van antes que él."
+  "A field can only depend on the fields placed before it.": "Un campo solo puede depender de los campos que van antes que él.",
+  "Images (JPG, PNG, GIF, WebP)": "Imágenes (JPG, PNG, GIF, WebP)",
+  "PDF": "PDF",
+  "Office documents (Word, Excel, PowerPoint, OpenDocument, TXT, CSV)": "Documentos de oficina (Word, Excel, PowerPoint, OpenDocument, TXT, CSV)",
+  "The file could not be stored.": "No se ha podido guardar el fichero.",
+  "This download link is not valid or has expired.": "Este enlace de descarga no es válido o ha caducado.",
+  "File not available": "Fichero no disponible",
+  "File upload": "Subida de ficheros",
+  "Allowed file types": "Tipos de fichero permitidos",
+  "If none is selected, images and PDF are accepted.": "Si no se marca ninguno, se aceptan imágenes y PDF.",
+  "Maximum number of files": "Número máximo de ficheros",
+  "Maximum total size": "Tamaño máximo en total",
+  "%d MB": "%d MB",
+  "Attach the files to the email notifications": "Adjuntar los ficheros a las notificaciones por correo",
+  "Keep the files with the stored submission": "Conservar los ficheros con el envío guardado",
+  "They are downloaded from the Submissions screen and are deleted with the submission. If the form does not store its submissions, the files are not kept either.": "Se descargan desde la pantalla de Envíos y se borran con el envío. Si el formulario no guarda sus envíos, tampoco se conservan los ficheros.",
+  "Include a download link in the notifications": "Incluir un enlace de descarga en las notificaciones",
+  "Anyone with the link can download the file until it expires, without logging in.": "Cualquiera que tenga el enlace puede descargar el fichero hasta que caduque, sin iniciar sesión.",
+  "The link expires after": "El enlace caduca tras",
+  "%d day": [
+    "%d día",
+    "%d días"
+  ],
+  "You can upload %d file at most.": [
+    "Puedes subir %d fichero como máximo.",
+    "Puedes subir %d ficheros como máximo."
+  ],
+  "The file could not be uploaded. Please try again.": "No se ha podido subir el fichero. Inténtalo de nuevo.",
+  "This type of file is not allowed. Allowed: %s.": "Este tipo de fichero no está permitido. Permitidos: %s.",
+  "sample-document.pdf": "documento-de-ejemplo.pdf",
+  "Allowed: %1$s. %2$d file, up to %3$d MB.": [
+    "Permitidos: %1$s. %2$d fichero, hasta %3$d MB.",
+    "Permitidos: %1$s. Hasta %2$d ficheros, %3$d MB en total."
+  ],
+  "The files are too large. The maximum is %d MB in total.": "Los ficheros pesan demasiado. El máximo es de %d MB en total.",
+  "The file is too large. This site accepts files of up to %s.": "El fichero pesa demasiado. Este sitio acepta ficheros de hasta %s.",
+  "The files could not be stored. Please try again later.": "No se han podido guardar los ficheros. Inténtalo de nuevo más tarde.",
+  "The files are too large to be sent. Please choose smaller files and try again.": "Los ficheros pesan demasiado para enviarlos. Elige ficheros más pequeños e inténtalo de nuevo.",
+  "Files": "Ficheros"
 }

@@ -26,6 +26,8 @@ final class Submission_Request {
 	 * @param string               $page_url   Dirección de la página de origen, o cadena vacía.
 	 * @param string               $user_agent Navegador del visitante, o cadena vacía.
 	 * @param string               $captcha_token Testigo del captcha, si el formulario lo lleva.
+	 * @param array<string, mixed> $files       Ficheros tal como los entrega PHP para los campos del formulario, sin validar.
+	 * @param bool                 $truncated   Si la petición superaba el tamaño que acepta el servidor y PHP ha descartado su contenido.
 	 */
 	public function __construct(
 		public readonly int $form_id,
@@ -36,6 +38,8 @@ final class Submission_Request {
 		public readonly string $client_ip = '',
 		public readonly string $page_url = '',
 		public readonly string $user_agent = '',
-		public readonly string $captcha_token = ''
+		public readonly string $captcha_token = '',
+		public readonly array $files = array(),
+		public readonly bool $truncated = false
 	) {}
 }

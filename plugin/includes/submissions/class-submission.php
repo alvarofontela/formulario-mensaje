@@ -45,10 +45,18 @@ final class Submission {
 	}
 
 	/**
-	 * Valor legible de un campo, sin escapar.
+	 * Copia del envío con otros datos: el mismo envío, contado de otra manera.
+	 *
+	 * @param array<string, Submission_Entry> $entries Datos del envío, por identificador de campo.
+	 */
+	public function with_entries( array $entries ): self {
+		return new self( $this->form_id, $this->reference, $this->created_at, $this->page_url, $entries, $this->client_ip, $this->user_agent );
+	}
+
+	/**
+	 * Valor legible de un campo, o cadena vacía si el envío no lo tiene.
 	 *
 	 * @param string $field_id Identificador del campo.
-	 * @return string Cadena vacía si el campo no existe o llegó sin dato.
 	 */
 	public function formatted( string $field_id ): string {
 		return isset( $this->entries[ $field_id ] ) ? $this->entries[ $field_id ]->formatted : '';

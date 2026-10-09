@@ -1,5 +1,6 @@
 import {
 	Button,
+	CheckboxControl,
 	SelectControl,
 	TextControl,
 	TextareaControl,
@@ -104,24 +105,36 @@ function OptionsControl( { label, value, onChange } ) {
 export default function FieldSettings( { schema, settings, onChange } ) {
 	const set = ( key, value ) => onChange( { ...settings, [ key ]: value } );
 
+	// Valor actual de una opción: el guardado o, si todavía no hay, el de partida de su control.
+	const current = ( name ) =>
+		settings[ name ] ??
+		schema.find( ( item ) => item.key === name )?.default ??
+		'';
+
+	// Un control que depende de otro solo se muestra si ese otro también se muestra.
+	const isVisible = ( control ) => {
+		const showIf = control.show_if;
+
+		if ( ! showIf ) {
+			return true;
+		}
+
+		const parent = schema.find( ( item ) => item.key === showIf.key );
+
+		return (
+			showIf.values.includes( current( showIf.key ) ) &&
+			( ! parent || isVisible( parent ) )
+		);
+	};
+
 	return (
 		<div className="fm-settings">
 			{ schema.map( ( control ) => {
-				const {
-					key,
-					type,
-					label,
-					help,
-					choices,
-					show_if: showIf,
-				} = control;
+				const { key, type, label, help, choices } = control;
 				const value = settings[ key ] ?? control.default ?? '';
 
 				// Controles que solo tienen sentido según el valor de otro.
-				if (
-					showIf &&
-					! showIf.values.includes( settings[ showIf.key ] ?? '' )
-				) {
+				if ( ! isVisible( control ) ) {
 					return null;
 				}
 
@@ -150,6 +163,47 @@ export default function FieldSettings( { schema, settings, onChange } ) {
 								}
 							/>
 						);
+					case 'checklist': {
+						const selected = Array.isArray( value ) ? value : [];
+
+						return (
+							<fieldset key={ key } className="fm-checklist">
+								<legend className="fm-checklist__legend">
+									{ label }
+								</legend>
+								{ ( choices || [] ).map( ( choice ) => (
+									<CheckboxControl
+										key={ choice.value }
+										__nextHasNoMarginBottom
+										label={ choice.label }
+										checked={ selected.includes(
+											choice.value
+										) }
+										onChange={ ( checked ) =>
+											set(
+												key,
+												checked
+													? [
+															...selected,
+															choice.value,
+														]
+													: selected.filter(
+															( item ) =>
+																item !==
+																choice.value
+														)
+											)
+										}
+									/>
+								) ) }
+								{ help && (
+									<p className="fm-checklist__help">
+										{ help }
+									</p>
+								) }
+							</fieldset>
+						);
+					}
 					case 'options':
 						return (
 							<OptionsControl

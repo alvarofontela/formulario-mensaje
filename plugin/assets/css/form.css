@@ -186,6 +186,12 @@
 	resize: vertical;
 }
 
+.formulario-mensaje input[type="file"].fm-control {
+	/* El selector de ficheros nativo: cada navegador pinta su botón y su texto. */
+	padding: 0.5em;
+	cursor: pointer;
+}
+
 .formulario-mensaje select.fm-control {
 	/* El desplegable nativo conserva su flecha y su comportamiento en móviles. */
 	appearance: auto;

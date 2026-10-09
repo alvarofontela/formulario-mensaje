@@ -15,6 +15,9 @@ use Formulario_Mensaje\Storage\Delivery;
 use Formulario_Mensaje\Storage\Stored_Submission;
 use Formulario_Mensaje\Storage\Submission_Query;
 use Formulario_Mensaje\Storage\Submission_Service;
+use Formulario_Mensaje\Uploads\Download_Links;
+use Formulario_Mensaje\Uploads\Stored_File;
+use Formulario_Mensaje\Uploads\Upload_Store;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -37,12 +40,16 @@ final class Submission_Records_Controller {
 	 * @param Action_Retrier       $retrier      Reintento de acciones fallidas.
 	 * @param Form_Service         $forms        Servicio de formularios.
 	 * @param Action_Type_Registry $action_types Tipos de acción.
+	 * @param Upload_Store         $uploads      Ficheros de los envíos.
+	 * @param Download_Links       $downloads    Enlaces de descarga.
 	 */
 	public function __construct(
 		private readonly Submission_Service $submissions,
 		private readonly Action_Retrier $retrier,
 		private readonly Form_Service $forms,
-		private readonly Action_Type_Registry $action_types
+		private readonly Action_Type_Registry $action_types,
+		private readonly Upload_Store $uploads,
+		private readonly Download_Links $downloads
 	) {}
 
 	/**
@@ -237,6 +244,16 @@ final class Submission_Records_Controller {
 				'ip'         => $submission->ip,
 				'user_agent' => $submission->user_agent,
 				'entries'    => $entries,
+				'files'      => array_map(
+					fn ( Stored_File $file ): array => array(
+						'field_id' => $file->field_id,
+						'name'     => $file->name,
+						'size'     => (string) size_format( $file->size, 1 ),
+						// Enlace para quien tiene sesión y el permiso de ver envíos: no sirve sin ellos.
+						'url'      => $this->downloads->admin( $file ),
+					),
+					$this->uploads->for_submission( $submission->id )
+				),
 				'deliveries' => array_map( array( $this, 'delivery' ), $this->submissions->deliveries( $submission->id ) ),
 			)
 		);

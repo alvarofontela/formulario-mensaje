@@ -42,11 +42,12 @@ final class Submission_Validator {
 	/**
 	 * Sanea y valida un envío.
 	 *
-	 * @param Form                 $form       Formulario.
-	 * @param array<string, mixed> $raw_values Valores tal como llegan, por identificador de campo.
+	 * @param Form                                                       $form       Formulario.
+	 * @param array<string, mixed>                                       $raw_values Valores tal como llegan, por identificador de campo.
+	 * @param array<string, \Formulario_Mensaje\Uploads\Uploaded_File[]> $uploads Ficheros recibidos, por identificador de campo.
 	 * @return array{entries: array<string, Submission_Entry>, errors: array<string, string>}
 	 */
-	public function validate( Form $form, array $raw_values ): array {
+	public function validate( Form $form, array $raw_values, array $uploads = array() ): array {
 		$values     = array();
 		$conditions = array();
 		$inputs     = array();
@@ -64,8 +65,12 @@ final class Submission_Validator {
 				continue;
 			}
 
-			$inputs[ $field->id ]     = array( $field, $type );
-			$values[ $field->id ]     = $type->sanitize_value( $field, $raw_values[ $field->id ] ?? null );
+			// El dato de un campo de ficheros no llega con los valores: son los ficheros recibidos para él.
+			$upload = $this->field_types->get_upload( $field->type );
+			$raw    = null === $upload ? ( $raw_values[ $field->id ] ?? null ) : ( $uploads[ $field->id ] ?? array() );
+
+			$inputs[ $field->id ]     = array( $field, $type, $upload );
+			$values[ $field->id ]     = $type->sanitize_value( $field, $raw );
 			$conditions[ $field->id ] = $field->condition;
 		}
 
@@ -73,7 +78,7 @@ final class Submission_Validator {
 		$entries = array();
 		$errors  = array();
 
-		foreach ( $inputs as $id => list( $field, $type ) ) {
+		foreach ( $inputs as $id => list( $field, $type, $upload ) ) {
 			if ( ! $visible[ $id ] ) {
 				continue;
 			}
@@ -85,7 +90,7 @@ final class Submission_Validator {
 			if ( $empty && $field->is_required() ) {
 				$error = __( 'This field is required.', 'formulario-mensaje' );
 			} elseif ( ! $empty ) {
-				$error = $type->validate( $field, $value );
+				$error = null === $upload ? $type->validate( $field, $value ) : $upload->validate_files( $field, $uploads[ $id ] ?? array() );
 			}
 
 			if ( null !== $error ) {

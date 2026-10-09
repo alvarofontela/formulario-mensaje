@@ -22,7 +22,7 @@ final class Schema {
 	/**
 	 * Versión del esquema que crea este código.
 	 */
-	public const VERSION = 2;
+	public const VERSION = 3;
 
 	/**
 	 * Opción que guarda la versión del esquema instalado.
@@ -64,6 +64,15 @@ final class Schema {
 	}
 
 	/**
+	 * Nombre de la tabla del registro de ficheros de los envíos.
+	 */
+	public function files_table(): string {
+		$wpdb = $this->wpdb;
+
+		return $wpdb->prefix . 'formulario_mensaje_files';
+	}
+
+	/**
 	 * Crea las tablas o las lleva a la versión actual.
 	 */
 	public function install(): void {
@@ -75,6 +84,7 @@ final class Schema {
 		$submissions = $this->submissions_table();
 		$deliveries  = $this->deliveries_table();
 		$rate_limits = $this->rate_limits_table();
+		$files       = $this->files_table();
 
 		/*
 		 * `search_text` reúne la referencia y los valores para poder buscar sin leer el JSON de
@@ -126,6 +136,27 @@ final class Schema {
 			) {$collate};"
 		);
 
+		// Ficheros de los envíos. `token` es su identificador público, aleatorio; `path`, su ruta dentro del almacén privado.
+		dbDelta(
+			"CREATE TABLE {$files} (
+				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+				submission_id bigint(20) unsigned NOT NULL DEFAULT 0,
+				form_id bigint(20) unsigned NOT NULL,
+				field_id varchar(32) NOT NULL DEFAULT '',
+				reference varchar(20) NOT NULL DEFAULT '',
+				token char(32) NOT NULL DEFAULT '',
+				name varchar(255) NOT NULL DEFAULT '',
+				mime varchar(100) NOT NULL DEFAULT '',
+				size bigint(20) unsigned NOT NULL DEFAULT 0,
+				path varchar(255) NOT NULL DEFAULT '',
+				created_at datetime NOT NULL,
+				PRIMARY KEY  (id),
+				UNIQUE KEY token (token),
+				KEY submission_id (submission_id),
+				KEY form_reference (form_id,reference)
+			) {$collate};"
+		);
+
 		// `bucket` es un resumen de formulario, vía e IP: la IP no se guarda.
 		dbDelta(
 			"CREATE TABLE {$rate_limits} (
@@ -157,6 +188,7 @@ final class Schema {
 		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $this->submissions_table() ) );
 		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $this->deliveries_table() ) );
 		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $this->rate_limits_table() ) );
+		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $this->files_table() ) );
 		// phpcs:enable
 
 		delete_option( self::VERSION_OPTION );
