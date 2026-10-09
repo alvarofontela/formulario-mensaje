@@ -317,9 +317,17 @@ class FicherosTest extends Caso_Formulario {
 
 		// En disco: nombre aleatorio, sin nada del original y con una extensión que nadie ejecuta ni interpreta.
 		$this->assertMatchesRegularExpression( '#^[a-f0-9]{2}/[a-f0-9]{32}\.dat$#', $guardados[0]->path );
-		$this->assertStringStartsWith( substr( $guardados[0]->token, 0, 2 ) . '/' . $guardados[0]->token, $guardados[0]->path );
 		$this->assertFileExists( $this->directorio->base() . '/' . $guardados[0]->path );
 		$this->assertNotSame( $guardados[0]->token, $guardados[1]->token );
+		$this->assertNotSame( $guardados[0]->path, $guardados[1]->path );
+
+		// La ruta en disco no se deduce del identificador que viaja en los enlaces de descarga:
+		// tener un enlace, aunque esté caducado, no dice dónde está el fichero.
+		foreach ( $guardados as $guardado ) {
+			$this->assertStringNotContainsString( $guardado->token, $guardado->path );
+			$this->assertStringNotContainsString( substr( $guardado->token, 0, 16 ), $guardado->path );
+			$this->assertFileDoesNotExist( $this->directorio->base() . '/' . substr( $guardado->token, 0, 2 ) . '/' . $guardado->token . '.dat' );
+		}
 
 		// El almacén no se sirve ni se lista por URL.
 		$this->assertStringContainsString( 'Require all denied', file_get_contents( $this->directorio->base() . '/.htaccess' ) );

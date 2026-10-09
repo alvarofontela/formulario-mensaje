@@ -22,11 +22,11 @@ final class Stored_File {
 	 * @param int    $form_id       Identificador del formulario.
 	 * @param string $field_id      Identificador del campo con el que se subió.
 	 * @param string $reference     Número de referencia del envío.
-	 * @param string $token         Identificador aleatorio e impredecible del fichero.
+	 * @param string $token         Identificador aleatorio e impredecible del fichero; es el que va en los enlaces de descarga.
 	 * @param string $name          Nombre original, saneado, para mostrarlo y para la descarga.
 	 * @param string $mime          Tipo real del contenido.
 	 * @param int    $size          Tamaño en bytes.
-	 * @param string $path          Ruta relativa al almacén privado.
+	 * @param string $path          Ruta relativa al almacén privado. Su nombre es otro valor aleatorio, que no se deduce del identificador.
 	 * @param int    $created_at    Marca de tiempo Unix de la subida.
 	 */
 	public function __construct(

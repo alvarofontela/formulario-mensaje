@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import path from 'node:path';
 import { BrowserContext, Page, expect, request as playwrightRequest, test } from '@playwright/test';
 import { env } from './support/env';
 import { AdminApi, FormDefinition, contactDefinition, notifyTo, visitorContext } from './support/forms';
@@ -118,10 +119,12 @@ test('los ficheros llegan adjuntos al correo, se guardan en privado y se descarg
   expect(token).toMatch(/^[a-f0-9]{32}$/);
   expect((await anonymousGet(adminUrl)).status).toBe(403);
 
-  // Y el almacén no se sirve por URL, ni sabiendo dónde está el fichero.
+  // Y el almacén no se sirve por URL. El identificador del enlace, además, no es el nombre del fichero en disco.
   const store = '/wp-content/uploads/formulario-mensaje-private';
   expect((await anonymousGet(`${store}/`)).status).toBe(403);
   expect((await anonymousGet(`${store}/${token.slice(0, 2)}/${token}.dat`)).status).toBe(403);
+  expect(existsSync(path.join(env.paths.www, store, token.slice(0, 2), `${token}.dat`))).toBe(false);
+  expect(readdirSync(path.join(env.paths.www, store), { recursive: true }).some((name) => String(name).endsWith('.dat'))).toBe(true);
 
   // Al borrar el envío, el fichero deja de existir.
   await adminPage.getByRole('button', { name: 'Borrar' }).click();

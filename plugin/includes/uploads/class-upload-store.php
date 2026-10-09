@@ -236,8 +236,9 @@ final class Upload_Store implements Attachment_Source {
 	 * @param array<string, string> $mimes     Tipos que admite el campo.
 	 */
 	private function store( Form $form, string $reference, Field $field, Uploaded_File $upload, array $mimes ): Stored_File|WP_Error {
+		// Dos valores aleatorios distintos: el identificador viaja en los enlaces de descarga; la ruta en disco no sale nunca del servidor.
 		$token     = bin2hex( random_bytes( 16 ) );
-		$relative  = $this->directory->relative_path( $token );
+		$relative  = $this->directory->new_relative_path();
 		$directory = $this->directory->prepare( $relative );
 
 		if ( null === $directory ) {

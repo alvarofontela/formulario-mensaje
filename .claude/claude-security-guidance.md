@@ -1,6 +1,6 @@
 # Reglas de seguridad de formulario-mensaje
 
-Plugin de formularios para WordPress. Recibe datos de visitantes anónimos: trata toda entrada del formulario como controlada por un atacante, también cuando después se muestra en la administración o se envía por correo.
+Recibe datos de visitantes anónimos: trata toda entrada del formulario como controlada por un atacante, también cuando después se muestra en la administración o se envía por correo.
 
 ## Qué es producción y qué es entorno
 
@@ -18,7 +18,7 @@ Plugin de formularios para WordPress. Recibe datos de visitantes anónimos: trat
 - **Importación.** `/forms/import` recibe un JSON no fiable: pasa por el mismo saneado que el constructor y sus acciones quedan desactivadas. Ni la exportación ni la importación llevan secretos (`Action_Type::portable_settings()`).
 - **Estilo.** `Form_Style` solo admite colores hexadecimales y píxeles, y vuelve a sanear lo que imprime en `style`.
 - **Valores de los campos.** Llegan sin sanear al servicio de envío: solo se leen las claves de los campos del formulario y cada valor lo sanea su `Input_Field_Type`. Los campos cuya condición no se cumple se descartan en el servidor. Las etiquetas (`{field:…}`) se sustituyen en una sola pasada y, en HTML, escapadas.
-- **Ficheros.** Solo los campos `Upload_Field_Type` los reciben: tipos de la lista cerrada `File_Types` (sin scripts, HTML ni SVG), comprobados por contenido y movidos con `wp_handle_upload()` a una carpeta con `.htaccess`, con nombre aleatorio `.dat`. Solo los sirve `admin_post(_nopriv)_formulario_mensaje_file`, siempre como descarga: capability de ver envíos y nonce, o firma HMAC con caducidad (`Download_Links`). Otra forma de servirlos es un hallazgo.
+- **Ficheros.** Solo los campos `Upload_Field_Type` los reciben: tipos de la lista cerrada `File_Types` (sin scripts, HTML ni SVG), comprobados por contenido y movidos con `wp_handle_upload()` a una carpeta con `.htaccess`, con nombre aleatorio `.dat`. Solo los sirve `admin_post(_nopriv)_formulario_mensaje_file`, siempre como descarga: capability de ver envíos y nonce, o firma HMAC con caducidad (`Download_Links`). Servirlos de otro modo es un hallazgo.
 - **Redirección tras el envío.** El destino sale de la definición guardada y pasa por `Redirect_Policy` (host del sitio o lista de los ajustes) al guardar y en cada envío. Un destino tomado de la petición es un hallazgo.
 - **Mensaje de éxito.** Lo compone el servidor (plantilla por `Inline_Html::filter()`, datos por `esc_html()`) y el script lo inserta con `innerHTML`. Otro uso de `innerHTML` con datos es un hallazgo.
 

@@ -37,13 +37,18 @@ final class Upload_Directory {
 	}
 
 	/**
-	 * Ruta, relativa al almacén, en la que se guarda el fichero de un identificador.
+	 * Ruta nueva, relativa al almacén, para guardar un fichero.
 	 *
-	 * @param string $token Identificador aleatorio del fichero, en hexadecimal.
+	 * El nombre es aleatorio y no sale de ningún otro dato del fichero, tampoco de su identificador
+	 * público: quien tiene un enlace de descarga, vigente o caducado, no puede deducir de él dónde
+	 * está el fichero. Donde el servidor no aplica el `.htaccess`, eso es lo que impide ir a buscarlo
+	 * sin pasar por los permisos ni por la caducidad del enlace.
 	 */
-	public function relative_path( string $token ): string {
+	public function new_relative_path(): string {
+		$name = bin2hex( random_bytes( 16 ) );
+
 		// Una subcarpeta por los dos primeros caracteres, para no juntar miles de ficheros en una sola.
-		return substr( $token, 0, 2 ) . '/' . $token . self::EXTENSION;
+		return substr( $name, 0, 2 ) . '/' . $name . self::EXTENSION;
 	}
 
 	/**
