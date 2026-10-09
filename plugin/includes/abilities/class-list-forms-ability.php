@@ -102,6 +102,13 @@ final class List_Forms_Ability implements Ability {
 	}
 
 	/**
+	 * Indica si el resultado lleva texto escrito por visitantes anónimos.
+	 */
+	public function returns_visitor_content(): bool {
+		return false;
+	}
+
+	/**
 	 * Lista los formularios.
 	 *
 	 * @param array<string, mixed> $input Entrada ya validada.

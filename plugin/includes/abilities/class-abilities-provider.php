@@ -8,7 +8,6 @@
 namespace Formulario_Mensaje\Abilities;
 
 use Formulario_Mensaje\Container;
-use Formulario_Mensaje\Forms\Form_Porter;
 use Formulario_Mensaje\Forms\Form_Service;
 use Formulario_Mensaje\Service_Provider;
 use Formulario_Mensaje\Storage\Submission_Service;
@@ -31,7 +30,7 @@ final class Abilities_Provider implements Service_Provider {
 			static fn ( Container $c ): Ability_Registrar => new Ability_Registrar(
 				array(
 					new List_Forms_Ability( $c->get( Form_Service::class ) ),
-					new Get_Form_Ability( $c->get( Form_Service::class ), $c->get( Form_Porter::class ) ),
+					new Get_Form_Ability( $c->get( Form_Service::class ) ),
 					new Get_Submissions_Ability( $c->get( Submission_Service::class ) ),
 					new Get_Submission_Counts_Ability( $c->get( Submission_Service::class ), $c->get( Form_Service::class ) ),
 				)

@@ -101,6 +101,13 @@ final class Get_Submission_Counts_Ability implements Ability {
 	}
 
 	/**
+	 * Indica si el resultado lleva texto escrito por visitantes anónimos.
+	 */
+	public function returns_visitor_content(): bool {
+		return false;
+	}
+
+	/**
 	 * Cuenta los envíos.
 	 *
 	 * @param array<string, mixed> $input Entrada; no se usa.

@@ -55,6 +55,14 @@ interface Ability {
 	public function is_allowed(): bool;
 
 	/**
+	 * Indica si el resultado lleva texto escrito por visitantes anónimos.
+	 *
+	 * Ese texto puede contener instrucciones dirigidas a quien lo lea (inyección de instrucciones):
+	 * una ability así no se ofrece a los clientes MCP mientras el sitio no lo pida expresamente.
+	 */
+	public function returns_visitor_content(): bool;
+
+	/**
 	 * Ejecuta la operación.
 	 *
 	 * @param array<string, mixed> $input Entrada ya validada contra el esquema. Los valores por defecto del esquema no vienen puestos.

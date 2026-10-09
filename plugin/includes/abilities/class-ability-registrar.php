@@ -46,6 +46,20 @@ final class Ability_Registrar {
 	 */
 	public function register_abilities(): void {
 		foreach ( $this->abilities as $ability ) {
+			/**
+			 * Filtra si una ability del plugin se ofrece a los clientes MCP.
+			 *
+			 * Por defecto se ofrecen todas menos las que devuelven texto escrito por visitantes
+			 * anónimos: un agente que lo lea podría tomar por instrucciones lo que alguien haya
+			 * escrito en un formulario. Activarlas es decisión de quien administra el sitio.
+			 *
+			 * @since 0.11.0
+			 *
+			 * @param bool   $public Si la ability se ofrece a los clientes MCP.
+			 * @param string $name   Nombre de la ability, como `formulario-mensaje/get-submissions`.
+			 */
+			$mcp_public = true === apply_filters( 'formulario_mensaje_ability_mcp_public', ! $ability->returns_visitor_content(), $ability->get_name() );
+
 			wp_register_ability(
 				$ability->get_name(),
 				array(
@@ -63,9 +77,9 @@ final class Ability_Registrar {
 							'destructive' => false,
 							'idempotent'  => true,
 						),
-						// Visibles para los clientes de la REST API de abilities y para el adaptador de MCP. El permiso se comprueba en cada ejecución.
+						// Visibles para los clientes de la REST API de abilities. El permiso se comprueba en cada ejecución.
 						'show_in_rest' => true,
-						'mcp'          => array( 'public' => true ),
+						'mcp'          => array( 'public' => $mcp_public ),
 					),
 				)
 			);

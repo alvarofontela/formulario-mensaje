@@ -7,7 +7,6 @@
 
 namespace Formulario_Mensaje\Abilities;
 
-use Formulario_Mensaje\Forms\Form_Porter;
 use Formulario_Mensaje\Forms\Form_Service;
 use Formulario_Mensaje\Lifecycle\Capabilities;
 use WP_Error;
@@ -15,24 +14,21 @@ use WP_Error;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Devuelve la definición completa de un formulario, sin sus secretos.
+ * Devuelve la definición de un formulario: sus campos, sus ajustes, su estilo y qué acciones tiene.
  *
- * Es el mismo documento que descarga «Exportar»: campos, ajustes, estilo y acciones, sin el secreto
- * de firma de los webhooks ni el valor de sus cabeceras. Un agente no necesita credenciales para
- * entender un formulario, y así no salen de la instalación.
+ * De las acciones solo dice cuáles son y si están activas, no sus ajustes. Ahí están la dirección
+ * de los webhooks, que a menudo es en sí misma una credencial, sus cabeceras y los destinatarios de
+ * los correos: nada de eso hace falta para entender un formulario, y así no llega a un agente ni
+ * a lo que el agente tenga conectado. Para verlo o cambiarlo está la administración.
  */
 final class Get_Form_Ability implements Ability {
 
 	/**
 	 * Constructor.
 	 *
-	 * @param Form_Service $forms  Servicio de formularios.
-	 * @param Form_Porter  $porter Exportación de formularios.
+	 * @param Form_Service $forms Servicio de formularios.
 	 */
-	public function __construct(
-		private readonly Form_Service $forms,
-		private readonly Form_Porter $porter
-	) {}
+	public function __construct( private readonly Form_Service $forms ) {}
 
 	/**
 	 * Nombre con el que se registra.
@@ -52,7 +48,7 @@ final class Get_Form_Ability implements Ability {
 	 * Qué hace y cuándo usarla, ya traducido.
 	 */
 	public function get_description(): string {
-		return __( 'Returns the full definition of one form: its fields, settings, style, notifications and webhooks. Secrets such as webhook signing keys and header values are never included.', 'formulario-mensaje' );
+		return __( 'Returns the definition of one form: its fields, settings and style, and which notifications and webhooks it has. The settings of those actions (recipients, webhook addresses, headers and secrets) are never included.', 'formulario-mensaje' );
 	}
 
 	/**
@@ -89,7 +85,7 @@ final class Get_Form_Ability implements Ability {
 				'title'      => array( 'type' => 'string' ),
 				'definition' => array(
 					'type'        => 'object',
-					'description' => __( 'Fields, settings, style and actions of the form.', 'formulario-mensaje' ),
+					'description' => __( 'Fields, settings and style of the form, and the list of its actions without their settings.', 'formulario-mensaje' ),
 				),
 			),
 		);
@@ -100,6 +96,13 @@ final class Get_Form_Ability implements Ability {
 	 */
 	public function is_allowed(): bool {
 		return current_user_can( Capabilities::MANAGE_FORMS );
+	}
+
+	/**
+	 * Indica si el resultado lleva texto escrito por visitantes anónimos.
+	 */
+	public function returns_visitor_content(): bool {
+		return false;
 	}
 
 	/**
@@ -115,13 +118,23 @@ final class Get_Form_Ability implements Ability {
 			return new WP_Error( 'formulario_mensaje_form_not_found', __( 'The form does not exist.', 'formulario-mensaje' ), array( 'status' => 404 ) );
 		}
 
-		$document = $this->porter->export( $form );
+		$definition            = $form->definition->to_array();
+		$definition['actions'] = array_map(
+			// Solo lo que identifica a cada acción: sus ajustes no salen de la administración.
+			static fn ( array $action ): array => array(
+				'id'      => (string) ( $action['id'] ?? '' ),
+				'type'    => (string) ( $action['type'] ?? '' ),
+				'name'    => (string) ( $action['name'] ?? '' ),
+				'enabled' => ! empty( $action['enabled'] ),
+			),
+			array_values( array_filter( is_array( $definition['actions'] ?? null ) ? $definition['actions'] : array(), 'is_array' ) )
+		);
 
 		return array(
 			'id'         => $form->id,
 			'status'     => $form->status,
-			'title'      => $document['title'],
-			'definition' => $document['definition'],
+			'title'      => $form->title,
+			'definition' => $definition,
 		);
 	}
 }

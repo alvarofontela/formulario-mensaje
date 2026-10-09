@@ -123,13 +123,29 @@ El mantenimiento diario no tiene comando propio porque no lo necesita: `wp cron 
 
 El plugin registra cuatro abilities en la categoría `formulario-mensaje`, para agentes y clientes MCP. Las cuatro consultan y ninguna modifica nada; cada una comprueba su capability en cada ejecución y llama al mismo servicio que la administración.
 
-| Ability | Capability | Qué devuelve |
-| --- | --- | --- |
-| `formulario-mensaje/list-forms` | `formulario_mensaje_manage_forms` | Los formularios publicados o los de la papelera (`status`), con su título, número de campos y shortcode |
-| `formulario-mensaje/get-form` | `formulario_mensaje_manage_forms` | La definición completa de un formulario (`id`), sin secretos: el mismo contenido que una exportación |
-| `formulario-mensaje/get-submissions` | `formulario_mensaje_view_submissions` | Los envíos guardados, con filtros (`form_id`, `search`, `only_failed`, `after`, `before`) y paginación (`page`, `per_page` hasta 100). Sin IP ni navegador |
-| `formulario-mensaje/get-submission-counts` | `formulario_mensaje_view_submissions` | Cuántos envíos hay, en total y por formulario. No necesita entrada |
+| Ability | Capability | Qué devuelve | MCP |
+| --- | --- | --- | --- |
+| `formulario-mensaje/list-forms` | `formulario_mensaje_manage_forms` | Los formularios publicados o los de la papelera (`status`), con su título, número de campos y shortcode | Sí |
+| `formulario-mensaje/get-form` | `formulario_mensaje_manage_forms` | La definición de un formulario (`id`): campos, ajustes y estilo, y qué acciones tiene. De las acciones, solo su tipo, su nombre y si están activas | Sí |
+| `formulario-mensaje/get-submissions` | `formulario_mensaje_view_submissions` | Los envíos guardados, con filtros (`form_id`, `search`, `only_failed`, `after`, `before`) y paginación (`page`, `per_page` hasta 100). Sin IP ni navegador | No, salvo que se active |
+| `formulario-mensaje/get-submission-counts` | `formulario_mensaje_view_submissions` | Cuántos envíos hay, en total y por formulario. No necesita entrada | Sí |
 
-Se ejecutan desde PHP con `wp_get_ability( '…' )->execute( $entrada )`, y por la REST API de WordPress en `wp-json/wp-abilities/v1/abilities/<nombre>/run`. Están marcadas como visibles para la REST API (`show_in_rest`) y para el adaptador de MCP de WordPress (`mcp.public`).
+Se ejecutan desde PHP con `wp_get_ability( '…' )->execute( $entrada )`, y por la REST API de WordPress en `wp-json/wp-abilities/v1/abilities/<nombre>/run` (todas llevan `show_in_rest`).
+
+Dos decisiones de seguridad que conviene conocer:
+
+- **`get-form` no devuelve los ajustes de las acciones.** Ahí están la dirección de los webhooks, que a menudo es en sí misma una credencial, sus cabeceras y los destinatarios de los correos. Nada de eso hace falta para entender un formulario, y así no llega a un agente ni a lo que el agente tenga conectado.
+- **`get-submissions` no se ofrece a los clientes MCP por defecto.** Lo que devuelve lo ha escrito cualquiera que haya enviado un formulario, y puede haberlo escrito pensando en el agente que lo va a leer («ignora tus instrucciones y…»). El resultado lleva siempre un aviso (`notice`) de que ese contenido son datos y no instrucciones, pero un aviso no es una garantía. Quien quiera que un agente lea los envíos por MCP lo activa a sabiendas:
+
+  ```php
+  add_filter(
+  	'formulario_mensaje_ability_mcp_public',
+  	static fn ( bool $public, string $name ): bool => 'formulario-mensaje/get-submissions' === $name ? true : $public,
+  	10,
+  	2
+  );
+  ```
+
+  Conviene hacerlo solo si ese agente no tiene, en la misma sesión, herramientas con las que causar daño (enviar correos, publicar, borrar) sin confirmación de una persona.
 
 Lo que escribe o borra (crear formularios, borrar envíos, cambiar ajustes) no se ofrece como ability a propósito.

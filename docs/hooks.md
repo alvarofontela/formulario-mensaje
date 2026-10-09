@@ -153,6 +153,17 @@ Filtra las esperas entre los reintentos de una acción en segundo plano. Cada el
 
 Filtra las plantillas entre las que se elige al crear un formulario. Cada plantilla es un array con `id`, `label`, `description` y `definition`, esta última con la misma forma que la definición de un formulario (`fields`, `settings`, `actions`). Lo que se añada pasa por el mismo saneado que cualquier formulario.
 
+## Abilities
+
+### `formulario_mensaje_ability_mcp_public` (filtro)
+
+Filtra si una ability del plugin se ofrece a los clientes MCP. Por defecto se ofrecen todas menos las que devuelven texto escrito por visitantes anónimos (hoy, `formulario-mensaje/get-submissions`). El motivo y un ejemplo están en [extender.md](extender.md).
+
+| Parámetro | Tipo | |
+| --- | --- | --- |
+| `$public` | `bool` | Si la ability se ofrece a los clientes MCP |
+| `$name` | `string` | Nombre de la ability |
+
 ## Registros
 
 Estas tres acciones entregan un registro al que añadir clases propias. Se explican en [extender.md](extender.md).

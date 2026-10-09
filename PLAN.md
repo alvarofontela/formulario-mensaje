@@ -292,9 +292,14 @@ No verificado contra servicios reales: Resend se ha probado con un doble de la H
 - **El mantenimiento diario no tiene comando propio**: `wp cron event run formulario_mensaje_daily_maintenance` ya lo lanza. La cola sí, porque es lo que hay que poder empujar cuando el cron del sitio está parado.
 - **Cuatro abilities, todas de solo lectura**: `list-forms`, `get-form`, `get-submissions` y `get-submission-counts`, en la categoría `formulario-mensaje`. Se agrupan por la pregunta que responden, no por ruta REST: una sola para los envíos, con filtros. Cada una comprueba la capability de lo que lee en cada ejecución y llama al mismo servicio que la administración, no a la ruta REST.
 - **Lo que escribe o borra no se ofrece como ability**, a propósito: crear o cambiar formularios, borrar envíos y los ajustes se hacen en la administración. Es la decisión conservadora para un plugin que guarda datos personales; ampliar es añadir clases que implementen `Ability`.
-- **`get-form` devuelve el documento de exportación**, sin secretos, y `get-submissions` no devuelve ni la IP ni el navegador del visitante.
-- **Visibles por la REST API de abilities y para el adaptador de MCP** (`show_in_rest` y `mcp.public`). El permiso se comprueba igual por cualquier vía.
+- **`get-form` no devuelve los ajustes de las acciones**, solo cuáles son y si están activas, y `get-submissions` no devuelve ni la IP ni el navegador del visitante.
+- **Visibles por la REST API de abilities** (`show_in_rest`) **y, salvo `get-submissions`, para el adaptador de MCP** (`mcp.public`). El permiso se comprueba igual por cualquier vía.
 - **Documentación para desarrolladores** en `docs/`: `hooks.md` (acciones, filtros, tareas programadas y lo que ofrece el script del navegador) y `extender.md` (tipos de campo, de acción, servicios de captcha, plantillas, WP-CLI y abilities). La referencia exacta de cada hook sigue siendo su docblock.
+
+Cambios a raíz de la revisión de seguridad del commit de esta fase, corregidos en un commit aparte:
+
+- `get-form` devolvía el documento de exportación, que quita los secretos pero conserva la dirección de los webhooks (que suele ser una credencial), el nombre de sus cabeceras y los destinatarios de los correos. Para copiar un formulario a otra web eso es lo que se quiere; para un agente, no. Ahora las acciones van resumidas, sin ajustes.
+- `get-submissions` entrega a un agente texto escrito por visitantes anónimos, que puede contener instrucciones dirigidas a él (inyección de instrucciones indirecta). Ahora el resultado lleva un aviso junto a los datos, la descripción lo advierte, y la ability no se ofrece a los clientes MCP salvo que el sitio la active con el filtro `formulario_mensaje_ability_mcp_public`. El contrato `Ability` dice qué abilities devuelven texto de visitantes (`returns_visitor_content()`), y el registro decide con eso. El riesgo no desaparece para quien la active o la use por REST con un agente: es inherente a dar a leer contenido ajeno.
 
 Límite conocido: el constructor solo tiene editor para las notificaciones y los webhooks. Un tipo de acción de terceros se ejecuta y queda en el registro de entregas, pero hay que añadirlo a la definición por una plantilla o una importación.
 
