@@ -46,6 +46,11 @@ export const deleteForm = ( id, deleteSubmissions = false ) =>
 	} );
 export const restoreForm = ( id ) =>
 	request( `/forms/${ id }/restore`, 'POST' );
+export const duplicateForm = ( id ) =>
+	request( `/forms/${ id }/duplicate`, 'POST' );
+export const exportForm = ( id ) => request( `/forms/${ id }/export` );
+export const importForm = ( document ) =>
+	request( '/forms/import', 'POST', { document } );
 export const previewForm = ( form, signal ) =>
 	apiFetch( {
 		path: `${ restBase }/forms/preview`,

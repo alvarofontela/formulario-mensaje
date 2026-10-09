@@ -1,10 +1,25 @@
-import { Button, Dropdown, MenuGroup, MenuItem } from '@wordpress/components';
+import {
+	Button,
+	Dropdown,
+	MenuGroup,
+	MenuItem,
+	SelectControl,
+} from '@wordpress/components';
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
-import { fieldGroups, fieldTypes, getFieldType } from './config';
+import { fieldGroups, fieldTypes, fieldWidths, getFieldType } from './config';
 import FieldSettings from './field-settings';
 import { createField, createId, fieldTitle, moveItem } from './utils';
+
+const WIDTH_LABELS = {
+	100: __( 'Full width', 'formulario-mensaje' ),
+	75: __( 'Three quarters', 'formulario-mensaje' ),
+	66: __( 'Two thirds', 'formulario-mensaje' ),
+	50: __( 'Half', 'formulario-mensaje' ),
+	33: __( 'One third', 'formulario-mensaje' ),
+	25: __( 'One quarter', 'formulario-mensaje' ),
+};
 
 /**
  * Menú para añadir un campo, con los tipos registrados agrupados.
@@ -80,12 +95,14 @@ export default function FieldsPanel( { fields, onChange } ) {
 		setOpenId( field.id );
 	};
 
-	const update = ( index, settings ) =>
+	const patch = ( index, changes ) =>
 		onChange(
 			fields.map( ( field, position ) =>
-				position === index ? { ...field, settings } : field
+				position === index ? { ...field, ...changes } : field
 			)
 		);
+
+	const update = ( index, settings ) => patch( index, { settings } );
 
 	const remove = ( index ) =>
 		onChange( fields.filter( ( field, position ) => position !== index ) );
@@ -191,6 +208,9 @@ export default function FieldsPanel( { fields, onChange } ) {
 													'Unknown type',
 													'formulario-mensaje'
 												) }
+										{ field.width && field.width !== 100
+											? ` · ${ field.width } %`
+											: '' }
 										{ field.settings?.required
 											? ` · ${ __( 'Required', 'formulario-mensaje' ) }`
 											: '' }
@@ -280,6 +300,38 @@ export default function FieldsPanel( { fields, onChange } ) {
 											update( index, settings )
 										}
 									/>
+									{ /* Un campo oculto no ocupa sitio en el formulario. */ }
+									{ field.type !== 'hidden' && (
+										<SelectControl
+											__next40pxDefaultSize
+											__nextHasNoMarginBottom
+											className="fm-fields__width"
+											label={ __(
+												'Width',
+												'formulario-mensaje'
+											) }
+											help={ __(
+												'Consecutive fields that add up to the full width share a row. On narrow screens each field takes its own row.',
+												'formulario-mensaje'
+											) }
+											value={ String(
+												field.width || 100
+											) }
+											options={ fieldWidths.map(
+												( width ) => ( {
+													value: String( width ),
+													label:
+														WIDTH_LABELS[ width ] ||
+														`${ width } %`,
+												} )
+											) }
+											onChange={ ( value ) =>
+												patch( index, {
+													width: Number( value ),
+												} )
+											}
+										/>
+									) }
 									<p className="fm-fields__id">
 										{ __(
 											'Tag for emails and messages:',

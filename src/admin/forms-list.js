@@ -6,12 +6,20 @@ import {
 	Spinner,
 } from '@wordpress/components';
 import { dateI18n, getSettings as getDateSettings } from '@wordpress/date';
-import { useCallback, useEffect, useState } from '@wordpress/element';
+import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
 
-import { deleteForm, listForms, restoreForm, trashForm } from './api';
-import { can, urls } from './config';
+import {
+	deleteForm,
+	duplicateForm,
+	exportForm,
+	importForm,
+	listForms,
+	restoreForm,
+	trashForm,
+} from './api';
+import { can, templates, urls } from './config';
 import { useLatest, useReload } from './hooks';
 
 const STATUSES = [
@@ -32,6 +40,8 @@ export default function FormsList( { onOpen } ) {
 	const [ pendingDelete, setPendingDelete ] = useState( null );
 	const [ deleteSubmissions, setDeleteSubmissions ] = useState( false );
 	const [ copied, setCopied ] = useState( 0 );
+	const [ picking, setPicking ] = useState( false );
+	const importInput = useRef( null );
 
 	const latest = useLatest();
 	const [ version, reload ] = useReload();
@@ -71,6 +81,72 @@ export default function FormsList( { onOpen } ) {
 		} );
 	};
 
+	// El documento se descarga desde el navegador: la respuesta ya llega sin secretos.
+	const download = ( form ) => {
+		setNotice( null );
+
+		exportForm( form.id )
+			.then( ( document ) => {
+				const url = URL.createObjectURL(
+					new window.Blob( [ JSON.stringify( document, null, 2 ) ], {
+						type: 'application/json',
+					} )
+				);
+				const link = window.document.createElement( 'a' );
+
+				link.href = url;
+				link.download = `formulario-${ form.id }.json`;
+				link.click();
+				URL.revokeObjectURL( url );
+			} )
+			.catch( ( error ) =>
+				setNotice( { status: 'error', message: error.message } )
+			);
+	};
+
+	const importFile = ( event ) => {
+		const file = event.target.files?.[ 0 ];
+
+		// Se vacía para poder elegir el mismo fichero otra vez.
+		event.target.value = '';
+
+		if ( ! file ) {
+			return;
+		}
+
+		setNotice( null );
+
+		file.text()
+			.then( ( text ) => JSON.parse( text ) )
+			.catch( () => {
+				throw new Error(
+					__(
+						'The file is not a form exported from Formulario Mensaje.',
+						'formulario-mensaje'
+					)
+				);
+			} )
+			.then( importForm )
+			.then( ( form ) => {
+				setStatus( 'publish' );
+				setNotice( {
+					status: 'success',
+					message: sprintf(
+						/* translators: %s: name of a form. */
+						__(
+							'“%s” imported. Its notifications and webhooks are turned off: review them and turn them on.',
+							'formulario-mensaje'
+						),
+						form.title
+					),
+				} );
+				reload();
+			} )
+			.catch( ( error ) =>
+				setNotice( { status: 'error', message: error.message } )
+			);
+	};
+
 	const dateFormat = getDateSettings().formats.datetimeAbbreviated;
 
 	return (
@@ -79,13 +155,33 @@ export default function FormsList( { onOpen } ) {
 				<h1 className="fm-admin__title">
 					{ __( 'Forms', 'formulario-mensaje' ) }
 				</h1>
-				<Button
-					__next40pxDefaultSize
-					variant="primary"
-					onClick={ () => onOpen( 'new' ) }
-				>
-					{ __( 'Add form', 'formulario-mensaje' ) }
-				</Button>
+				<div className="fm-admin__header-actions">
+					<input
+						ref={ importInput }
+						type="file"
+						accept="application/json,.json"
+						hidden
+						aria-label={ __(
+							'File of a form to import',
+							'formulario-mensaje'
+						) }
+						onChange={ importFile }
+					/>
+					<Button
+						__next40pxDefaultSize
+						variant="secondary"
+						onClick={ () => importInput.current?.click() }
+					>
+						{ __( 'Import', 'formulario-mensaje' ) }
+					</Button>
+					<Button
+						__next40pxDefaultSize
+						variant="primary"
+						onClick={ () => setPicking( true ) }
+					>
+						{ __( 'Add form', 'formulario-mensaje' ) }
+					</Button>
+				</div>
 			</div>
 
 			{ notice && (
@@ -142,14 +238,14 @@ export default function FormsList( { onOpen } ) {
 							</h2>
 							<p>
 								{ __(
-									'A new form starts as a contact form with name, email and message. You can change everything.',
+									'Start from a template or from a blank form. You can change everything afterwards.',
 									'formulario-mensaje'
 								) }
 							</p>
 							<Button
 								__next40pxDefaultSize
 								variant="primary"
-								onClick={ () => onOpen( 'new' ) }
+								onClick={ () => setPicking( true ) }
 							>
 								{ __( 'Add form', 'formulario-mensaje' ) }
 							</Button>
@@ -278,6 +374,53 @@ export default function FormsList( { onOpen } ) {
 												</Button>
 												<Button
 													variant="link"
+													aria-label={ sprintf(
+														/* translators: %s: name of a form. */
+														__(
+															'Duplicate “%s”',
+															'formulario-mensaje'
+														),
+														form.title
+													) }
+													onClick={ () =>
+														run(
+															() =>
+																duplicateForm(
+																	form.id
+																),
+															__(
+																'Form duplicated.',
+																'formulario-mensaje'
+															)
+														)
+													}
+												>
+													{ __(
+														'Duplicate',
+														'formulario-mensaje'
+													) }
+												</Button>
+												<Button
+													variant="link"
+													aria-label={ sprintf(
+														/* translators: %s: name of a form. */
+														__(
+															'Export “%s”',
+															'formulario-mensaje'
+														),
+														form.title
+													) }
+													onClick={ () =>
+														download( form )
+													}
+												>
+													{ __(
+														'Export',
+														'formulario-mensaje'
+													) }
+												</Button>
+												<Button
+													variant="link"
 													isDestructive
 													aria-label={ sprintf(
 														/* translators: %s: name of a form. */
@@ -369,6 +512,31 @@ export default function FormsList( { onOpen } ) {
 						) ) }
 					</tbody>
 				</table>
+			) }
+
+			{ picking && (
+				<Modal
+					title={ __( 'Choose a template', 'formulario-mensaje' ) }
+					onRequestClose={ () => setPicking( false ) }
+					size="medium"
+				>
+					<ul className="fm-templates">
+						{ templates.map( ( template ) => (
+							<li key={ template.id }>
+								<button
+									type="button"
+									className="fm-templates__item"
+									onClick={ () =>
+										onOpen( `new:${ template.id }` )
+									}
+								>
+									<strong>{ template.label }</strong>
+									<span>{ template.description }</span>
+								</button>
+							</li>
+						) ) }
+					</ul>
+				</Modal>
 			) }
 
 			{ pendingDelete && (

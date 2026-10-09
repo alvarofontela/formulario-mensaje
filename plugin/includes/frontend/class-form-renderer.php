@@ -48,13 +48,11 @@ final class Form_Renderer {
 	 * @param Field_Type_Registry $field_types Tipos de campo.
 	 * @param Field_Markup        $markup      HTML común de los campos.
 	 * @param Captcha_Service     $captcha     Captcha de los formularios.
-	 * @param Frontend_Assets     $assets      Scripts y estilos del formulario.
 	 */
 	public function __construct(
 		private readonly Field_Type_Registry $field_types,
 		private readonly Field_Markup $markup,
-		private readonly Captcha_Service $captcha,
-		private readonly Frontend_Assets $assets
+		private readonly Captcha_Service $captcha
 	) {}
 
 	/**
@@ -121,7 +119,6 @@ final class Form_Renderer {
 		if ( null !== $captcha ) {
 			$attributes['data-fm-captcha']         = $captcha['provider'];
 			$attributes['data-fm-captcha-key']     = $captcha['site_key'];
-			$attributes['data-fm-captcha-module']  = $this->assets->captcha_module_url();
 			$attributes['data-fm-captcha-message'] = __( 'Complete the security check before sending the form.', 'formulario-mensaje' );
 		}
 

@@ -44,10 +44,21 @@ final class Forms_Provider implements Service_Provider {
 		);
 
 		$container->set(
-			Default_Definition::class,
-			static fn ( Container $c ): Default_Definition => new Default_Definition(
+			Form_Templates::class,
+			static fn ( Container $c ): Form_Templates => new Form_Templates(
 				$c->get( Form_Definition_Sanitizer::class ),
 				$c->get( Action_Type_Registry::class )
+			)
+		);
+
+		$container->set(
+			Form_Porter::class,
+			static fn ( Container $c ): Form_Porter => new Form_Porter(
+				$c->get( Form_Service::class ),
+				$c->get( Form_Definition_Sanitizer::class ),
+				$c->get( Action_Type_Registry::class ),
+				$c->get( Redirect_Policy::class ),
+				FORMULARIO_MENSAJE_VERSION
 			)
 		);
 

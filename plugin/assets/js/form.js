@@ -12,6 +12,16 @@ const TOKEN_ERRORS = [
 ];
 const controllers = new WeakMap();
 
+/*
+ * Dirección del módulo del captcha: el fichero vecino de este, con su misma versión. Sale de la
+ * dirección de este script y no de un atributo del formulario: quien lograse insertar HTML en la
+ * página podría, si no, hacer que se importase su propio código.
+ */
+const CAPTCHA_MODULE = new URL(
+	`captcha.js${ new URL( import.meta.url ).search }`,
+	import.meta.url
+).href;
+
 const wait = ( milliseconds ) =>
 	new Promise( ( resolve ) =>
 		setTimeout( resolve, Math.max( 0, milliseconds ) )
@@ -132,7 +142,7 @@ class FormController {
 
 		if ( ! this.captcha ) {
 			// El módulo del captcha solo se descarga en los formularios que lo usan.
-			this.captcha = import( this.form.dataset.fmCaptchaModule )
+			this.captcha = import( CAPTCHA_MODULE )
 				.then( ( module ) => module.mountCaptcha( this.form ) )
 				.catch( ( error ) => {
 					this.captcha = null;

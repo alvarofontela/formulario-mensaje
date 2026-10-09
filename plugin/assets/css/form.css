@@ -31,11 +31,48 @@
 	display: none !important;
 }
 
+/*
+ * El formulario es una rejilla de doce columnas. Todo ocupa la fila entera salvo los campos con un
+ * ancho menor, que comparten fila con los que les siguen.
+ */
 .formulario-mensaje .fm-form {
-	display: flex;
-	flex-direction: column;
+	display: grid;
+	grid-template-columns: repeat(12, minmax(0, 1fr));
 	gap: var(--fm-gap);
+	align-items: start;
 	margin: 0;
+}
+
+.formulario-mensaje .fm-form > * {
+	grid-column: 1 / -1;
+}
+
+.formulario-mensaje .fm-form > .fm-w-75 {
+	grid-column: span 9;
+}
+
+.formulario-mensaje .fm-form > .fm-w-66 {
+	grid-column: span 8;
+}
+
+.formulario-mensaje .fm-form > .fm-w-50 {
+	grid-column: span 6;
+}
+
+.formulario-mensaje .fm-form > .fm-w-33 {
+	grid-column: span 4;
+}
+
+.formulario-mensaje .fm-form > .fm-w-25 {
+	grid-column: span 3;
+}
+
+/* En pantallas estrechas no hay columnas: cada campo ocupa su fila. */
+@media (max-width: 480px) {
+
+	.formulario-mensaje .fm-form > [class*="fm-w-"] {
+		grid-column: 1 / -1;
+	}
 }
 
 .formulario-mensaje .fm-required-note {

@@ -7,11 +7,18 @@ const config = window.formularioMensajeAdmin || {};
 export const fieldTypes = config.fieldTypes || [];
 export const fieldGroups = config.fieldGroups || {};
 export const actionTypes = config.actionTypes || [];
-export const defaultDefinition = config.defaultDefinition || {
-	fields: [],
-	settings: {},
-	actions: [],
-};
+// Plantillas entre las que se elige al crear un formulario; la primera es la de partida.
+export const templates = config.templates?.length
+	? config.templates
+	: [
+			{
+				id: 'blank',
+				label: '',
+				description: '',
+				definition: { fields: [], settings: {}, actions: [] },
+			},
+		];
+export const fieldWidths = config.fieldWidths || [ 100 ];
 export const can = config.can || {};
 export const urls = config.urls || {};
 export const siteHost = config.siteHost || '';

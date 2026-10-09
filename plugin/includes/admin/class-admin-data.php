@@ -12,7 +12,8 @@ use Formulario_Mensaje\Actions\Action_Type_Registry;
 use Formulario_Mensaje\Fields\Field_Type;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Fields\Input_Field_Type;
-use Formulario_Mensaje\Forms\Default_Definition;
+use Formulario_Mensaje\Forms\Field;
+use Formulario_Mensaje\Forms\Form_Templates;
 use Formulario_Mensaje\Lifecycle\Capabilities;
 use Formulario_Mensaje\Rest\Rest_Provider;
 use Formulario_Mensaje\Rules\Operator;
@@ -33,12 +34,12 @@ final class Admin_Data {
 	 *
 	 * @param Field_Type_Registry  $field_types        Tipos de campo.
 	 * @param Action_Type_Registry $action_types       Tipos de acción.
-	 * @param Default_Definition   $default_definition Definición de un formulario nuevo.
+	 * @param Form_Templates       $templates          Plantillas de partida.
 	 */
 	public function __construct(
 		private readonly Field_Type_Registry $field_types,
 		private readonly Action_Type_Registry $action_types,
-		private readonly Default_Definition $default_definition
+		private readonly Form_Templates $templates
 	) {}
 
 	/**
@@ -49,9 +50,9 @@ final class Admin_Data {
 	 */
 	public function get( string $view ): array {
 		return array(
-			'view'              => $view,
-			'restNamespace'     => Rest_Provider::ROUTE_NAMESPACE,
-			'fieldTypes'        => array_map(
+			'view'          => $view,
+			'restNamespace' => Rest_Provider::ROUTE_NAMESPACE,
+			'fieldTypes'    => array_map(
 				static fn ( Field_Type $type ): array => array(
 					'type'    => $type->get_type(),
 					'label'   => $type->get_label(),
@@ -61,13 +62,13 @@ final class Admin_Data {
 				),
 				$this->field_types->all()
 			),
-			'fieldGroups'       => array(
+			'fieldGroups'   => array(
 				'basic'    => __( 'Basic fields', 'formulario-mensaje' ),
 				'choice'   => __( 'Choice fields', 'formulario-mensaje' ),
 				'advanced' => __( 'Advanced fields', 'formulario-mensaje' ),
 				'layout'   => __( 'Layout', 'formulario-mensaje' ),
 			),
-			'actionTypes'       => array_map(
+			'actionTypes'   => array_map(
 				static fn ( Action_Type $type ): array => array(
 					'type'     => $type->get_type(),
 					'label'    => $type->get_label(),
@@ -75,9 +76,19 @@ final class Admin_Data {
 				),
 				$this->action_types->all()
 			),
-			'defaultDefinition' => $this->default_definition->create()->to_array(),
+			// Plantillas entre las que se elige al crear un formulario; la primera es la de partida.
+			'templates'     => array_map(
+				static fn ( array $template ): array => array(
+					'id'          => $template['id'],
+					'label'       => $template['label'],
+					'description' => $template['description'],
+					'definition'  => $template['definition']->to_array(),
+				),
+				$this->templates->all()
+			),
+			'fieldWidths'   => Field::WIDTHS,
 			// Operadores del motor de reglas, para el editor de condiciones.
-			'operators'         => array_map(
+			'operators'     => array_map(
 				static fn ( Operator $operator ): array => array(
 					'value'      => $operator->value,
 					'label'      => $operator->label(),
@@ -85,13 +96,13 @@ final class Admin_Data {
 				),
 				Operator::cases()
 			),
-			'userEmail'         => wp_get_current_user()->user_email,
-			'can'               => array(
+			'userEmail'     => wp_get_current_user()->user_email,
+			'can'           => array(
 				'manageForms'     => current_user_can( Capabilities::MANAGE_FORMS ),
 				'viewSubmissions' => current_user_can( Capabilities::VIEW_SUBMISSIONS ),
 				'manageSettings'  => current_user_can( Capabilities::MANAGE_SETTINGS ),
 			),
-			'urls'              => array(
+			'urls'          => array(
 				'forms'       => admin_url( 'admin.php?page=' . Admin_Menu::FORMS_PAGE ),
 				'submissions' => admin_url( 'admin.php?page=' . Admin_Menu::SUBMISSIONS_PAGE ),
 				'settings'    => admin_url( 'admin.php?page=' . Admin_Menu::SETTINGS_PAGE ),
@@ -108,7 +119,7 @@ final class Admin_Data {
 					)
 					: '',
 			),
-			'siteHost'          => (string) wp_parse_url( home_url(), PHP_URL_HOST ),
+			'siteHost'      => (string) wp_parse_url( home_url(), PHP_URL_HOST ),
 		);
 	}
 }

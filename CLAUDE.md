@@ -243,6 +243,8 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 
 Para añadir un tipo de acción (como el correo o el webhook): una clase que implemente `Action_Type` y su proveedor. `is_deferred()` decide si se ejecuta mientras el visitante espera o en segundo plano, por la cola (`plugin/includes/queue/`), con reintentos. La cola no es una tabla aparte: son las filas en estado pendiente del registro de entregas.
 
+Para añadir una plantilla de partida: una entrada en `Form_Templates::built_in()`. Un ajuste nuevo de un tipo de acción que sea un secreto se quita en su `portable_settings()`, para que no viaje al exportar.
+
 Para añadir un servicio de captcha: una clase en `plugin/includes/captcha/` que implemente `Captcha_Provider`, una línea en `Captcha_Module_Provider` y su adaptador, con el mismo identificador, en `plugin/assets/js/captcha.js`.
 
 Para añadir un transporte de correo: una clase en `plugin/includes/mail/` que implemente `Mail_Transport` y una línea en `Mail_Provider`. Un secreto nuevo (clave de API, contraseña) se guarda con `Secret_Vault`, nunca en una opción en claro, y ninguna ruta lo devuelve.

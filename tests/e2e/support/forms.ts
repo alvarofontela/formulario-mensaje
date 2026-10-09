@@ -5,6 +5,7 @@ export interface FormField {
   id: string;
   type: string;
   settings: Record<string, unknown>;
+  width?: number;
 }
 
 export interface FormDefinition {

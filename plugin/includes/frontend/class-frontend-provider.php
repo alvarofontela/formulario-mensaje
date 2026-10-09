@@ -46,8 +46,7 @@ final class Frontend_Provider implements Service_Provider {
 			static fn ( Container $c ): Form_Renderer => new Form_Renderer(
 				$c->get( Field_Type_Registry::class ),
 				$c->get( Field_Markup::class ),
-				$c->get( Captcha_Service::class ),
-				$c->get( Frontend_Assets::class )
+				$c->get( Captcha_Service::class )
 			)
 		);
 

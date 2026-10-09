@@ -58,4 +58,13 @@ interface Action_Type {
 	 * mientras el visitante espera. Es lo propio de las que dependen de un servicio ajeno.
 	 */
 	public function is_deferred(): bool;
+
+	/**
+	 * Ajustes de la acción sin nada que deba quedarse en esta instalación (claves, contraseñas,
+	 * credenciales), para exportar el formulario o recibirlo de otra web.
+	 *
+	 * @param array<string, mixed> $settings Ajustes guardados de la acción.
+	 * @return array<string, mixed>
+	 */
+	public function portable_settings( array $settings ): array;
 }

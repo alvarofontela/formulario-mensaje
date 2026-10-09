@@ -146,7 +146,9 @@ final class Field_Markup {
 	 * @param Field $field Campo.
 	 */
 	private function wrapper_class( Field $field ): string {
-		return trim( 'fm-field fm-field--' . sanitize_html_class( $field->type ) . ' ' . $field->text( 'css_class' ) );
+		$width = 100 === $field->width ? '' : ' fm-w-' . $field->width;
+
+		return trim( 'fm-field fm-field--' . sanitize_html_class( $field->type ) . $width . ' ' . $field->text( 'css_class' ) );
 	}
 
 	/**

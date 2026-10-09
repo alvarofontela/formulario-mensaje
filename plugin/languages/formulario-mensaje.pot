@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Formulario Mensaje 0.5.0\n"
+"Project-Id-Version: Formulario Mensaje 0.6.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/formulario-mensaje\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-09T13:29:31+02:00\n"
+"POT-Creation-Date: 2026-10-09T13:45:43+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: formulario-mensaje\n"
@@ -29,19 +29,19 @@ msgstr ""
 msgid "Álvaro Fontela"
 msgstr ""
 
-#: includes/admin/class-admin-data.php:65
+#: includes/admin/class-admin-data.php:66
 msgid "Basic fields"
 msgstr ""
 
-#: includes/admin/class-admin-data.php:66
+#: includes/admin/class-admin-data.php:67
 msgid "Choice fields"
 msgstr ""
 
-#: includes/admin/class-admin-data.php:67
+#: includes/admin/class-admin-data.php:68
 msgid "Advanced fields"
 msgstr ""
 
-#: includes/admin/class-admin-data.php:68
+#: includes/admin/class-admin-data.php:69
 msgid "Layout"
 msgstr ""
 
@@ -53,20 +53,20 @@ msgid "Forms"
 msgstr ""
 
 #: includes/admin/class-admin-menu.php:118
-#: build/admin/index.js:30
+#: build/admin/index.js:33
 msgid "All forms"
 msgstr ""
 
 #: includes/admin/class-admin-menu.php:124
 #: includes/admin/class-admin-menu.php:125
-#: build/admin/index.js:12
-#: build/admin/index.js:24
-#: build/admin/index.js:30
+#: build/admin/index.js:13
+#: build/admin/index.js:27
+#: build/admin/index.js:33
 msgid "Submissions"
 msgstr ""
 
 #: includes/admin/class-admin-menu.php:131
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Forms settings"
 msgstr ""
 
@@ -92,8 +92,9 @@ msgid "Sorry, you are not allowed to view submissions."
 msgstr ""
 
 #: includes/admin/class-export-controller.php:51
-#: includes/forms/class-form-service.php:193
+#: includes/forms/class-form-service.php:210
 #: includes/forms/class-post-form-repository.php:86
+#: includes/rest/class-form-transfer-controller.php:131
 #: includes/rest/class-forms-controller.php:220
 #: includes/rest/class-forms-controller.php:275
 msgid "The form does not exist."
@@ -138,7 +139,7 @@ msgid "This form needs JavaScript to be sent. Enable it in your browser and try 
 msgstr ""
 
 #: includes/captcha/class-captcha-check.php:57
-#: includes/frontend/class-form-renderer.php:125
+#: includes/frontend/class-form-renderer.php:122
 msgid "Complete the security check before sending the form."
 msgstr ""
 
@@ -212,17 +213,19 @@ msgstr ""
 #: includes/fields/class-common-settings.php:107
 #: includes/fields/class-common-settings.php:157
 #: includes/fields/types/class-email-field-type.php:30
-#: includes/forms/class-default-definition.php:53
-#: build/admin/index.js:21
+#: includes/forms/class-form-templates.php:77
+#: build/admin/index.js:24
 msgid "Email"
 msgstr ""
 
 #: includes/fields/class-common-settings.php:108
 #: includes/fields/types/class-tel-field-type.php:30
+#: includes/forms/class-form-templates.php:78
 msgid "Phone"
 msgstr ""
 
 #: includes/fields/class-common-settings.php:109
+#: includes/forms/class-form-templates.php:101
 msgid "Company"
 msgstr ""
 
@@ -252,7 +255,7 @@ msgid "Prefill"
 msgstr ""
 
 #: includes/fields/class-common-settings.php:132
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "None"
 msgstr ""
 
@@ -344,8 +347,8 @@ msgstr ""
 
 #: includes/fields/types/class-date-field-type.php:30
 #: includes/storage/class-csv-exporter.php:63
-#: build/admin/index.js:25
-#: build/admin/index.js:31
+#: build/admin/index.js:28
+#: build/admin/index.js:34
 msgid "Date"
 msgstr ""
 
@@ -469,41 +472,120 @@ msgstr ""
 msgid "Enter a valid web address."
 msgstr ""
 
-#: includes/forms/class-default-definition.php:44
-#: build/admin/index.js:8
-#: build/admin/index.js:12
-msgid "Name"
-msgstr ""
-
-#: includes/forms/class-default-definition.php:62
-#: build/admin/index.js:10
-msgid "Message"
-msgstr ""
-
-#: includes/forms/class-default-definition.php:73
-msgid "Notification"
-msgstr ""
-
-#: includes/forms/class-form-definition-sanitizer.php:106
-#: includes/frontend/class-form-renderer.php:135
+#: includes/forms/class-form-definition-sanitizer.php:111
+#: includes/frontend/class-form-renderer.php:132
 msgid "Send"
 msgstr ""
 
-#: includes/forms/class-form-definition-sanitizer.php:109
+#: includes/forms/class-form-definition-sanitizer.php:114
 #: includes/submissions/class-confirmation-builder.php:62
 msgid "Thank you. Your message has been sent."
 msgstr ""
 
-#: includes/forms/class-form-service.php:141
+#: includes/forms/class-form-porter.php:76
+#: build/admin/index.js:12
+msgid "The file is not a form exported from Formulario Mensaje."
+msgstr ""
+
+#: includes/forms/class-form-porter.php:80
+msgid "The file was exported from a newer version of Formulario Mensaje. Update the plugin and try again."
+msgstr ""
+
+#. translators: %s: name of the form that was copied.
+#: includes/forms/class-form-service.php:111
+#, php-format
+msgid "%s (copy)"
+msgstr ""
+
+#: includes/forms/class-form-service.php:158
 msgid "The redirect address is not allowed. Use an address of this site, or add its domain to the allowed domains in the plugin settings."
 msgstr ""
 
-#: includes/forms/class-form-service.php:170
+#: includes/forms/class-form-service.php:187
 msgid "The form could not be updated."
 msgstr ""
 
-#: includes/forms/class-form-service.php:186
+#: includes/forms/class-form-service.php:203
 msgid "Untitled form"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:76
+#: build/admin/index.js:8
+#: build/admin/index.js:13
+msgid "Name"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:79
+msgid "Privacy"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:84
+msgid "Contact"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:85
+msgid "Name, email and message."
+msgstr ""
+
+#: includes/forms/class-form-templates.php:90
+#: build/admin/index.js:10
+msgid "Message"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:96
+msgid "Quote request"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:97
+msgid "Contact details in two columns, what the visitor needs and privacy consent."
+msgstr ""
+
+#: includes/forms/class-form-templates.php:104
+msgid "What do you need?"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:111
+msgid "Call me back"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:112
+msgid "Name, phone and the best time to call."
+msgstr ""
+
+#: includes/forms/class-form-templates.php:120
+msgid "Best time to call"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:124
+msgid "Morning"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:128
+msgid "Afternoon"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:132
+msgid "Any time"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:145
+msgid "Newsletter signup"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:146
+msgid "Only the email address and privacy consent."
+msgstr ""
+
+#: includes/forms/class-form-templates.php:151
+msgid "Blank form"
+msgstr ""
+
+#: includes/forms/class-form-templates.php:152
+msgid "No fields: start from scratch."
+msgstr ""
+
+#: includes/forms/class-form-templates.php:199
+msgid "Notification"
 msgstr ""
 
 #: includes/frontend/class-fallback-controller.php:56
@@ -515,17 +597,17 @@ msgstr ""
 msgid "This form does not exist or is in the trash."
 msgstr ""
 
-#: includes/frontend/class-form-renderer.php:115
+#: includes/frontend/class-form-renderer.php:113
 msgid "Your message could not be sent. Check your connection and try again."
 msgstr ""
 
 #. translators: %s: the asterisk that marks required fields.
-#: includes/frontend/class-form-renderer.php:149
+#: includes/frontend/class-form-renderer.php:146
 #, php-format
 msgid "Fields marked with %s are required."
 msgstr ""
 
-#: includes/frontend/class-form-renderer.php:167
+#: includes/frontend/class-form-renderer.php:164
 msgid "Leave this field empty"
 msgstr ""
 
@@ -542,12 +624,12 @@ msgid "Email notification"
 msgstr ""
 
 #. translators: {form_title} is a tag replaced by the name of the form; keep it as is.
-#: includes/mail/class-email-action.php:83
+#: includes/mail/class-email-action.php:93
 msgid "New submission: {form_title}"
 msgstr ""
 
 #. translators: {all_fields}, {reference}, {page_url} and {date} are tags replaced by data of the submission; keep them as they are.
-#: includes/mail/class-email-action.php:85
+#: includes/mail/class-email-action.php:95
 msgid ""
 "{all_fields}\n"
 "\n"
@@ -557,7 +639,7 @@ msgid ""
 "Date: {date}"
 msgstr ""
 
-#: includes/mail/class-email-action.php:123
+#: includes/mail/class-email-action.php:133
 msgid "The notification has no valid recipients."
 msgstr ""
 
@@ -645,6 +727,7 @@ msgid "Identifier of the webhook to test."
 msgstr ""
 
 #: includes/rest/class-action-tests-controller.php:112
+#: includes/rest/class-form-transfer-controller.php:104
 #: includes/rest/class-forms-controller.php:171
 msgid "Sorry, you are not allowed to manage forms."
 msgstr ""
@@ -668,9 +751,14 @@ msgstr ""
 msgid "Sorry, you are not allowed to manage the plugin settings."
 msgstr ""
 
+#: includes/rest/class-form-transfer-controller.php:44
 #: includes/rest/class-forms-controller.php:67
 #: includes/rest/class-submissions-controller.php:52
 msgid "Form identifier."
+msgstr ""
+
+#: includes/rest/class-form-transfer-controller.php:82
+msgid "Content of a form exported from Formulario Mensaje."
 msgstr ""
 
 #: includes/rest/class-forms-controller.php:84
@@ -811,23 +899,23 @@ msgid "This delivery cannot be retried."
 msgstr ""
 
 #: includes/storage/class-csv-exporter.php:63
-#: build/admin/index.js:31
+#: build/admin/index.js:34
 msgid "Reference"
 msgstr ""
 
 #: includes/storage/class-csv-exporter.php:63
-#: build/admin/index.js:25
+#: build/admin/index.js:28
 msgid "Page"
 msgstr ""
 
 #: includes/storage/class-csv-exporter.php:66
 #: build/admin/index.js:10
-#: build/admin/index.js:25
+#: build/admin/index.js:28
 msgid "IP address"
 msgstr ""
 
 #: includes/storage/class-csv-exporter.php:70
-#: build/admin/index.js:25
+#: build/admin/index.js:28
 msgid "Browser"
 msgstr ""
 
@@ -855,12 +943,12 @@ msgstr ""
 msgid "This field is required."
 msgstr ""
 
-#: includes/webhooks/class-webhook-action.php:71
+#: includes/webhooks/class-webhook-action.php:76
 msgid "Webhook"
 msgstr ""
 
 #. translators: %d: HTTP status code.
-#: includes/webhooks/class-webhook-action.php:140
+#: includes/webhooks/class-webhook-action.php:163
 #, php-format
 msgid "The destination answered with HTTP status %d."
 msgstr ""
@@ -904,6 +992,30 @@ msgid "Add option"
 msgstr ""
 
 #: build/admin/index.js:2
+msgid "Full width"
+msgstr ""
+
+#: build/admin/index.js:2
+msgid "Three quarters"
+msgstr ""
+
+#: build/admin/index.js:2
+msgid "Two thirds"
+msgstr ""
+
+#: build/admin/index.js:2
+msgid "Half"
+msgstr ""
+
+#: build/admin/index.js:2
+msgid "One third"
+msgstr ""
+
+#: build/admin/index.js:2
+msgid "One quarter"
+msgstr ""
+
+#: build/admin/index.js:2
 #: build/admin/index.js:6
 msgid "Add field"
 msgstr ""
@@ -934,8 +1046,10 @@ msgstr ""
 
 #. translators: %s: name of a field.
 #. translators: %s: name of a notification or webhook.
+#. translators: %s: name of a form.
 #: build/admin/index.js:5
 #: build/admin/index.js:7
+#: build/admin/index.js:17
 #, js-format
 msgid "Duplicate “%s”"
 msgstr ""
@@ -946,6 +1060,14 @@ msgstr ""
 #: build/admin/index.js:8
 #, js-format
 msgid "Delete “%s”"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Width"
+msgstr ""
+
+#: build/admin/index.js:6
+msgid "Consecutive fields that add up to the full width share a row. On narrow screens each field takes its own row."
 msgstr ""
 
 #: build/admin/index.js:6
@@ -1122,13 +1244,13 @@ msgstr ""
 
 #. translators: %s: email address.
 #: build/admin/index.js:9
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 #, js-format
 msgid "Test sent to %s."
 msgstr ""
 
 #: build/admin/index.js:9
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Send test"
 msgstr ""
 
@@ -1360,7 +1482,7 @@ msgid "Signing secret"
 msgstr ""
 
 #: build/admin/index.js:12
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Stored. Write to replace it"
 msgstr ""
 
@@ -1369,11 +1491,12 @@ msgid "Optional. With a secret, each request carries the headers X-Formulario-Me
 msgstr ""
 
 #: build/admin/index.js:12
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Delete the stored one"
 msgstr ""
 
 #: build/admin/index.js:12
+#: build/admin/index.js:13
 msgid "Fields"
 msgstr ""
 
@@ -1430,701 +1553,737 @@ msgid "Published"
 msgstr ""
 
 #: build/admin/index.js:12
-#: build/admin/index.js:16
+#: build/admin/index.js:19
 msgid "Trash"
 msgstr ""
 
 #: build/admin/index.js:12
+msgid "File of a form to import"
+msgstr ""
+
+#. translators: %s: name of a form.
+#: build/admin/index.js:13
+#, js-format
+msgid "“%s” imported. Its notifications and webhooks are turned off: review them and turn them on."
+msgstr ""
+
+#: build/admin/index.js:13
+msgid "Import"
+msgstr ""
+
+#: build/admin/index.js:13
 msgid "Add form"
 msgstr ""
 
-#: build/admin/index.js:12
+#: build/admin/index.js:13
 msgid "The trash is empty."
 msgstr ""
 
-#: build/admin/index.js:12
+#: build/admin/index.js:13
 msgid "Create your first form"
 msgstr ""
 
-#: build/admin/index.js:12
-msgid "A new form starts as a contact form with name, email and message. You can change everything."
+#: build/admin/index.js:13
+msgid "Start from a template or from a blank form. You can change everything afterwards."
 msgstr ""
 
-#: build/admin/index.js:12
+#: build/admin/index.js:13
 msgid "Shortcode"
 msgstr ""
 
-#: build/admin/index.js:12
+#: build/admin/index.js:13
 msgid "Last modified"
 msgstr ""
 
 #. translators: %s: name of a form.
-#: build/admin/index.js:13
+#: build/admin/index.js:14
 #, js-format
 msgid "Restore “%s”"
 msgstr ""
 
-#: build/admin/index.js:13
+#: build/admin/index.js:14
 msgid "Form restored."
 msgstr ""
 
-#: build/admin/index.js:13
+#: build/admin/index.js:14
 msgid "Restore"
 msgstr ""
 
 #. translators: %s: name of a form.
-#: build/admin/index.js:14
+#: build/admin/index.js:15
 #, js-format
 msgid "Delete “%s” permanently"
 msgstr ""
 
-#: build/admin/index.js:14
-#: build/admin/index.js:19
+#: build/admin/index.js:15
+#: build/admin/index.js:22
 msgid "Delete permanently"
 msgstr ""
 
 #. translators: %s: name of a form.
-#: build/admin/index.js:15
+#: build/admin/index.js:16
 #, js-format
 msgid "Edit “%s”"
 msgstr ""
 
-#: build/admin/index.js:15
+#: build/admin/index.js:16
 msgid "Edit"
 msgstr ""
 
+#: build/admin/index.js:17
+msgid "Form duplicated."
+msgstr ""
+
+#: build/admin/index.js:17
+msgid "Duplicate"
+msgstr ""
+
 #. translators: %s: name of a form.
-#: build/admin/index.js:16
+#: build/admin/index.js:18
+#, js-format
+msgid "Export “%s”"
+msgstr ""
+
+#: build/admin/index.js:18
+msgid "Export"
+msgstr ""
+
+#. translators: %s: name of a form.
+#: build/admin/index.js:19
 #, js-format
 msgid "Move “%s” to the trash"
 msgstr ""
 
-#: build/admin/index.js:16
+#: build/admin/index.js:19
 msgid "Form moved to the trash."
 msgstr ""
 
-#: build/admin/index.js:16
+#: build/admin/index.js:19
 msgid "Copied"
 msgstr ""
 
-#: build/admin/index.js:16
+#: build/admin/index.js:19
 msgid "Copy"
 msgstr ""
 
 #. translators: %d: number of fields in a form.
-#: build/admin/index.js:17
+#: build/admin/index.js:20
 #, js-format
 msgid "%d field"
 msgid_plural "%d fields"
 msgstr[0] ""
 msgstr[1] ""
 
-#: build/admin/index.js:17
+#: build/admin/index.js:20
+msgid "Choose a template"
+msgstr ""
+
+#: build/admin/index.js:20
 msgid "Delete form permanently?"
 msgstr ""
 
 #. translators: %s: name of a form.
-#: build/admin/index.js:18
+#: build/admin/index.js:21
 #, js-format
 msgid "“%s” will be deleted and cannot be recovered."
 msgstr ""
 
 #. translators: %d: number of stored submissions of the form.
-#: build/admin/index.js:19
+#: build/admin/index.js:22
 #, js-format
 msgid "Delete also its %d stored submission"
 msgid_plural "Delete also its %d stored submissions"
 msgstr[0] ""
 msgstr[1] ""
 
-#: build/admin/index.js:19
+#: build/admin/index.js:22
 msgid "If you keep them, they stay in the Submissions screen without a form."
 msgstr ""
 
-#: build/admin/index.js:19
-#: build/admin/index.js:27
+#: build/admin/index.js:22
 #: build/admin/index.js:30
 #: build/admin/index.js:33
+#: build/admin/index.js:36
 msgid "Cancel"
 msgstr ""
 
-#: build/admin/index.js:19
+#: build/admin/index.js:22
 msgid "Form deleted."
 msgstr ""
 
 #. translators: %s: name of a PHP constant.
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 #, js-format
 msgid "Defined in wp-config.php with the constant %s. It cannot be changed here."
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "It is stored encrypted and is never shown again."
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "It will be stored encrypted."
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Keep the stored one"
 msgstr ""
 
-#: build/admin/index.js:20
-#: build/admin/index.js:21
+#: build/admin/index.js:23
+#: build/admin/index.js:24
 msgid "Captcha"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Every form is already protected without a captcha. Add one only if you still receive spam: it loads a script from another company in the pages with a form, when the visitor starts filling it in, and a form with captcha cannot be sent without JavaScript."
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Captcha service"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Site key"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "The public key the service gives you for this site."
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Secret key"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Minimum score"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "reCAPTCHA scores each visitor from 0 (a bot) to 1 (a person). Submissions below this score are rejected. 0.5 is the usual value: raise it if spam gets through, lower it if real visitors are rejected."
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "The captcha is used in every form as soon as both keys are saved. Each form can opt out in its “After sending” tab."
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Email delivery"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "How the emails of the forms are sent. It only affects the emails of this plugin: the rest of the email of the site does not change."
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Send with"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "WordPress, like the rest of the site"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "An SMTP server"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Resend"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Server"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Port"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Encryption"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "STARTTLS (usually port 587)"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "SSL/TLS (usually port 465)"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "The server asks for user and password"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "User"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Password"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Resend API key"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Resend only sends from an address of a domain verified in your Resend account: fill in the sender address below."
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Sender address"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Empty to use the one of the site."
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Sender name"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Empty to use the name of the site."
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Send a test email to"
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Save the settings first: the test uses the saved ones."
 msgstr ""
 
-#: build/admin/index.js:20
+#: build/admin/index.js:23
 msgid "Checks that the emails are delivered with these settings."
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Email appearance"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Brand of the notifications sent in HTML format."
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Logo"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Address of the image. Without a logo, the emails show the name of the site."
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Email logo"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Choose image"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Brand colour"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Footer text"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "For example, the name and address of the company. Without it, the footer shows the name of the site."
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "General"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Cleanup done."
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "The SMTP server has changed, so the stored password has been deleted: write the password of the new server."
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "The captcha service has changed, so the stored secret key has been deleted: write the secret key of the new service."
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Settings saved."
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Spam protection"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Every form is protected by a hidden trap field, a minimum time to fill it in and a limit of submissions per IP address. None of them needs configuration."
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Accept submissions without JavaScript"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Forms keep working in browsers without JavaScript, but those submissions cannot prove a minimum filling time, so they only have the trap field and a stricter limit per IP address. Turn it off if you receive spam through this path."
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Visitor IP address"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "The plugin limits how many submissions an IP address can send. If the site is behind a proxy or CDN, every visitor seems to come from the proxy unless you say which one it is."
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "The site is behind"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Nothing: visitors connect directly to the server"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "Cloudflare"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "My own proxy or load balancer"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "IP addresses of the proxy"
 msgstr ""
 
-#: build/admin/index.js:21
+#: build/admin/index.js:24
 msgid "One per line. IPv4, IPv6 and CIDR ranges such as 10.0.0.0/8. The X-Forwarded-For header is only trusted when the connection comes from one of them."
 msgstr ""
 
 #. translators: 1: IP address the plugin detects for the current user, 2: IP address of the connection to the server.
-#: build/admin/index.js:22
+#: build/admin/index.js:25
 #, js-format
 msgid "Your IP address as the plugin sees it: %1$s (connection: %2$s)."
 msgstr ""
 
-#: build/admin/index.js:22
+#: build/admin/index.js:25
 msgid "Allowed redirect domains"
 msgstr ""
 
 #. translators: %s: domain of the site.
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 #, js-format
 msgid "After a submission, a form can redirect to any address of this site (%s). To redirect to another site, add its domain here."
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Domains"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "One per line, without https://. For example: pay.example.com"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Failed actions"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "When a notification cannot be sent, or a webhook fails after all its retries, it stays in the Submissions screen until someone retries or dismisses it."
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Send me an email when an action fails"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "At most one email every 12 hours, with the number of failures since the previous one."
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Address for those emails"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Empty to use the one of the site administrator."
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Days the delivery log is kept"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "The log says what was done with each submission: which notifications and webhooks were sent, and which failed. Entries older than this are deleted, except the ones still waiting for a retry."
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Data"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Once a day the plugin deletes the submissions that have exceeded the retention period of their form and the old entries of the delivery log, and sends the webhooks that were left waiting. You can run that maintenance now."
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Run cleanup now"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Delete all data when the plugin is uninstalled"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Forms, submissions and settings are deleted when the plugin is deleted from the Plugins screen. Deactivating it never deletes anything."
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Save settings"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Delivered"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Failed"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "Failed (dismissed)"
 msgstr ""
 
-#: build/admin/index.js:23
+#: build/admin/index.js:26
 msgid "In the queue"
 msgstr ""
 
 #. translators: %s: error returned by the action.
-#: build/admin/index.js:24
-#: build/admin/index.js:28
+#: build/admin/index.js:27
+#: build/admin/index.js:31
 #, js-format
 msgid "It failed again: %s"
 msgstr ""
 
 #. translators: %s: reference number of a submission.
-#: build/admin/index.js:25
+#: build/admin/index.js:28
 #, js-format
 msgid "Submission %s"
 msgstr ""
 
-#: build/admin/index.js:25
-#: build/admin/index.js:27
-#: build/admin/index.js:34
+#: build/admin/index.js:28
+#: build/admin/index.js:30
+#: build/admin/index.js:37
 msgid "Delete"
 msgstr ""
 
-#: build/admin/index.js:25
+#: build/admin/index.js:28
 msgid "Data received"
 msgstr ""
 
-#: build/admin/index.js:25
+#: build/admin/index.js:28
 msgid "(empty)"
 msgstr ""
 
-#: build/admin/index.js:25
+#: build/admin/index.js:28
 msgid "Details"
 msgstr ""
 
-#: build/admin/index.js:25
 #: build/admin/index.js:28
-#: build/admin/index.js:30
 #: build/admin/index.js:31
+#: build/admin/index.js:33
+#: build/admin/index.js:34
 #: build/blocks/form/index.js:1
 msgid "Form"
 msgstr ""
 
-#: build/admin/index.js:25
 #: build/admin/index.js:28
-#: build/admin/index.js:32
+#: build/admin/index.js:31
+#: build/admin/index.js:35
 msgid "(deleted form)"
 msgstr ""
 
-#: build/admin/index.js:25
 #: build/admin/index.js:28
+#: build/admin/index.js:31
 msgid "Actions"
 msgstr ""
 
-#: build/admin/index.js:25
+#: build/admin/index.js:28
 msgid "This form did not run any action with this submission."
 msgstr ""
 
 #. translators: 1: number of attempts, 2: date and time of the last attempt.
-#: build/admin/index.js:26
+#: build/admin/index.js:29
 #, js-format
 msgid "Attempts: %1$d · Last: %2$s"
 msgstr ""
 
 #. translators: %s: date and time.
-#: build/admin/index.js:27
+#: build/admin/index.js:30
 #, js-format
 msgid "Next attempt: %s"
 msgstr ""
 
-#: build/admin/index.js:27
-#: build/admin/index.js:29
+#: build/admin/index.js:30
+#: build/admin/index.js:32
 msgid "Delivered."
 msgstr ""
 
-#: build/admin/index.js:27
-#: build/admin/index.js:29
+#: build/admin/index.js:30
+#: build/admin/index.js:32
 msgid "Retry"
 msgstr ""
 
-#: build/admin/index.js:27
-#: build/admin/index.js:29
+#: build/admin/index.js:30
+#: build/admin/index.js:32
 msgid "Failure dismissed."
 msgstr ""
 
-#: build/admin/index.js:27
-#: build/admin/index.js:29
+#: build/admin/index.js:30
+#: build/admin/index.js:32
 msgid "Dismiss"
 msgstr ""
 
-#: build/admin/index.js:27
+#: build/admin/index.js:30
 msgid "Delete submission?"
 msgstr ""
 
-#: build/admin/index.js:27
+#: build/admin/index.js:30
 msgid "The submission will be deleted and cannot be recovered."
 msgstr ""
 
-#: build/admin/index.js:28
+#: build/admin/index.js:31
 msgid "There are no failed deliveries. Everything has been delivered."
 msgstr ""
 
-#: build/admin/index.js:28
+#: build/admin/index.js:31
 msgid "Action"
 msgstr ""
 
-#: build/admin/index.js:28
-#: build/admin/index.js:32
+#: build/admin/index.js:31
+#: build/admin/index.js:35
 msgid "Error"
 msgstr ""
 
-#: build/admin/index.js:28
+#: build/admin/index.js:31
 msgid "Last attempt"
 msgstr ""
 
-#: build/admin/index.js:28
+#: build/admin/index.js:31
 msgid "View submission"
 msgstr ""
 
-#: build/admin/index.js:28
+#: build/admin/index.js:31
 msgid "Submission not stored"
 msgstr ""
 
 #. translators: %d: number of attempts.
-#: build/admin/index.js:29
+#: build/admin/index.js:32
 #, js-format
 msgid "Attempts: %d"
 msgstr ""
 
-#: build/admin/index.js:29
 #: build/admin/index.js:32
+#: build/admin/index.js:35
 msgid "Previous"
 msgstr ""
 
 #. translators: 1: current page, 2: total number of pages.
-#: build/admin/index.js:30
 #: build/admin/index.js:33
+#: build/admin/index.js:36
 #, js-format
 msgid "Page %1$d of %2$d"
 msgstr ""
 
-#: build/admin/index.js:30
 #: build/admin/index.js:33
+#: build/admin/index.js:36
 msgid "Next"
 msgstr ""
 
-#: build/admin/index.js:30
+#: build/admin/index.js:33
 msgid "Failed deliveries"
 msgstr ""
 
-#: build/admin/index.js:30
+#: build/admin/index.js:33
 msgid "Export submissions"
 msgstr ""
 
-#: build/admin/index.js:30
+#: build/admin/index.js:33
 msgid "Downloads a CSV file with the submissions of the selected form. Leave the dates empty to export all of them."
 msgstr ""
 
-#: build/admin/index.js:30
+#: build/admin/index.js:33
 msgid "From"
 msgstr ""
 
-#: build/admin/index.js:30
+#: build/admin/index.js:33
 msgid "To"
 msgstr ""
 
-#: build/admin/index.js:30
+#: build/admin/index.js:33
 msgid "Download CSV"
 msgstr ""
 
-#: build/admin/index.js:30
+#: build/admin/index.js:33
 msgid "Search submissions"
 msgstr ""
 
-#: build/admin/index.js:30
+#: build/admin/index.js:33
 msgid "Search by reference or content"
 msgstr ""
 
-#: build/admin/index.js:30
+#: build/admin/index.js:33
 msgid "Only with errors"
 msgstr ""
 
 #. translators: %d: number of selected submissions.
-#: build/admin/index.js:31
+#: build/admin/index.js:34
 #, js-format
 msgid "Delete %d submission"
 msgid_plural "Delete %d submissions"
 msgstr[0] ""
 msgstr[1] ""
 
-#: build/admin/index.js:31
+#: build/admin/index.js:34
 msgid "Choose a form to export its submissions"
 msgstr ""
 
-#: build/admin/index.js:31
+#: build/admin/index.js:34
 msgid "Export CSV"
 msgstr ""
 
-#: build/admin/index.js:31
+#: build/admin/index.js:34
 msgid "No submissions match these filters."
 msgstr ""
 
-#: build/admin/index.js:31
+#: build/admin/index.js:34
 msgid "There are no submissions yet. They will appear here as soon as someone sends a form."
 msgstr ""
 
-#: build/admin/index.js:31
+#: build/admin/index.js:34
 msgid "Select all"
 msgstr ""
 
-#: build/admin/index.js:31
+#: build/admin/index.js:34
 msgid "Content"
 msgstr ""
 
 #. translators: %s: reference number of a submission.
-#: build/admin/index.js:32
+#: build/admin/index.js:35
 #, js-format
 msgid "Select submission %s"
 msgstr ""
 
-#: build/admin/index.js:33
+#: build/admin/index.js:36
 msgid "Delete submissions?"
 msgstr ""
 
-#: build/admin/index.js:33
+#: build/admin/index.js:36
 msgid "The selected submissions will be deleted and cannot be recovered."
 msgstr ""
 
 #. translators: %d: number of submissions deleted.
-#: build/admin/index.js:34
+#: build/admin/index.js:37
 #, js-format
 msgid "%d submission deleted."
 msgid_plural "%d submissions deleted."

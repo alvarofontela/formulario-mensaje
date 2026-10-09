@@ -52,13 +52,6 @@ final class Frontend_Assets {
 	}
 
 	/**
-	 * Dirección del módulo del captcha. El script del formulario lo importa solo si el formulario lleva captcha.
-	 */
-	public function captcha_module_url(): string {
-		return add_query_arg( 'ver', $this->version, plugins_url( 'assets/js/captcha.js', $this->plugin_file ) );
-	}
-
-	/**
 	 * Dirección de la hoja de estilos, para la vista previa del constructor.
 	 */
 	public function style_url(): string {

@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 import { createForm, getForm, updateForm } from './api';
-import { defaultDefinition } from './config';
+import { templates } from './config';
 import FieldsPanel from './fields-panel';
 import FormSettingsPanel from './form-settings-panel';
 import NotificationPanel from './notification-panel';
@@ -32,11 +32,17 @@ const TABS = [
  * Constructor de un formulario: campos, notificación y comportamiento, con vista previa en vivo.
  *
  * @param {Object}   props
- * @param {number}   props.formId    Identificador del formulario, o 0 para uno nuevo.
- * @param {Function} props.onClose   Vuelve al listado.
- * @param {Function} props.onCreated Avisa del identificador de un formulario recién creado.
+ * @param {number}   props.formId     Identificador del formulario, o 0 para uno nuevo.
+ * @param {string}   props.templateId Plantilla de partida de un formulario nuevo.
+ * @param {Function} props.onClose    Vuelve al listado.
+ * @param {Function} props.onCreated  Avisa del identificador de un formulario recién creado.
  */
-export default function FormEditor( { formId, onClose, onCreated } ) {
+export default function FormEditor( {
+	formId,
+	templateId,
+	onClose,
+	onCreated,
+} ) {
 	const [ id, setId ] = useState( formId );
 	const [ title, setTitle ] = useState( '' );
 	const [ definition, setDefinition ] = useState( null );
@@ -50,7 +56,15 @@ export default function FormEditor( { formId, onClose, onCreated } ) {
 	useEffect( () => {
 		if ( ! formId ) {
 			setTitle( '' );
-			setDefinition( structuredClone( defaultDefinition ) );
+			setDefinition(
+				structuredClone(
+					(
+						templates.find(
+							( template ) => template.id === templateId
+						) || templates[ 0 ]
+					).definition
+				)
+			);
 			// Un formulario nuevo todavía no existe: hay algo que guardar desde el principio.
 			setDirty( true );
 			return;
@@ -63,7 +77,7 @@ export default function FormEditor( { formId, onClose, onCreated } ) {
 				setShortcode( form.shortcode );
 			} )
 			.catch( ( error ) => setLoadError( error.message ) );
-	}, [ formId ] );
+	}, [ formId, templateId ] );
 
 	// Aviso del navegador si se cierra o recarga la pestaña con cambios sin guardar.
 	useEffect( () => {

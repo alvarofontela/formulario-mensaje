@@ -47,6 +47,11 @@ final class Webhook_Action implements Action_Type {
 	private const OWN_HEADER_PREFIX = 'x-formulario-mensaje-';
 
 	/**
+	 * Cabeceras cuyo valor no sale de esta instalación al exportar: por su nombre, llevan credenciales.
+	 */
+	private const CREDENTIAL_HEADER = '/auth|token|key|secret|password|cookie|signature/i';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Webhook_Sender $sender Envío de webhooks.
@@ -76,6 +81,24 @@ final class Webhook_Action implements Action_Type {
 	 */
 	public function is_deferred(): bool {
 		return true;
+	}
+
+	/**
+	 * Ajustes sin el secreto de firma ni el valor de las cabeceras que suelen llevar credenciales.
+	 *
+	 * @param array<string, mixed> $settings Ajustes guardados de la acción.
+	 * @return array<string, mixed>
+	 */
+	public function portable_settings( array $settings ): array {
+		$settings['secret'] = '';
+
+		foreach ( is_array( $settings['headers'] ?? null ) ? $settings['headers'] : array() as $index => $header ) {
+			if ( is_array( $header ) && 1 === preg_match( self::CREDENTIAL_HEADER, (string) ( $header['name'] ?? '' ) ) ) {
+				$settings['headers'][ $index ]['value'] = '';
+			}
+		}
+
+		return $settings;
 	}
 
 	/**

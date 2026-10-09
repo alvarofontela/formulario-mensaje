@@ -86,7 +86,12 @@ final class Form_Definition_Sanitizer {
 			}
 
 			$id       = $this->unique_id( $item['id'] ?? null, 'f_', $ids );
-			$fields[] = new Field( $id, $type->get_type(), $this->schema_sanitizer->sanitize( $type->get_settings_schema(), $item['settings'] ?? array() ) );
+			$fields[] = new Field(
+				$id,
+				$type->get_type(),
+				$this->schema_sanitizer->sanitize( $type->get_settings_schema(), $item['settings'] ?? array() ),
+				Field::normalize_width( $item['width'] ?? null )
+			);
 		}
 
 		return $fields;

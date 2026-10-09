@@ -72,6 +72,16 @@ final class Email_Action implements Action_Type {
 	}
 
 	/**
+	 * Una notificación no guarda secretos: sus ajustes viajan tal cual.
+	 *
+	 * @param array<string, mixed> $settings Ajustes guardados de la acción.
+	 * @return array<string, mixed>
+	 */
+	public function portable_settings( array $settings ): array {
+		return $settings;
+	}
+
+	/**
 	 * Ajustes iniciales de una notificación nueva.
 	 *
 	 * @return array<string, mixed>

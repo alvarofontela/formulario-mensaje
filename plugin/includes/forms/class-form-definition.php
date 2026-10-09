@@ -49,7 +49,12 @@ final class Form_Definition {
 				continue;
 			}
 
-			$fields[] = new Field( $field['id'], $field['type'], is_array( $field['settings'] ?? null ) ? $field['settings'] : array() );
+			$fields[] = new Field(
+				$field['id'],
+				$field['type'],
+				is_array( $field['settings'] ?? null ) ? $field['settings'] : array(),
+				Field::normalize_width( $field['width'] ?? null )
+			);
 		}
 
 		foreach ( is_array( $data['actions'] ?? null ) ? $data['actions'] : array() as $action ) {

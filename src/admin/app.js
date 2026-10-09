@@ -72,7 +72,11 @@ export default function App( { initialView } ) {
 		return (
 			<FormEditor
 				// Al pasar de un formulario nuevo a su identificador ya guardado no se pierde el estado.
-				formId={ formParam === 'new' ? 0 : Number( formParam ) }
+				formId={
+					formParam.startsWith( 'new' ) ? 0 : Number( formParam )
+				}
+				// Un formulario nuevo puede partir de una plantilla: `new:<plantilla>`.
+				templateId={ formParam.split( ':' )[ 1 ] || '' }
 				onClose={ () => openForm( null ) }
 				onCreated={ ( id ) => {
 					const url = new URL( window.location.href );

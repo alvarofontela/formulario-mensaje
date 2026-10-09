@@ -95,7 +95,24 @@ final class Form_Service {
 	}
 
 	/**
-	 * Envía un formulario a la papelera: deja de aceptar envíos, pero se puede recuperar.
+	 * Crea una copia de un formulario, con todos sus campos, ajustes y acciones.
+	 *
+	 * @param int $id Identificador del formulario que se copia.
+	 * @return Form|WP_Error La copia.
+	 */
+	public function duplicate( int $id ): Form|WP_Error {
+		$form = $this->forms->find( $id );
+
+		if ( null === $form ) {
+			return $this->not_found();
+		}
+
+		/* translators: %s: name of the form that was copied. */
+		return $this->save( 0, sprintf( __( '%s (copy)', 'formulario-mensaje' ), $form->title ), $form->definition->to_array() );
+	}
+
+	/**
+	 * Envía un formulario a la papelera.
 	 *
 	 * @param int $id Identificador del formulario.
 	 * @return true|WP_Error

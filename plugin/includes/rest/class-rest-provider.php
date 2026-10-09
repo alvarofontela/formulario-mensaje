@@ -14,6 +14,7 @@ use Formulario_Mensaje\Captcha\Captcha_Config_Repository;
 use Formulario_Mensaje\Captcha\Captcha_Config_Sanitizer;
 use Formulario_Mensaje\Captcha\Captcha_Provider_Registry;
 use Formulario_Mensaje\Container;
+use Formulario_Mensaje\Forms\Form_Porter;
 use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Forms\Form_Service;
 use Formulario_Mensaje\Frontend\Form_Renderer;
@@ -72,6 +73,11 @@ final class Rest_Provider implements Service_Provider {
 		);
 
 		$container->set(
+			Form_Transfer_Controller::class,
+			static fn ( Container $c ): Form_Transfer_Controller => new Form_Transfer_Controller( $c->get( Form_Service::class ), $c->get( Form_Porter::class ) )
+		);
+
+		$container->set(
 			Action_Tests_Controller::class,
 			static fn ( Container $c ): Action_Tests_Controller => new Action_Tests_Controller(
 				$c->get( Form_Service::class ),
@@ -127,6 +133,7 @@ final class Rest_Provider implements Service_Provider {
 			static function () use ( $container ): void {
 				$container->get( Submissions_Controller::class )->register_routes();
 				$container->get( Forms_Controller::class )->register_routes();
+				$container->get( Form_Transfer_Controller::class )->register_routes();
 				$container->get( Action_Tests_Controller::class )->register_routes();
 				$container->get( Settings_Controller::class )->register_routes();
 				$container->get( Submission_Records_Controller::class )->register_routes();

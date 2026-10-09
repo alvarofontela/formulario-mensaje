@@ -229,7 +229,7 @@ Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fa
 | 3. Correo avanzado | Hecha |
 | 4. Webhooks | Hecha |
 | 5. Captchas | Hecha |
-| 6. Constructor avanzado | Pendiente |
+| 6. Constructor avanzado | Hecha |
 | 7. Estilo, bloque y Elementor | Pendiente |
 | 8. Lógica condicional en campos | Pendiente |
 | 9. Formularios por pasos | Pendiente |
@@ -285,6 +285,16 @@ Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel
 
 No verificado contra servicios reales: Resend se ha probado con un doble de la HTTP API (petición, cabecera de autorización, errores) y el SMTP contra Mailpit, que no cifra ni pide credenciales. Quedan sin probar STARTTLS, SSL y la autenticación contra un servidor real.
 
+### Fase 6: lo que se decidió al hacerla
+
+- **Columnas**: cada campo tiene un ancho (todo, tres cuartos, dos tercios, la mitad, un tercio o un cuarto) y los campos seguidos que suman el ancho completo comparten fila. El formulario es una rejilla de doce columnas; por debajo de 480 píxeles de pantalla cada campo ocupa su fila. No hay «filas» ni «columnas» como elementos del constructor: el orden de los campos sigue siendo una sola lista, que es también el orden de lectura y de tabulación.
+- **El ancho es una propiedad del campo en la definición** (`{ id, type, settings, width }`), no una opción de cada tipo: vale para cualquier tipo, también los de terceros, sin que tengan que declararlo.
+- **Plantillas de partida**: al añadir un formulario se elige entre contacto, solicitud de presupuesto (en dos columnas), «te llamamos», alta en el boletín y en blanco. Una plantilla es solo el punto de partida; el formulario no guarda relación con ella. Todas llevan una notificación al administrador del sitio. Filtro `formulario_mensaje_form_templates` para añadir las propias, que pasan por el mismo saneado que un formulario.
+- **Duplicar** crea una copia con todo, también el secreto de firma de sus webhooks, y con las acciones como estuvieran: es la misma web y las mismas personas.
+- **Exportar** descarga un JSON con todo menos los secretos: el secreto de firma de los webhooks y el valor de las cabeceras que por su nombre llevan credenciales (`Authorization`, `X-Api-Key`…). Cada tipo de acción decide qué no sale de la instalación (`Action_Type::portable_settings()`).
+- **Importar** crea siempre un formulario nuevo. El fichero es entrada no fiable: pasa por el mismo saneado que el constructor, sus acciones quedan en pausa hasta que alguien las revise, no trae secretos aunque el fichero los lleve, y una redirección a un dominio que esta web no permite se desactiva en vez de impedir la importación. Un fichero de una versión posterior del formato se rechaza.
+- **Reorganizado**: `Default_Definition` desaparece; la plantilla de contacto es ahora la primera de `Form_Templates`.
+
 ### Fase 5: lo que se decidió al hacerla
 
 - **El captcha se configura una vez para todo el sitio** (Ajustes → Captcha: servicio, clave del sitio, clave secreta y, para reCAPTCHA, puntuación mínima) y protege todos los formularios en cuanto están las dos claves. Cada formulario puede renunciar a él (ajuste `captcha_enabled`, en su pestaña «Tras el envío»). A medio configurar no se activa.
@@ -296,6 +306,8 @@ No verificado contra servicios reales: Resend se ha probado con un doble de la H
 - **Casilla sin resolver**: si el servicio espera a que el visitante pulse su casilla, el formulario avisa al momento en vez de enviar; si su comprobación es automática y sigue en curso, espera hasta 10 segundos. Tras cada intento se pide un testigo nuevo, porque solo valen una vez.
 - **Clave secreta** en el almacén de secretos (`captcha_secret`, constante `FORMULARIO_MENSAJE_CAPTCHA_SECRET`). Como la contraseña de SMTP, va ligada a su servicio: al cambiar de servicio sin escribir la nueva, la guardada se descarta.
 - **Privacidad**: los tres servicios reciben la IP del visitante y lo que su script recoja en el navegador. La pantalla de ajustes lo advierte y recomienda usar captcha solo si sigue llegando spam; informar de ello en la política de privacidad del sitio queda en manos de quien lo activa.
+
+Cambio a raíz de la revisión de seguridad de su commit: el script del formulario importaba el módulo del captcha desde una dirección escrita en un atributo del HTML. Quien lograse insertar HTML en una página (sin poder insertar scripts) habría podido hacer que se cargase su código. Ahora la dirección sale de la del propio script.
 
 Verificado contra los servicios reales con sus claves públicas de prueba: la verificación en servidor de Turnstile y de hCaptcha (aprobado y rechazado). No verificado: reCAPTCHA v3, que no tiene claves de prueba, ni los scripts reales de los tres servicios en el navegador, que en los tests se sustituyen por dobles.
 

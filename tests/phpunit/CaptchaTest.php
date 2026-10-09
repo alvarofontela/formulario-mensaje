@@ -206,7 +206,8 @@ class CaptchaTest extends Caso_Formulario {
 
 		$this->assertStringContainsString( 'data-fm-captcha="hcaptcha"', $html );
 		$this->assertStringContainsString( 'data-fm-captcha-key="clave-publica"', $html );
-		$this->assertMatchesRegularExpression( '#data-fm-captcha-module="[^"]+/assets/js/captcha\.js\?ver=[^"]+"#', $html );
+		// La dirección del módulo del captcha no va en el HTML: el script del formulario la deduce de la suya.
+		$this->assertStringNotContainsString( 'captcha.js', $html );
 		$this->assertStringContainsString( '<div class="fm-captcha" data-fm-captcha-slot></div>', $html );
 		$this->assertStringNotContainsString( 'clave-secreta', $html );
 		// El script del servicio no va en la página: lo carga el módulo cuando el visitante usa el formulario.

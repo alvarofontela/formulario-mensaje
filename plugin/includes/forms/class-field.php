@@ -20,17 +20,34 @@ final class Field {
 	public const ID_PATTERN = '/^[a-z][a-z0-9_]{0,31}$/';
 
 	/**
+	 * Anchos que puede ocupar un campo en su fila, en tanto por ciento. Varios campos seguidos que
+	 * sumen 100 comparten fila; en pantallas estrechas cada uno ocupa la suya.
+	 */
+	public const WIDTHS = array( 100, 75, 66, 50, 33, 25 );
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string               $id       Identificador único dentro del formulario.
 	 * @param string               $type     Tipo de campo, tal como está registrado.
 	 * @param array<string, mixed> $settings Opciones del campo.
+	 * @param int                  $width    Ancho que ocupa en su fila, en tanto por ciento: uno de WIDTHS.
 	 */
 	public function __construct(
 		public readonly string $id,
 		public readonly string $type,
-		public readonly array $settings = array()
+		public readonly array $settings = array(),
+		public readonly int $width = 100
 	) {}
+
+	/**
+	 * Convierte un valor sin validar en uno de los anchos admitidos; ante la duda, todo el ancho.
+	 *
+	 * @param mixed $width Ancho sin validar.
+	 */
+	public static function normalize_width( mixed $width ): int {
+		return is_numeric( $width ) && in_array( (int) $width, self::WIDTHS, true ) ? (int) $width : 100;
+	}
 
 	/**
 	 * Valor de una opción del campo.
@@ -87,6 +104,7 @@ final class Field {
 			'id'       => $this->id,
 			'type'     => $this->type,
 			'settings' => $this->settings,
+			'width'    => $this->width,
 		);
 	}
 }

@@ -105,8 +105,14 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 
 	&__row-actions {
 		display: flex;
-		gap: 12px;
+		flex-wrap: wrap;
+		gap: 2px 12px;
 		margin-top: 4px;
+	}
+
+	// La columna del nombre lleva además las acciones de la fila: necesita más sitio que las otras.
+	&__table .column-primary {
+		width: 32%;
 	}
 
 	&__shortcode {
@@ -158,6 +164,47 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		> .components-tab-panel__tabs {
 			margin-bottom: 16px;
 			border-bottom: 1px solid $border;
+		}
+	}
+}
+
+.fm-admin__header-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.fm-templates {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 12px;
+	margin: 0;
+
+	li {
+		margin: 0;
+	}
+
+	&__item {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		width: 100%;
+		height: 100%;
+		padding: 16px;
+		border: 1px solid $border;
+		border-radius: 2px;
+		background: $surface;
+		text-align: start;
+		cursor: pointer;
+
+		span {
+			color: $muted;
+			font-size: 12px;
+		}
+
+		&:hover,
+		&:focus-visible {
+			border-color: $accent;
+			outline: 1px solid $accent;
 		}
 	}
 }
@@ -354,6 +401,11 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		padding: 16px;
 		border-top: 1px solid $border;
 		background: #f6f7f7;
+	}
+
+	&__width {
+		max-width: 320px;
+		margin-top: 16px;
 	}
 
 	&__id {

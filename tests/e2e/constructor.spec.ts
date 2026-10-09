@@ -20,8 +20,9 @@ test('se crea un formulario desde el constructor y aparece en el listado', async
 
   await page.goto(formsScreen);
   await page.getByRole('button', { name: 'Añadir formulario' }).first().click();
+  await page.getByRole('dialog', { name: 'Elige una plantilla' }).getByRole('button', { name: /^Contacto/ }).click();
 
-  // Un formulario nuevo parte de un formulario de contacto.
+  // La plantilla de contacto trae nombre, correo y mensaje.
   const fields = page.locator('.fm-fields__item');
   await expect(fields).toHaveCount(3);
   await expect(fields.nth(0)).toContainText('Nombre');
