@@ -45,7 +45,8 @@
  * El formulario es una rejilla de doce columnas. Todo ocupa la fila entera salvo los campos con un
  * ancho menor, que comparten fila con los que les siguen.
  */
-.formulario-mensaje .fm-form {
+.formulario-mensaje .fm-form,
+.formulario-mensaje .fm-step {
 	display: grid;
 	grid-template-columns: repeat(12, minmax(0, 1fr));
 	gap: var(--fm-gap);
@@ -53,35 +54,87 @@
 	margin: 0;
 }
 
-.formulario-mensaje .fm-form > * {
+.formulario-mensaje .fm-form > *,
+.formulario-mensaje .fm-step > * {
 	grid-column: 1 / -1;
 }
 
-.formulario-mensaje .fm-form > .fm-w-75 {
+.formulario-mensaje .fm-w-75 {
 	grid-column: span 9;
 }
 
-.formulario-mensaje .fm-form > .fm-w-66 {
+.formulario-mensaje .fm-w-66 {
 	grid-column: span 8;
 }
 
-.formulario-mensaje .fm-form > .fm-w-50 {
+.formulario-mensaje .fm-w-50 {
 	grid-column: span 6;
 }
 
-.formulario-mensaje .fm-form > .fm-w-33 {
+.formulario-mensaje .fm-w-33 {
 	grid-column: span 4;
 }
 
-.formulario-mensaje .fm-form > .fm-w-25 {
+.formulario-mensaje .fm-w-25 {
 	grid-column: span 3;
 }
 
 /* En pantallas estrechas no hay columnas: cada campo ocupa su fila. */
 @media (max-width: 480px) {
 
-	.formulario-mensaje .fm-form > [class*="fm-w-"] {
+	.formulario-mensaje [class*="fm-w-"] {
 		grid-column: 1 / -1;
+	}
+}
+
+/* Pasos. Sin JavaScript se ven todos seguidos, como secciones con su título. */
+
+.formulario-mensaje .fm-step {
+	min-width: 0;
+	padding: 0;
+	border: 0;
+}
+
+.formulario-mensaje .fm-step__title {
+	margin: 0;
+	font-size: 1.15em;
+}
+
+.formulario-mensaje .fm-step__title:focus {
+	outline: none;
+}
+
+.formulario-mensaje .fm-progress {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+}
+
+.formulario-mensaje .fm-progress__bar {
+	height: 0.5rem;
+	overflow: hidden;
+	border-radius: 999px;
+	background-color: var(--fm-border-color);
+}
+
+.formulario-mensaje .fm-progress__fill {
+	display: block;
+	width: var(--fm-progress, 0%);
+	height: 100%;
+	border-radius: inherit;
+	background-color: var(--fm-button-background, currentColor);
+	transition: width 0.2s ease;
+}
+
+.formulario-mensaje .fm-progress__text {
+	margin: 0;
+	font-size: 0.875em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.formulario-mensaje .fm-progress__fill {
+		transition: none;
 	}
 }
 

@@ -1,94 +1,882 @@
 {
   "conditions": [
-    { "name": "sin reglas se cumple", "condition": { "match": "all", "rules": [] }, "values": {}, "expected": true },
-    { "name": "condición vacía se cumple", "condition": {}, "values": { "a": "x" }, "expected": true },
-    { "name": "es, sin distinguir mayúsculas ni espacios", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "equals", "value": "Ventas" } ] }, "values": { "a": " ventas " }, "expected": true },
-    { "name": "es, con acentos", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "equals", "value": "ATENCIÓN" } ] }, "values": { "a": "atención" }, "expected": true },
-    { "name": "es, otro valor", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "equals", "value": "ventas" } ] }, "values": { "a": "soporte" }, "expected": false },
-    { "name": "es, en un campo con varios valores", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "equals", "value": "b" } ] }, "values": { "a": [ "a", "b" ] }, "expected": true },
-    { "name": "es vacío contra un campo vacío no se cumple", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "equals", "value": "" } ] }, "values": { "a": "" }, "expected": false },
-    { "name": "no es", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "not_equals", "value": "ventas" } ] }, "values": { "a": "soporte" }, "expected": true },
-    { "name": "no es, cuando lo incluye", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "not_equals", "value": "a" } ] }, "values": { "a": [ "a", "b" ] }, "expected": false },
-    { "name": "no es, con el campo ausente", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "not_equals", "value": "x" } ] }, "values": {}, "expected": true },
-    { "name": "contiene", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "contains", "value": "urgent" } ] }, "values": { "a": "Es URGENTE de verdad" }, "expected": true },
-    { "name": "contiene un texto vacío", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "contains", "value": "" } ] }, "values": { "a": "algo" }, "expected": false },
-    { "name": "contiene, en alguno de varios valores", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "contains", "value": "jo" } ] }, "values": { "a": [ "verde", "rojo" ] }, "expected": true },
-    { "name": "no contiene", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "not_contains", "value": "spam" } ] }, "values": { "a": "mensaje normal" }, "expected": true },
-    { "name": "no contiene un texto vacío", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "not_contains", "value": "" } ] }, "values": { "a": "algo" }, "expected": true },
-    { "name": "está vacío", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "is_empty", "value": "" } ] }, "values": { "a": "" }, "expected": true },
-    { "name": "está vacío, solo espacios", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "is_empty", "value": "" } ] }, "values": { "a": "   " }, "expected": true },
-    { "name": "está vacío, lista vacía", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "is_empty", "value": "" } ] }, "values": { "a": [] }, "expected": true },
-    { "name": "está vacío, campo ausente", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "is_empty", "value": "" } ] }, "values": {}, "expected": true },
-    { "name": "está vacío, con dato", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "is_empty", "value": "" } ] }, "values": { "a": "x" }, "expected": false },
-    { "name": "no está vacío", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "is_not_empty", "value": "" } ] }, "values": { "a": "x" }, "expected": true },
-    { "name": "no está vacío, con el cero", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "is_not_empty", "value": "" } ] }, "values": { "a": "0" }, "expected": true },
-    { "name": "mayor que, con coma decimal", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "greater_than", "value": "10" } ] }, "values": { "a": "10,5" }, "expected": true },
-    { "name": "mayor que, sin serlo", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "greater_than", "value": "10" } ] }, "values": { "a": "9" }, "expected": false },
-    { "name": "mayor que, iguales", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "greater_than", "value": "10" } ] }, "values": { "a": "10.0" }, "expected": false },
-    { "name": "mayor que, compara números y no textos", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "greater_than", "value": "9" } ] }, "values": { "a": "10" }, "expected": true },
-    { "name": "menor que, con negativos", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "less_than", "value": "10" } ] }, "values": { "a": "-3" }, "expected": true },
-    { "name": "mayor que, con texto no numérico", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "greater_than", "value": "10" } ] }, "values": { "a": "muchos" }, "expected": false },
-    { "name": "menor que, con el campo vacío", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "less_than", "value": "10" } ] }, "values": { "a": "" }, "expected": false },
-    { "name": "operador desconocido", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "matches_regex", "value": ".*" } ] }, "values": { "a": "x" }, "expected": false },
-    { "name": "todas: se cumplen las dos", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "equals", "value": "1" }, { "field": "b", "operator": "equals", "value": "2" } ] }, "values": { "a": "1", "b": "2" }, "expected": true },
-    { "name": "todas: falla una", "condition": { "match": "all", "rules": [ { "field": "a", "operator": "equals", "value": "1" }, { "field": "b", "operator": "equals", "value": "2" } ] }, "values": { "a": "1", "b": "x" }, "expected": false },
-    { "name": "alguna: se cumple una", "condition": { "match": "any", "rules": [ { "field": "a", "operator": "equals", "value": "1" }, { "field": "b", "operator": "equals", "value": "2" } ] }, "values": { "a": "1", "b": "x" }, "expected": true },
-    { "name": "alguna: no se cumple ninguna", "condition": { "match": "any", "rules": [ { "field": "a", "operator": "equals", "value": "1" }, { "field": "b", "operator": "equals", "value": "2" } ] }, "values": { "a": "x", "b": "x" }, "expected": false },
-    { "name": "un valor de match desconocido cuenta como todas", "condition": { "match": "cualquiera", "rules": [ { "field": "a", "operator": "equals", "value": "1" }, { "field": "b", "operator": "equals", "value": "2" } ] }, "values": { "a": "1", "b": "x" }, "expected": false }
+    {
+      "name": "sin reglas se cumple",
+      "condition": {
+        "match": "all",
+        "rules": []
+      },
+      "values": {},
+      "expected": true
+    },
+    {
+      "name": "condición vacía se cumple",
+      "condition": {},
+      "values": {
+        "a": "x"
+      },
+      "expected": true
+    },
+    {
+      "name": "es, sin distinguir mayúsculas ni espacios",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "equals",
+            "value": "Ventas"
+          }
+        ]
+      },
+      "values": {
+        "a": " ventas "
+      },
+      "expected": true
+    },
+    {
+      "name": "es, con acentos",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "equals",
+            "value": "ATENCIÓN"
+          }
+        ]
+      },
+      "values": {
+        "a": "atención"
+      },
+      "expected": true
+    },
+    {
+      "name": "es, otro valor",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "equals",
+            "value": "ventas"
+          }
+        ]
+      },
+      "values": {
+        "a": "soporte"
+      },
+      "expected": false
+    },
+    {
+      "name": "es, en un campo con varios valores",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "equals",
+            "value": "b"
+          }
+        ]
+      },
+      "values": {
+        "a": [
+          "a",
+          "b"
+        ]
+      },
+      "expected": true
+    },
+    {
+      "name": "es vacío contra un campo vacío no se cumple",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "equals",
+            "value": ""
+          }
+        ]
+      },
+      "values": {
+        "a": ""
+      },
+      "expected": false
+    },
+    {
+      "name": "no es",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "not_equals",
+            "value": "ventas"
+          }
+        ]
+      },
+      "values": {
+        "a": "soporte"
+      },
+      "expected": true
+    },
+    {
+      "name": "no es, cuando lo incluye",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "not_equals",
+            "value": "a"
+          }
+        ]
+      },
+      "values": {
+        "a": [
+          "a",
+          "b"
+        ]
+      },
+      "expected": false
+    },
+    {
+      "name": "no es, con el campo ausente",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "not_equals",
+            "value": "x"
+          }
+        ]
+      },
+      "values": {},
+      "expected": true
+    },
+    {
+      "name": "contiene",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "contains",
+            "value": "urgent"
+          }
+        ]
+      },
+      "values": {
+        "a": "Es URGENTE de verdad"
+      },
+      "expected": true
+    },
+    {
+      "name": "contiene un texto vacío",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "contains",
+            "value": ""
+          }
+        ]
+      },
+      "values": {
+        "a": "algo"
+      },
+      "expected": false
+    },
+    {
+      "name": "contiene, en alguno de varios valores",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "contains",
+            "value": "jo"
+          }
+        ]
+      },
+      "values": {
+        "a": [
+          "verde",
+          "rojo"
+        ]
+      },
+      "expected": true
+    },
+    {
+      "name": "no contiene",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "not_contains",
+            "value": "spam"
+          }
+        ]
+      },
+      "values": {
+        "a": "mensaje normal"
+      },
+      "expected": true
+    },
+    {
+      "name": "no contiene un texto vacío",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "not_contains",
+            "value": ""
+          }
+        ]
+      },
+      "values": {
+        "a": "algo"
+      },
+      "expected": true
+    },
+    {
+      "name": "está vacío",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "is_empty",
+            "value": ""
+          }
+        ]
+      },
+      "values": {
+        "a": ""
+      },
+      "expected": true
+    },
+    {
+      "name": "está vacío, solo espacios",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "is_empty",
+            "value": ""
+          }
+        ]
+      },
+      "values": {
+        "a": "   "
+      },
+      "expected": true
+    },
+    {
+      "name": "está vacío, lista vacía",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "is_empty",
+            "value": ""
+          }
+        ]
+      },
+      "values": {
+        "a": []
+      },
+      "expected": true
+    },
+    {
+      "name": "está vacío, campo ausente",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "is_empty",
+            "value": ""
+          }
+        ]
+      },
+      "values": {},
+      "expected": true
+    },
+    {
+      "name": "está vacío, con dato",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "is_empty",
+            "value": ""
+          }
+        ]
+      },
+      "values": {
+        "a": "x"
+      },
+      "expected": false
+    },
+    {
+      "name": "no está vacío",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "is_not_empty",
+            "value": ""
+          }
+        ]
+      },
+      "values": {
+        "a": "x"
+      },
+      "expected": true
+    },
+    {
+      "name": "no está vacío, con el cero",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "is_not_empty",
+            "value": ""
+          }
+        ]
+      },
+      "values": {
+        "a": "0"
+      },
+      "expected": true
+    },
+    {
+      "name": "mayor que, con coma decimal",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "greater_than",
+            "value": "10"
+          }
+        ]
+      },
+      "values": {
+        "a": "10,5"
+      },
+      "expected": true
+    },
+    {
+      "name": "mayor que, sin serlo",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "greater_than",
+            "value": "10"
+          }
+        ]
+      },
+      "values": {
+        "a": "9"
+      },
+      "expected": false
+    },
+    {
+      "name": "mayor que, iguales",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "greater_than",
+            "value": "10"
+          }
+        ]
+      },
+      "values": {
+        "a": "10.0"
+      },
+      "expected": false
+    },
+    {
+      "name": "mayor que, compara números y no textos",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "greater_than",
+            "value": "9"
+          }
+        ]
+      },
+      "values": {
+        "a": "10"
+      },
+      "expected": true
+    },
+    {
+      "name": "menor que, con negativos",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "less_than",
+            "value": "10"
+          }
+        ]
+      },
+      "values": {
+        "a": "-3"
+      },
+      "expected": true
+    },
+    {
+      "name": "mayor que, con texto no numérico",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "greater_than",
+            "value": "10"
+          }
+        ]
+      },
+      "values": {
+        "a": "muchos"
+      },
+      "expected": false
+    },
+    {
+      "name": "menor que, con el campo vacío",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "less_than",
+            "value": "10"
+          }
+        ]
+      },
+      "values": {
+        "a": ""
+      },
+      "expected": false
+    },
+    {
+      "name": "operador desconocido",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "matches_regex",
+            "value": ".*"
+          }
+        ]
+      },
+      "values": {
+        "a": "x"
+      },
+      "expected": false
+    },
+    {
+      "name": "todas: se cumplen las dos",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "equals",
+            "value": "1"
+          },
+          {
+            "field": "b",
+            "operator": "equals",
+            "value": "2"
+          }
+        ]
+      },
+      "values": {
+        "a": "1",
+        "b": "2"
+      },
+      "expected": true
+    },
+    {
+      "name": "todas: falla una",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "equals",
+            "value": "1"
+          },
+          {
+            "field": "b",
+            "operator": "equals",
+            "value": "2"
+          }
+        ]
+      },
+      "values": {
+        "a": "1",
+        "b": "x"
+      },
+      "expected": false
+    },
+    {
+      "name": "alguna: se cumple una",
+      "condition": {
+        "match": "any",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "equals",
+            "value": "1"
+          },
+          {
+            "field": "b",
+            "operator": "equals",
+            "value": "2"
+          }
+        ]
+      },
+      "values": {
+        "a": "1",
+        "b": "x"
+      },
+      "expected": true
+    },
+    {
+      "name": "alguna: no se cumple ninguna",
+      "condition": {
+        "match": "any",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "equals",
+            "value": "1"
+          },
+          {
+            "field": "b",
+            "operator": "equals",
+            "value": "2"
+          }
+        ]
+      },
+      "values": {
+        "a": "x",
+        "b": "x"
+      },
+      "expected": false
+    },
+    {
+      "name": "un valor de match desconocido cuenta como todas",
+      "condition": {
+        "match": "cualquiera",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "equals",
+            "value": "1"
+          },
+          {
+            "field": "b",
+            "operator": "equals",
+            "value": "2"
+          }
+        ]
+      },
+      "values": {
+        "a": "1",
+        "b": "x"
+      },
+      "expected": false
+    }
   ],
   "visibility": [
     {
       "name": "sin condiciones se muestra todo",
-      "conditions": { "a": {}, "b": {} },
+      "conditions": {
+        "a": {},
+        "b": {}
+      },
       "values": {},
-      "expected": { "a": true, "b": true }
+      "expected": {
+        "a": true,
+        "b": true
+      }
     },
     {
-      "name": "un campo aparece cuando otro tiene el valor",
-      "conditions": { "tipo": {}, "empresa": { "match": "all", "rules": [ { "field": "tipo", "operator": "equals", "value": "empresa" } ] } },
-      "values": { "tipo": "empresa", "empresa": "ACME" },
-      "expected": { "tipo": true, "empresa": true }
+      "name": "un campo aparece cuando uno anterior tiene el valor",
+      "conditions": {
+        "tipo": {},
+        "empresa": {
+          "match": "all",
+          "rules": [
+            {
+              "field": "tipo",
+              "operator": "equals",
+              "value": "empresa"
+            }
+          ]
+        }
+      },
+      "values": {
+        "tipo": "empresa",
+        "empresa": "ACME"
+      },
+      "expected": {
+        "tipo": true,
+        "empresa": true
+      }
     },
     {
       "name": "y se oculta cuando no lo tiene",
-      "conditions": { "tipo": {}, "empresa": { "match": "all", "rules": [ { "field": "tipo", "operator": "equals", "value": "empresa" } ] } },
-      "values": { "tipo": "particular", "empresa": "ACME" },
-      "expected": { "tipo": true, "empresa": false }
+      "conditions": {
+        "tipo": {},
+        "empresa": {
+          "match": "all",
+          "rules": [
+            {
+              "field": "tipo",
+              "operator": "equals",
+              "value": "empresa"
+            }
+          ]
+        }
+      },
+      "values": {
+        "tipo": "particular",
+        "empresa": "ACME"
+      },
+      "expected": {
+        "tipo": true,
+        "empresa": false
+      }
     },
     {
       "name": "un campo oculto no aporta su valor al que depende de él",
       "conditions": {
         "tipo": {},
-        "empresa": { "match": "all", "rules": [ { "field": "tipo", "operator": "equals", "value": "empresa" } ] },
-        "cif": { "match": "all", "rules": [ { "field": "empresa", "operator": "is_not_empty", "value": "" } ] }
+        "empresa": {
+          "match": "all",
+          "rules": [
+            {
+              "field": "tipo",
+              "operator": "equals",
+              "value": "empresa"
+            }
+          ]
+        },
+        "cif": {
+          "match": "all",
+          "rules": [
+            {
+              "field": "empresa",
+              "operator": "is_not_empty",
+              "value": ""
+            }
+          ]
+        }
       },
-      "values": { "tipo": "particular", "empresa": "ACME", "cif": "B123" },
-      "expected": { "tipo": true, "empresa": false, "cif": false }
+      "values": {
+        "tipo": "particular",
+        "empresa": "ACME",
+        "cif": "B123"
+      },
+      "expected": {
+        "tipo": true,
+        "empresa": false,
+        "cif": false
+      }
     },
     {
-      "name": "la cadena de dependencias se resuelve aunque el orden sea el inverso",
+      "name": "un campo posterior cuenta como vacío aunque tenga valor",
       "conditions": {
-        "cif": { "match": "all", "rules": [ { "field": "empresa", "operator": "is_not_empty", "value": "" } ] },
-        "empresa": { "match": "all", "rules": [ { "field": "tipo", "operator": "equals", "value": "empresa" } ] },
-        "tipo": {}
+        "cif": {
+          "match": "all",
+          "rules": [
+            {
+              "field": "empresa",
+              "operator": "is_not_empty",
+              "value": ""
+            }
+          ]
+        },
+        "empresa": {}
       },
-      "values": { "tipo": "particular", "empresa": "ACME", "cif": "B123" },
-      "expected": { "cif": false, "empresa": false, "tipo": true }
+      "values": {
+        "empresa": "ACME",
+        "cif": "B123"
+      },
+      "expected": {
+        "cif": false,
+        "empresa": true
+      }
     },
     {
-      "name": "dos campos que dependen el uno del otro dan el mismo resultado en los dos lados",
+      "name": "dos campos que dependen el uno del otro se resuelven en el orden del formulario",
       "conditions": {
-        "a": { "match": "all", "rules": [ { "field": "b", "operator": "is_empty", "value": "" } ] },
-        "b": { "match": "all", "rules": [ { "field": "a", "operator": "is_empty", "value": "" } ] }
+        "a": {
+          "match": "all",
+          "rules": [
+            {
+              "field": "b",
+              "operator": "is_empty",
+              "value": ""
+            }
+          ]
+        },
+        "b": {
+          "match": "all",
+          "rules": [
+            {
+              "field": "a",
+              "operator": "is_empty",
+              "value": ""
+            }
+          ]
+        }
       },
-      "values": { "a": "x", "b": "y" },
-      "expected": { "a": true, "b": true }
+      "values": {
+        "a": "x",
+        "b": "y"
+      },
+      "expected": {
+        "a": true,
+        "b": false
+      }
     },
     {
       "name": "un elemento sin valor propio también puede tener condición",
-      "conditions": { "tipo": {}, "aviso": { "match": "any", "rules": [ { "field": "tipo", "operator": "equals", "value": "urgente" }, { "field": "tipo", "operator": "equals", "value": "crítico" } ] } },
-      "values": { "tipo": "Urgente" },
-      "expected": { "tipo": true, "aviso": true }
+      "conditions": {
+        "tipo": {},
+        "aviso": {
+          "match": "any",
+          "rules": [
+            {
+              "field": "tipo",
+              "operator": "equals",
+              "value": "urgente"
+            },
+            {
+              "field": "tipo",
+              "operator": "equals",
+              "value": "crítico"
+            }
+          ]
+        }
+      },
+      "values": {
+        "tipo": "Urgente"
+      },
+      "expected": {
+        "tipo": true,
+        "aviso": true
+      }
+    },
+    {
+      "name": "los campos de un paso que no se muestra tampoco se muestran, ni aportan su valor",
+      "conditions": {
+        "tipo": {},
+        "paso_empresa": {
+          "match": "all",
+          "rules": [
+            {
+              "field": "tipo",
+              "operator": "equals",
+              "value": "empresa"
+            }
+          ]
+        },
+        "empresa": {},
+        "final": {
+          "match": "all",
+          "rules": [
+            {
+              "field": "empresa",
+              "operator": "is_empty",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "parents": {
+        "empresa": "paso_empresa"
+      },
+      "values": {
+        "tipo": "particular",
+        "empresa": "ACME"
+      },
+      "expected": {
+        "tipo": true,
+        "paso_empresa": false,
+        "empresa": false,
+        "final": true
+      }
+    },
+    {
+      "name": "los campos de un paso que sí se muestra siguen su propia condición",
+      "conditions": {
+        "tipo": {},
+        "paso_empresa": {
+          "match": "all",
+          "rules": [
+            {
+              "field": "tipo",
+              "operator": "equals",
+              "value": "empresa"
+            }
+          ]
+        },
+        "empresa": {},
+        "cif": {
+          "match": "all",
+          "rules": [
+            {
+              "field": "empresa",
+              "operator": "is_not_empty",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "parents": {
+        "empresa": "paso_empresa",
+        "cif": "paso_empresa"
+      },
+      "values": {
+        "tipo": "empresa",
+        "empresa": "",
+        "cif": "B123"
+      },
+      "expected": {
+        "tipo": true,
+        "paso_empresa": true,
+        "empresa": true,
+        "cif": false
+      }
     }
   ]
 }

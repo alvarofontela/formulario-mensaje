@@ -51,6 +51,17 @@ final class Field_Type_Registry {
 	}
 
 	/**
+	 * Devuelve un tipo de campo si abre una sección del formulario (un paso).
+	 *
+	 * @param string $type Identificador del tipo.
+	 */
+	public function get_section( string $type ): ?Section_Field_Type {
+		$field_type = $this->get( $type );
+
+		return $field_type instanceof Section_Field_Type ? $field_type : null;
+	}
+
+	/**
 	 * Todos los tipos registrados, en orden de registro.
 	 *
 	 * @return Field_Type[]

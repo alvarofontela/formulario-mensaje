@@ -12,6 +12,8 @@ use Formulario_Mensaje\Captcha\Captcha_Service;
 use Formulario_Mensaje\Fields\Field_Markup;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Fields\Render_Context;
+use Formulario_Mensaje\Fields\Step_Layout;
+use Formulario_Mensaje\Forms\Field;
 use Formulario_Mensaje\Forms\Form;
 use Formulario_Mensaje\Forms\Form_Style;
 use Formulario_Mensaje\Rest\Rest_Provider;
@@ -50,12 +52,14 @@ final class Form_Renderer {
 	 * @param Field_Markup        $markup      HTML común de los campos.
 	 * @param Captcha_Service     $captcha     Captcha de los formularios.
 	 * @param Form_Style          $style       Estilo de los formularios.
+	 * @param Step_Layout         $steps       Pasos de los formularios.
 	 */
 	public function __construct(
 		private readonly Field_Type_Registry $field_types,
 		private readonly Field_Markup $markup,
 		private readonly Captcha_Service $captcha,
-		private readonly Form_Style $style
+		private readonly Form_Style $style,
+		private readonly Step_Layout $steps
 	) {}
 
 	/**
@@ -98,19 +102,27 @@ final class Form_Renderer {
 	 * @param bool           $interactive Si el formulario puede enviarse.
 	 */
 	private function form( Form $form, Render_Context $context, bool $interactive ): string {
+		$steps        = $this->steps->steps( $form->definition );
 		$fields       = '';
 		$has_required = false;
 
 		foreach ( $form->definition->fields as $field ) {
-			$type = $this->field_types->get( $field->type );
-
-			// Un campo de un tipo que ya no está registrado no se pinta.
-			if ( null === $type ) {
-				continue;
-			}
-
-			$fields      .= $type->render( $field, $context );
 			$has_required = $has_required || $field->is_required();
+		}
+
+		if ( array() === $steps ) {
+			$fields = $this->fields( $form->definition->fields, $context );
+		}
+
+		// Sin JavaScript, cada paso es una sección más del formulario, con su título.
+		foreach ( $steps as $index => $step ) {
+			$fields .= sprintf(
+				'<div class="fm-step" data-fm-step="%1$d"%2$s>%3$s%4$s</div>',
+				$index,
+				null === $step['marker'] ? '' : $this->markup->condition_attribute( $step['marker'] ),
+				null === $step['marker'] ? '' : $this->fields( array( $step['marker'] ), $context ),
+				$this->fields( $step['fields'], $context )
+			);
 		}
 
 		$attributes = array(
@@ -118,6 +130,12 @@ final class Form_Renderer {
 			'method'     => 'post',
 			'aria-label' => $form->title,
 		);
+
+		if ( $interactive && array() !== $steps ) {
+			$attributes['data-fm-steps'] = count( $steps );
+			/* translators: {current} and {total} are replaced by the number of the current step and the number of steps; keep them as they are. */
+			$attributes['data-fm-step-text'] = __( 'Step {current} of {total}', 'formulario-mensaje' );
+		}
 
 		if ( $interactive ) {
 			$attributes['action']                = admin_url( 'admin-post.php' );
@@ -136,7 +154,7 @@ final class Form_Renderer {
 		}
 
 		return sprintf(
-			'<form%1$s><div class="fm-status" role="alert" tabindex="-1" hidden></div>%2$s%3$s%4$s%5$s%7$s<div class="fm-actions"><button type="submit" class="fm-submit wp-element-button">%6$s</button></div></form>',
+			'<form%1$s><div class="fm-status" role="alert" tabindex="-1" hidden></div>%2$s%8$s%3$s%4$s%5$s%7$s<div class="fm-actions">%9$s<button type="submit" class="fm-submit wp-element-button">%6$s</button></div></form>',
 			$this->markup->attributes( $attributes ),
 			$has_required ? $this->required_note() : '',
 			$fields,
@@ -144,7 +162,45 @@ final class Form_Renderer {
 			$interactive ? $this->fallback_fields( $form ) : '',
 			esc_html( (string) $form->definition->setting( 'submit_label', __( 'Send', 'formulario-mensaje' ) ) ),
 			// Hueco donde el servicio pinta su casilla, si la tiene.
-			null === $captcha ? '' : '<div class="fm-captcha" data-fm-captcha-slot></div>'
+			null === $captcha ? '' : '<div class="fm-captcha" data-fm-captcha-slot></div>',
+			$interactive && array() !== $steps ? $this->progress() : '',
+			$interactive && array() !== $steps ? $this->step_buttons() : ''
+		);
+	}
+
+	/**
+	 * HTML de una lista de campos.
+	 *
+	 * @param Field[]        $fields  Campos.
+	 * @param Render_Context $context Formulario e instancia en los que se pintan.
+	 */
+	private function fields( array $fields, Render_Context $context ): string {
+		$html = '';
+
+		foreach ( $fields as $field ) {
+			// Un campo de un tipo que ya no está registrado no se pinta.
+			$html .= $this->field_types->get( $field->type )?->render( $field, $context ) ?? '';
+		}
+
+		return $html;
+	}
+
+	/**
+	 * Barra de progreso de un formulario por pasos. Oculta hasta que el script la pone en marcha.
+	 */
+	private function progress(): string {
+		return '<div class="fm-progress" hidden><div class="fm-progress__bar" role="progressbar" aria-valuemin="1" aria-valuemax="1" aria-valuenow="1"><span class="fm-progress__fill"></span></div><p class="fm-progress__text" aria-live="polite"></p></div>';
+	}
+
+	/**
+	 * Botones para moverse entre los pasos. Ocultos hasta que el script los pone en marcha: sin
+	 * JavaScript los pasos se ven todos seguidos y solo hace falta el botón de enviar.
+	 */
+	private function step_buttons(): string {
+		return sprintf(
+			'<button type="button" class="fm-prev wp-element-button" hidden>%1$s</button><button type="button" class="fm-next wp-element-button" hidden>%2$s</button>',
+			esc_html__( 'Previous', 'formulario-mensaje' ),
+			esc_html__( 'Next', 'formulario-mensaje' )
 		);
 	}
 

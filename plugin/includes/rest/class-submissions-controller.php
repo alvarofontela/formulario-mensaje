@@ -14,6 +14,7 @@ use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Submissions\Submission_Channel;
 use Formulario_Mensaje\Submissions\Submission_Handler;
 use Formulario_Mensaje\Submissions\Submission_Request_Factory;
+use Formulario_Mensaje\Submissions\Step_Validator;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -35,12 +36,14 @@ final class Submissions_Controller {
 	 * @param Submission_Request_Factory $requests Construcción de peticiones de envío.
 	 * @param Token_Service              $tokens   Token antispam.
 	 * @param Form_Repository            $forms    Almacén de formularios.
+	 * @param Step_Validator             $steps    Validación de pasos.
 	 */
 	public function __construct(
 		private readonly Submission_Handler $handler,
 		private readonly Submission_Request_Factory $requests,
 		private readonly Token_Service $tokens,
-		private readonly Form_Repository $forms
+		private readonly Form_Repository $forms,
+		private readonly Step_Validator $steps
 	) {}
 
 	/**
@@ -69,6 +72,30 @@ final class Submissions_Controller {
 				'callback'            => array( $this, 'create_token' ),
 				'permission_callback' => '__return_true',
 				'args'                => $id_arg,
+			)
+		);
+
+		// También pública: valida un paso de un formulario por pasos. Solo comprueba valores; no acepta, guarda ni envía nada.
+		register_rest_route(
+			Rest_Provider::ROUTE_NAMESPACE,
+			'/forms/(?P<id>\d+)/validate',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'validate_step' ),
+				'permission_callback' => '__return_true',
+				'args'                => $id_arg + array(
+					Render_Context::VALUES_PARAM => array(
+						'description' => __( 'Field values, by field identifier.', 'formulario-mensaje' ),
+						'type'        => 'object',
+						'default'     => array(),
+					),
+					'step'                       => array(
+						'description' => __( 'Position of the step to validate, starting at 0.', 'formulario-mensaje' ),
+						'type'        => 'integer',
+						'minimum'     => 0,
+						'required'    => true,
+					),
+				),
 			)
 		);
 
@@ -103,6 +130,36 @@ final class Submissions_Controller {
 				),
 			)
 		);
+	}
+
+	/**
+	 * Valida los campos de un paso, para dejar avanzar al siguiente. No guarda ni envía nada.
+	 *
+	 * @param WP_REST_Request $request Petición.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function validate_step( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		$form = $this->forms->find( (int) $request['id'] );
+
+		if ( null === $form || ! $form->is_published() ) {
+			return new WP_Error( 'formulario_mensaje_form_unavailable', __( 'This form is no longer available.', 'formulario-mensaje' ), array( 'status' => 404 ) );
+		}
+
+		$values = $request->get_param( Render_Context::VALUES_PARAM );
+		$errors = $this->steps->errors( $form, is_array( $values ) ? $values : array(), (int) $request['step'] );
+
+		if ( array() !== $errors ) {
+			return new WP_Error(
+				'formulario_mensaje_invalid',
+				__( 'Please review the highlighted fields.', 'formulario-mensaje' ),
+				array(
+					'status' => 422,
+					'errors' => $errors,
+				)
+			);
+		}
+
+		return new WP_REST_Response( array( 'valid' => true ) );
 	}
 
 	/**

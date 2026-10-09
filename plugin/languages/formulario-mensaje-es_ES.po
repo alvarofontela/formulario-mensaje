@@ -24,19 +24,19 @@ msgstr "Constructor de formularios ligero y auditable: formularios con sus propi
 msgid "Álvaro Fontela"
 msgstr "Álvaro Fontela"
 
-#: includes/admin/class-admin-data.php:69
+#: includes/admin/class-admin-data.php:72
 msgid "Basic fields"
 msgstr "Campos básicos"
 
-#: includes/admin/class-admin-data.php:70
+#: includes/admin/class-admin-data.php:73
 msgid "Choice fields"
 msgstr "Campos de opciones"
 
-#: includes/admin/class-admin-data.php:71
+#: includes/admin/class-admin-data.php:74
 msgid "Advanced fields"
 msgstr "Campos avanzados"
 
-#: includes/admin/class-admin-data.php:72
+#: includes/admin/class-admin-data.php:75
 msgid "Layout"
 msgstr "Presentación"
 
@@ -126,7 +126,7 @@ msgid "This form needs JavaScript to be sent. Enable it in your browser and try 
 msgstr "Este formulario necesita JavaScript para enviarse. Actívalo en tu navegador e inténtalo de nuevo."
 
 #: includes/captcha/class-captcha-check.php:57
-#: includes/frontend/class-form-renderer.php:135
+#: includes/frontend/class-form-renderer.php:153
 msgid "Complete the security check before sending the form."
 msgstr "Completa la comprobación de seguridad antes de enviar el formulario."
 
@@ -548,6 +548,14 @@ msgstr "Texto de la opción vacía"
 msgid "Select an option"
 msgstr "Elige una opción"
 
+#: includes/fields/types/class-step-field-type.php:43
+msgid "Step"
+msgstr "Paso"
+
+#: includes/fields/types/class-step-field-type.php:60
+msgid "Step title"
+msgstr "Título del paso"
+
 #: includes/fields/types/class-tel-field-type.php:67
 msgid "Enter a valid phone number."
 msgstr "Escribe un número de teléfono válido."
@@ -564,12 +572,12 @@ msgstr "Este es un mensaje de ejemplo.\nTiene dos líneas."
 msgid "Enter a valid web address."
 msgstr "Escribe una dirección web válida."
 
-#: includes/forms/class-form-definition-sanitizer.php:134
-#: includes/frontend/class-form-renderer.php:145
+#: includes/forms/class-form-definition-sanitizer.php:140
+#: includes/frontend/class-form-renderer.php:163
 msgid "Send"
 msgstr "Enviar"
 
-#: includes/forms/class-form-definition-sanitizer.php:137
+#: includes/forms/class-form-definition-sanitizer.php:143
 #: includes/submissions/class-confirmation-builder.php:62
 msgid "Thank you. Your message has been sent."
 msgstr "Gracias. Hemos recibido tu mensaje."
@@ -689,17 +697,34 @@ msgstr "No se ha podido enviar el formulario"
 msgid "This form does not exist or is in the trash."
 msgstr "Este formulario no existe o está en la papelera."
 
-#: includes/frontend/class-form-renderer.php:126
+#. translators: {current} and {total} are replaced by the number of the current step and the number of steps; keep them as they are.
+#: includes/frontend/class-form-renderer.php:137
+msgid "Step {current} of {total}"
+msgstr "Paso {current} de {total}"
+
+#: includes/frontend/class-form-renderer.php:144
 msgid "Your message could not be sent. Check your connection and try again."
 msgstr "No se ha podido enviar tu mensaje. Comprueba tu conexión e inténtalo de nuevo."
 
+#: includes/frontend/class-form-renderer.php:202
+#: build/admin/index.js:32
+#: build/admin/index.js:35
+msgid "Previous"
+msgstr "Anterior"
+
+#: includes/frontend/class-form-renderer.php:203
+#: build/admin/index.js:33
+#: build/admin/index.js:36
+msgid "Next"
+msgstr "Siguiente"
+
 #. translators: %s: the asterisk that marks required fields.
-#: includes/frontend/class-form-renderer.php:159
+#: includes/frontend/class-form-renderer.php:215
 #, php-format
 msgid "Fields marked with %s are required."
 msgstr "Los campos marcados con %s son obligatorios."
 
-#: includes/frontend/class-form-renderer.php:177
+#: includes/frontend/class-form-renderer.php:233
 msgid "Leave this field empty"
 msgstr "Deja este campo vacío"
 
@@ -839,7 +864,7 @@ msgstr "Lo siento, no tienes permisos para cambiar los ajustes del plugin."
 
 #: includes/rest/class-form-transfer-controller.php:44
 #: includes/rest/class-forms-controller.php:67
-#: includes/rest/class-submissions-controller.php:52
+#: includes/rest/class-submissions-controller.php:55
 msgid "Form identifier."
 msgstr "Identificador del formulario."
 
@@ -927,26 +952,37 @@ msgstr "Identificadores de los envíos que se borran."
 msgid "The submission does not exist."
 msgstr "El envío no existe."
 
-#: includes/rest/class-submissions-controller.php:84
+#: includes/rest/class-submissions-controller.php:88
+#: includes/rest/class-submissions-controller.php:111
 msgid "Field values, by field identifier."
 msgstr "Valores de los campos, por identificador de campo."
 
-#: includes/rest/class-submissions-controller.php:89
+#: includes/rest/class-submissions-controller.php:93
+msgid "Position of the step to validate, starting at 0."
+msgstr "Posición del paso que se valida, empezando en 0."
+
+#: includes/rest/class-submissions-controller.php:116
 msgid "Anti-spam token issued for this form."
 msgstr "Token antispam emitido para este formulario."
 
-#: includes/rest/class-submissions-controller.php:94
+#: includes/rest/class-submissions-controller.php:121
 msgid "Token of the captcha service, if the form uses one."
 msgstr "Testigo del servicio de captcha, si el formulario usa uno."
 
-#: includes/rest/class-submissions-controller.php:99
+#: includes/rest/class-submissions-controller.php:126
 msgid "Must be empty."
 msgstr "Tiene que estar vacío."
 
-#: includes/rest/class-submissions-controller.php:118
+#: includes/rest/class-submissions-controller.php:145
+#: includes/rest/class-submissions-controller.php:175
 #: includes/submissions/class-submission-handler.php:69
 msgid "This form is no longer available."
 msgstr "Este formulario ya no está disponible."
+
+#: includes/rest/class-submissions-controller.php:154
+#: includes/submissions/class-submission-handler.php:88
+msgid "Please review the highlighted fields."
+msgstr "Revisa los campos marcados."
 
 #: includes/rules/enum-operator.php:38
 msgid "is"
@@ -1017,15 +1053,11 @@ msgstr "Esta acción está desactivada en el formulario. Actívala para reintent
 msgid "There is no failed delivery with that identifier."
 msgstr "No hay ninguna entrega fallida con ese identificador."
 
-#: includes/submissions/class-submission-handler.php:88
-msgid "Please review the highlighted fields."
-msgstr "Revisa los campos marcados."
-
 #: includes/submissions/class-submission-handler.php:130
 msgid "Your message could not be sent. Please try again later."
 msgstr "No se ha podido enviar tu mensaje. Inténtalo de nuevo más tarde."
 
-#: includes/submissions/class-submission-validator.php:78
+#: includes/submissions/class-submission-validator.php:86
 msgid "This field is required."
 msgstr "Este campo es obligatorio."
 
@@ -1201,6 +1233,10 @@ msgstr "Los campos seguidos que suman el ancho completo comparten fila. En panta
 #: build/admin/index.js:6
 msgid "Show only if"
 msgstr "Mostrar solo si"
+
+#: build/admin/index.js:6
+msgid "A field can only depend on the fields placed before it."
+msgstr "Un campo solo puede depender de los campos que van antes que él."
 
 #: build/admin/index.js:6
 msgid "Tag for emails and messages:"
@@ -2309,22 +2345,12 @@ msgstr "Envío no guardado"
 msgid "Attempts: %d"
 msgstr "Intentos: %d"
 
-#: build/admin/index.js:32
-#: build/admin/index.js:35
-msgid "Previous"
-msgstr "Anterior"
-
 #. translators: 1: current page, 2: total number of pages.
 #: build/admin/index.js:33
 #: build/admin/index.js:36
 #, js-format
 msgid "Page %1$d of %2$d"
 msgstr "Página %1$d de %2$d"
-
-#: build/admin/index.js:33
-#: build/admin/index.js:36
-msgid "Next"
-msgstr "Siguiente"
 
 #: build/admin/index.js:33
 msgid "Failed deliveries"

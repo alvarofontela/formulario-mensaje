@@ -32,15 +32,15 @@ class CondicionalTest extends Caso_Formulario {
 		$casos = array();
 
 		foreach ( self::casos()['visibility'] as $caso ) {
-			$casos[ $caso['name'] ] = array( $caso['conditions'], $caso['values'], $caso['expected'] );
+			$casos[ $caso['name'] ] = array( $caso['conditions'], $caso['values'], $caso['expected'], $caso['parents'] ?? array() );
 		}
 
 		return $casos;
 	}
 
 	/** @dataProvider visibilidades */
-	public function test_la_visibilidad_del_servidor_cumple_los_casos_compartidos( array $condiciones, array $valores, array $esperado ) {
-		$this->assertSame( $esperado, ( new Visibility_Resolver( new Rule_Evaluator() ) )->resolve( $condiciones, $valores ) );
+	public function test_la_visibilidad_del_servidor_cumple_los_casos_compartidos( array $condiciones, array $valores, array $esperado, array $padres ) {
+		$this->assertSame( $esperado, ( new Visibility_Resolver( new Rule_Evaluator() ) )->resolve( $condiciones, $valores, $padres ) );
 	}
 
 	/** Formulario en el que la empresa y su CIF solo se piden a las empresas. */
@@ -102,7 +102,7 @@ class CondicionalTest extends Caso_Formulario {
 		$this->assertStringContainsString( 'CIF: B123', tests_retrieve_phpmailer_instance()->get_sent()->body );
 	}
 
-	public function test_la_condicion_de_un_campo_se_sanea_y_no_puede_depender_de_si_mismo() {
+	public function test_la_condicion_de_un_campo_se_sanea_y_solo_puede_depender_de_campos_anteriores() {
 		$formulario = $this->crear_formulario(
 			array(
 				'fields' => array(
@@ -117,6 +117,8 @@ class CondicionalTest extends Caso_Formulario {
 								array( 'field' => 'a', 'operator' => 'equals', 'value' => ' <b>sí</b> ' ),
 								array( 'field' => 'b', 'operator' => 'is_empty', 'value' => '' ),
 								array( 'field' => 'a', 'operator' => 'ejecutar', 'value' => 'x' ),
+								// Un campo que viene después: aceptarlo permitiría dependencias circulares.
+								array( 'field' => 'c', 'operator' => 'is_empty', 'value' => '' ),
 							),
 						),
 					),

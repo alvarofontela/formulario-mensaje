@@ -12,6 +12,7 @@ use Formulario_Mensaje\Actions\Action_Type_Registry;
 use Formulario_Mensaje\Fields\Field_Type;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Fields\Input_Field_Type;
+use Formulario_Mensaje\Fields\Section_Field_Type;
 use Formulario_Mensaje\Forms\Field;
 use Formulario_Mensaje\Forms\Form_Style;
 use Formulario_Mensaje\Forms\Form_Templates;
@@ -57,11 +58,13 @@ final class Admin_Data {
 			'restNamespace' => Rest_Provider::ROUTE_NAMESPACE,
 			'fieldTypes'    => array_map(
 				static fn ( Field_Type $type ): array => array(
-					'type'    => $type->get_type(),
-					'label'   => $type->get_label(),
-					'group'   => $type->get_group(),
-					'isInput' => $type instanceof Input_Field_Type,
-					'schema'  => $type->get_settings_schema(),
+					'type'      => $type->get_type(),
+					'label'     => $type->get_label(),
+					'group'     => $type->get_group(),
+					'isInput'   => $type instanceof Input_Field_Type,
+					// Un tipo que abre sección (un paso) no ocupa sitio en la rejilla ni recoge datos.
+					'isSection' => $type instanceof Section_Field_Type,
+					'schema'    => $type->get_settings_schema(),
 				),
 				$this->field_types->all()
 			),

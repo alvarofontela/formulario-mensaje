@@ -29,6 +29,7 @@ use Formulario_Mensaje\Settings\Settings_Repository;
 use Formulario_Mensaje\Settings\Settings_Sanitizer;
 use Formulario_Mensaje\Storage\Action_Retrier;
 use Formulario_Mensaje\Storage\Submission_Service;
+use Formulario_Mensaje\Submissions\Step_Validator;
 use Formulario_Mensaje\Submissions\Submission_Handler;
 use Formulario_Mensaje\Submissions\Submission_Request_Factory;
 use Formulario_Mensaje\Support\Server_Vars;
@@ -58,7 +59,8 @@ final class Rest_Provider implements Service_Provider {
 				$c->get( Submission_Handler::class ),
 				$c->get( Submission_Request_Factory::class ),
 				$c->get( Token_Service::class ),
-				$c->get( Form_Repository::class )
+				$c->get( Form_Repository::class ),
+				$c->get( Step_Validator::class )
 			)
 		);
 

@@ -35,6 +35,7 @@ final class Fields_Provider implements Service_Provider {
 		$container->set( Request_Query::class, static fn (): Request_Query => new Php_Request_Query() );
 		$container->set( Field_Markup::class, static fn (): Field_Markup => new Field_Markup() );
 		$container->set( Common_Settings::class, static fn (): Common_Settings => new Common_Settings() );
+		$container->set( Step_Layout::class, static fn ( Container $c ): Step_Layout => new Step_Layout( $c->get( Field_Type_Registry::class ) ) );
 
 		$container->set(
 			Prefill_Resolver::class,
@@ -108,6 +109,7 @@ final class Fields_Provider implements Service_Provider {
 			new Types\Date_Field_Type( $markup, $common, $prefill ),
 			new Types\Url_Field_Type( $markup, $common, $prefill ),
 			new Types\Hidden_Field_Type( $markup, $common, $container->get( Context_Resolver::class ) ),
+			new Types\Step_Field_Type( $common ),
 			new Types\Heading_Field_Type( $markup, $common ),
 			new Types\Paragraph_Field_Type( $markup, $common, $inline ),
 			new Types\Divider_Field_Type( $markup, $common ),

@@ -152,6 +152,7 @@ export default function FieldsPanel( { fields, onChange } ) {
 							className={ [
 								'fm-fields__item',
 								isOpen ? 'is-open' : '',
+								type?.isSection ? 'is-section' : '',
 								dragIndex === index ? 'is-dragging' : '',
 								overIndex === index && dragIndex !== index
 									? 'is-over'
@@ -304,47 +305,51 @@ export default function FieldsPanel( { fields, onChange } ) {
 											update( index, settings )
 										}
 									/>
-									{ /* Un campo oculto no ocupa sitio en el formulario. */ }
-									{ field.type !== 'hidden' && (
-										<SelectControl
-											__next40pxDefaultSize
-											__nextHasNoMarginBottom
-											className="fm-fields__width"
-											label={ __(
-												'Width',
-												'formulario-mensaje'
-											) }
-											help={ __(
-												'Consecutive fields that add up to the full width share a row. On narrow screens each field takes its own row.',
-												'formulario-mensaje'
-											) }
-											value={ String(
-												field.width || 100
-											) }
-											options={ fieldWidths.map(
-												( width ) => ( {
-													value: String( width ),
-													label:
-														WIDTH_LABELS[ width ] ||
-														`${ width } %`,
-												} )
-											) }
-											onChange={ ( value ) =>
-												patch( index, {
-													width: Number( value ),
-												} )
-											}
-										/>
-									) }
+									{ /* Un campo oculto o un paso no ocupan sitio en la rejilla del formulario. */ }
+									{ field.type !== 'hidden' &&
+										! type.isSection && (
+											<SelectControl
+												__next40pxDefaultSize
+												__nextHasNoMarginBottom
+												className="fm-fields__width"
+												label={ __(
+													'Width',
+													'formulario-mensaje'
+												) }
+												help={ __(
+													'Consecutive fields that add up to the full width share a row. On narrow screens each field takes its own row.',
+													'formulario-mensaje'
+												) }
+												value={ String(
+													field.width || 100
+												) }
+												options={ fieldWidths.map(
+													( width ) => ( {
+														value: String( width ),
+														label:
+															WIDTH_LABELS[
+																width
+															] || `${ width } %`,
+													} )
+												) }
+												onChange={ ( value ) =>
+													patch( index, {
+														width: Number( value ),
+													} )
+												}
+											/>
+										) }
 									<ConditionEditor
 										label={ __(
 											'Show only if',
 											'formulario-mensaje'
 										) }
 										condition={ field.condition }
-										// Un campo no puede depender de sí mismo.
-										fields={ fields.filter(
-											( other ) => other.id !== field.id
+										// Un campo solo puede depender de los que van antes que él.
+										fields={ fields.slice( 0, index ) }
+										note={ __(
+											'A field can only depend on the fields placed before it.',
+											'formulario-mensaje'
 										) }
 										onChange={ ( condition ) =>
 											patch( index, { condition } )

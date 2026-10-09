@@ -248,6 +248,8 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 
 Para añadir un tipo de acción (como el correo o el webhook): una clase que implemente `Action_Type` y su proveedor. `is_deferred()` decide si se ejecuta mientras el visitante espera o en segundo plano, por la cola (`plugin/includes/queue/`), con reintentos. La cola no es una tabla aparte: son las filas en estado pendiente del registro de entregas.
 
+Un formulario por pasos no tiene una estructura propia: el tipo de campo «Paso» (`Section_Field_Type`) parte la lista y `Step_Layout` reparte los campos. En el navegador, `plugin/assets/js/steps.js` los muestra de uno en uno.
+
 Para tocar el motor de reglas (un operador nuevo, un cambio de criterio): se cambia en PHP (`plugin/includes/rules/`) y en el navegador (`plugin/assets/js/rules.js`) a la vez, y se añade el caso a `tests/fixtures/reglas.json`, que es lo que comprueba que los dos lados coinciden.
 
 Para añadir un ajuste de estilo: una entrada en `Form_Style`, su propiedad encadenada en `plugin/assets/css/form.css` (`--fm-x: var(--fm-embed-x, var(--fm-form-x, valor))`), su etiqueta en `src/admin/style-panel.js` y en el bloque, y su control en el widget de Elementor (`plugin/includes/elementor/`).

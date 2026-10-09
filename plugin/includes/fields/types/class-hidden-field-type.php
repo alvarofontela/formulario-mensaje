@@ -139,6 +139,8 @@ final class Hidden_Field_Type implements Input_Field_Type {
 					'type'            => 'hidden',
 					'id'              => $context->control_id( $field ),
 					'name'            => $context->control_name( $field ),
+					// Sin envoltorio: el propio control dice de qué campo es, para las condiciones de otros campos.
+					'data-fm-field'   => $field->id,
 					'data-fm-context' => $this->context->client_key( $source, $param ),
 				)
 			)

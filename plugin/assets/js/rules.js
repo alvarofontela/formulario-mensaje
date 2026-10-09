@@ -117,35 +117,33 @@ export function passes( condition, values ) {
 }
 
 /**
- * Calcula qué elementos con condición se muestran.
+ * Calcula qué elementos se muestran.
  *
- * Un elemento oculto no aporta su valor, así que se calcula por pasadas hasta que deja de cambiar,
- * con el mismo tope y el mismo orden que en el servidor.
+ * Se recorren una sola vez, en el orden del formulario. La condición de un elemento solo ve los
+ * valores de los campos anteriores que se muestran: un campo oculto, o uno que viene después, cuenta
+ * como vacío. Es el mismo recorrido que hace el servidor.
  *
- * @param {Array<{id: string, condition: Object}>} items  Elementos con su condición. El `id` de un campo es su identificador.
- * @param {Object}                                 values Valores, por identificador de campo.
+ * @param {Array<{id: string, condition: ?Object, parent: ?string}>} items  Elementos en el orden del formulario. El `id` de un campo es su identificador; `parent`, el del paso que lo contiene.
+ * @param {Object}                                                   values Valores, por identificador de campo.
  * @return {boolean[]} Si se muestra cada elemento, en el mismo orden.
  */
 export function resolveVisibility( items, values ) {
-	let visible = items.map( () => true );
+	const current = {};
+	const shown = new Map();
 
-	for ( let pass = 0; pass < items.length; pass++ ) {
-		const current = { ...values };
+	return items.map( ( item ) => {
+		const visible =
+			( item.parent === undefined ||
+				item.parent === null ||
+				shown.get( item.parent ) !== false ) &&
+			passes( item.condition, current );
 
-		items.forEach( ( item, index ) => {
-			if ( ! visible[ index ] ) {
-				delete current[ item.id ];
-			}
-		} );
+		shown.set( item.id, visible );
 
-		const next = items.map( ( item ) => passes( item.condition, current ) );
-
-		if ( next.every( ( shown, index ) => shown === visible[ index ] ) ) {
-			break;
+		if ( visible && Object.hasOwn( values, item.id ) ) {
+			current[ item.id ] = values[ item.id ];
 		}
 
-		visible = next;
-	}
-
-	return visible;
+		return visible;
+	} );
 }

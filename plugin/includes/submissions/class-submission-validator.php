@@ -8,6 +8,7 @@
 namespace Formulario_Mensaje\Submissions;
 
 use Formulario_Mensaje\Fields\Field_Type_Registry;
+use Formulario_Mensaje\Fields\Step_Layout;
 use Formulario_Mensaje\Forms\Form;
 use Formulario_Mensaje\Rules\Visibility_Resolver;
 
@@ -30,10 +31,12 @@ final class Submission_Validator {
 	 *
 	 * @param Field_Type_Registry $field_types Tipos de campo.
 	 * @param Visibility_Resolver $visibility  Visibilidad condicional.
+	 * @param Step_Layout         $steps       Pasos de los formularios.
 	 */
 	public function __construct(
 		private readonly Field_Type_Registry $field_types,
-		private readonly Visibility_Resolver $visibility
+		private readonly Visibility_Resolver $visibility,
+		private readonly Step_Layout $steps
 	) {}
 
 	/**
@@ -53,6 +56,11 @@ final class Submission_Validator {
 			$type = $this->field_types->get_input( $field->type );
 
 			if ( null === $type ) {
+				// Un paso no recoge datos, pero su condición decide si sus campos forman parte del envío.
+				if ( null !== $this->field_types->get_section( $field->type ) ) {
+					$conditions[ $field->id ] = $field->condition;
+				}
+
 				continue;
 			}
 
@@ -61,7 +69,7 @@ final class Submission_Validator {
 			$conditions[ $field->id ] = $field->condition;
 		}
 
-		$visible = $this->visibility->resolve( $conditions, $values );
+		$visible = $this->visibility->resolve( $conditions, $values, $this->steps->parents( $form->definition ) );
 		$entries = array();
 		$errors  = array();
 

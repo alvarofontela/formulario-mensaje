@@ -38,7 +38,7 @@ final class Field_Markup {
 			$control,
 			$this->help( $field, $id ),
 			$this->error_slot( $id ),
-			$this->condition( $field )
+			$this->condition_attribute( $field )
 		);
 	}
 
@@ -63,7 +63,7 @@ final class Field_Markup {
 			$controls,
 			$this->help( $field, $id ),
 			$this->error_slot( $id ),
-			$this->condition( $field )
+			$this->condition_attribute( $field )
 		);
 	}
 
@@ -84,7 +84,7 @@ final class Field_Markup {
 			$control,
 			$this->help( $field, $id ),
 			$this->error_slot( $id ),
-			$this->condition( $field )
+			$this->condition_attribute( $field )
 		);
 	}
 
@@ -95,7 +95,7 @@ final class Field_Markup {
 	 * @param string $content HTML del elemento, ya escapado.
 	 */
 	public function presentation( Field $field, string $content ): string {
-		return sprintf( '<div class="%1$s"%3$s>%2$s</div>', esc_attr( $this->wrapper_class( $field ) ), $content, $this->condition( $field ) );
+		return sprintf( '<div class="%1$s"%3$s>%2$s</div>', esc_attr( $this->wrapper_class( $field ) ), $content, $this->condition_attribute( $field ) );
 	}
 
 	/**
@@ -149,7 +149,7 @@ final class Field_Markup {
 	 *
 	 * @param Field $field Campo.
 	 */
-	private function condition( Field $field ): string {
+	public function condition_attribute( Field $field ): string {
 		return $field->is_conditional() ? $this->attributes( array( 'data-fm-condition' => (string) wp_json_encode( $field->condition ) ) ) : '';
 	}
 

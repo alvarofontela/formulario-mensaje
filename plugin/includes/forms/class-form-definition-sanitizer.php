@@ -78,8 +78,9 @@ final class Form_Definition_Sanitizer {
 	 * @return Field[]
 	 */
 	private function sanitize_fields( mixed $raw ): array {
-		$fields = array();
-		$ids    = array();
+		$fields  = array();
+		$ids     = array();
+		$earlier = array();
 
 		foreach ( is_array( $raw ) ? array_slice( $raw, 0, self::MAX_FIELDS ) : array() as $item ) {
 			$type = is_array( $item ) && is_string( $item['type'] ?? null ) ? $this->field_types->get( $item['type'] ) : null;
@@ -94,26 +95,31 @@ final class Form_Definition_Sanitizer {
 				$type->get_type(),
 				$this->schema_sanitizer->sanitize( $type->get_settings_schema(), $item['settings'] ?? array() ),
 				Field::normalize_width( $item['width'] ?? null ),
-				$this->sanitize_field_condition( $item['condition'] ?? array(), $id )
+				$this->sanitize_field_condition( $item['condition'] ?? array(), $earlier )
 			);
+
+			$earlier[] = $id;
 		}
 
 		return $fields;
 	}
 
 	/**
-	 * Sanea la condición con la que se muestra un campo. Un campo no puede depender de sí mismo.
+	 * Sanea la condición con la que se muestra un campo.
 	 *
-	 * @param mixed  $raw      Condición sin validar.
-	 * @param string $field_id Identificador del campo.
+	 * Un campo solo puede depender de los que van antes que él en el formulario. Así no caben las
+	 * dependencias circulares, y servidor y navegador resuelven la visibilidad con un único recorrido.
+	 *
+	 * @param mixed    $raw     Condición sin validar.
+	 * @param string[] $earlier Identificadores de los campos anteriores.
 	 * @return array<string, mixed>
 	 */
-	private function sanitize_field_condition( mixed $raw, string $field_id ): array {
+	private function sanitize_field_condition( mixed $raw, array $earlier ): array {
 		$condition          = $this->conditions->sanitize( $raw );
 		$condition['rules'] = array_values(
 			array_filter(
 				$condition['rules'],
-				static fn ( array $rule ): bool => $rule['field'] !== $field_id
+				static fn ( array $rule ): bool => in_array( $rule['field'], $earlier, true )
 			)
 		);
 

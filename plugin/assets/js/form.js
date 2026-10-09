@@ -1,13 +1,16 @@
 /**
  * Formulario Mensaje: envío del formulario sin recargar la página.
  *
- * Sin librerías: solo depende del motor de reglas del propio plugin. Si no se carga, el formulario
- * sigue funcionando como POST normal, con todos sus campos a la vista.
+ * Sin librerías: solo depende de otros módulos del propio plugin (el motor de reglas y los pasos).
+ * Si no se carga, el formulario sigue funcionando como POST normal, con todos sus campos y pasos a
+ * la vista.
  */
 
-// WordPress resuelve este nombre con su mapa de importación, con la versión del plugin.
+// WordPress resuelve estos nombres con su mapa de importación, con la versión del plugin.
 // eslint-disable-next-line import/no-unresolved
 import { resolveVisibility } from '@formulario-mensaje/rules';
+// eslint-disable-next-line import/no-unresolved
+import { StepNavigator } from '@formulario-mensaje/steps';
 
 const FORM_SELECTOR = 'form.fm-form[data-fm-form]';
 const TOKEN_ERRORS = [
@@ -51,15 +54,39 @@ class FormController {
 
 		this.fillContext();
 
-		// Campos y elementos que solo se muestran si se cumple su condición.
-		this.conditional = Array.from(
-			form.querySelectorAll( '[data-fm-condition]' )
-		).map( ( element, index ) => ( {
-			element,
-			// Un elemento sin valor propio (un párrafo) no tiene identificador de campo.
-			id: element.dataset.fmField || `#${ index }`,
-			condition: this.parseCondition( element.dataset.fmCondition ),
-		} ) );
+		/*
+		 * Campos, pasos y elementos con condición, en el orden del formulario: el motor de reglas los
+		 * recorre una vez y cada condición solo ve los campos anteriores que se muestran.
+		 */
+		this.elements = Array.from(
+			form.querySelectorAll(
+				'[data-fm-field], .fm-step, [data-fm-condition]'
+			)
+		).map( ( element, index ) => {
+			const step = element.closest( '.fm-step' );
+			let id = element.dataset.fmField || `#${ index }`;
+
+			if ( element.classList.contains( 'fm-step' ) ) {
+				id = `step:${ element.dataset.fmStep }`;
+			}
+
+			return {
+				element,
+				id,
+				condition: this.parseCondition( element.dataset.fmCondition ),
+				// Un campo dentro de un paso solo se muestra si el paso se muestra.
+				parent:
+					step && step !== element
+						? `step:${ step.dataset.fmStep }`
+						: undefined,
+			};
+		} );
+		this.hasConditions =
+			form.querySelector( '[data-fm-condition]' ) !== null;
+
+		this.steps = form.dataset.fmSteps
+			? new StepNavigator( form, ( step ) => this.validateStep( step ) )
+			: null;
 
 		this.applyConditions();
 
@@ -84,12 +111,12 @@ class FormController {
 	}
 
 	/**
-	 * @param {string} json Condición de un campo, en JSON.
-	 * @return {Object} Condición; vacía (se cumple siempre) si el JSON no es válido.
+	 * @param {?string} json Condición de un campo, en JSON.
+	 * @return {Object} Condición; vacía (se cumple siempre) si no hay o si el JSON no es válido.
 	 */
 	parseCondition( json ) {
 		try {
-			return JSON.parse( json ) || {};
+			return ( json && JSON.parse( json ) ) || {};
 		} catch {
 			return {};
 		}
@@ -133,33 +160,78 @@ class FormController {
 	 * navegador. El servidor vuelve a aplicar las condiciones al recibirlo.
 	 */
 	applyConditions() {
-		if ( ! this.conditional.length ) {
+		if ( ! this.hasConditions ) {
 			return;
 		}
 
-		const visible = resolveVisibility(
-			this.conditional,
-			this.readValues()
-		);
+		const visible = resolveVisibility( this.elements, this.readValues() );
 
-		this.conditional.forEach( ( { element }, index ) => {
+		this.elements.forEach( ( { element }, index ) => {
 			const hide = ! visible[ index ];
 
-			if ( element.hidden === hide ) {
+			// Un paso que no se muestra se salta: de enseñar el paso actual se ocupa la navegación.
+			if ( element.classList.contains( 'fm-step' ) ) {
+				element.dataset.fmSkip = hide ? '1' : '0';
 				return;
 			}
 
+			if ( ( element.dataset.fmHidden === '1' ) === hide ) {
+				return;
+			}
+
+			element.dataset.fmHidden = hide ? '1' : '0';
 			element.hidden = hide;
-			element
-				.querySelectorAll( 'input, select, textarea' )
-				.forEach( ( control ) => {
-					control.disabled = hide;
-				} );
+
+			// El control de un campo oculto puede ser el propio elemento (un campo oculto del formulario).
+			[
+				...( element.matches( 'input, select, textarea' )
+					? [ element ]
+					: [] ),
+				...element.querySelectorAll( 'input, select, textarea' ),
+			].forEach( ( control ) => {
+				control.disabled = hide;
+			} );
 
 			if ( hide ) {
 				this.clearFieldError( element );
 			}
 		} );
+
+		this.steps?.refresh();
+	}
+
+	/**
+	 * Pide al servidor que valide un paso antes de dejar avanzar al siguiente.
+	 *
+	 * @param {number} step Posición del paso.
+	 * @return {Promise<boolean>} Si el paso es válido. Si no lo es, los errores quedan a la vista.
+	 */
+	async validateStep( step ) {
+		this.clearErrors();
+
+		try {
+			const data = new FormData( this.form );
+
+			data.delete( 'action' );
+			data.delete( 'fm_form_id' );
+			data.set( 'step', String( step ) );
+
+			const response = await fetch( `${ this.endpoint }/validate`, {
+				method: 'POST',
+				headers: { Accept: 'application/json' },
+				body: data,
+			} );
+
+			if ( response.ok ) {
+				return true;
+			}
+
+			this.onError( await response.json().catch( () => null ) );
+		} catch {
+			this.onError( null );
+		}
+
+		return false;
 	}
 
 	/**
@@ -258,6 +330,12 @@ class FormController {
 		event.preventDefault();
 
 		if ( this.busy ) {
+			return;
+		}
+
+		// Pulsar Intro en un paso que no es el último avanza al siguiente; no envía el formulario.
+		if ( this.steps && ! this.steps.isLast() ) {
+			this.steps.next();
 			return;
 		}
 
@@ -372,6 +450,7 @@ class FormController {
 			this.form.reset();
 			this.fillContext();
 			this.applyConditions();
+			this.steps?.reset();
 		} else {
 			this.form.hidden = true;
 		}
@@ -423,6 +502,11 @@ class FormController {
 		this.status.textContent =
 			error?.message || this.form.dataset.fmErrorMessage || '';
 		this.status.hidden = false;
+
+		// Si el error está en otro paso, se vuelve a él.
+		if ( firstInvalid ) {
+			this.steps?.reveal( firstInvalid );
+		}
 
 		// El foco va al primer campo con error; si no hay ninguno, al aviso general.
 		( firstInvalid || this.status ).focus();

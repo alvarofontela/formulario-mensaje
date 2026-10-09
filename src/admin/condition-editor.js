@@ -14,12 +14,14 @@ import { fieldTitle } from './utils';
  * @param {Object}   props.condition Condición: `{ match, rules }`.
  * @param {Array}    props.fields    Campos del formulario sobre los que se puede preguntar.
  * @param {string}   props.label     Texto que presenta la condición.
+ * @param {string}   props.note      Aclaración que se muestra bajo las reglas, si la hay.
  * @param {Function} props.onChange  Recibe la condición nueva.
  */
 export default function ConditionEditor( {
 	condition,
 	fields,
 	label,
+	note,
 	onChange,
 } ) {
 	const rules = Array.isArray( condition?.rules ) ? condition.rules : [];
@@ -194,6 +196,10 @@ export default function ConditionEditor( {
 					</div>
 				);
 			} ) }
+
+			{ note && rules.length > 0 && (
+				<p className="fm-settings__note">{ note }</p>
+			) }
 
 			<Button
 				variant="secondary"

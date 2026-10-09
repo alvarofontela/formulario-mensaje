@@ -12,11 +12,12 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Decide qué elementos con condición se muestran para unos valores dados.
  *
- * Un elemento oculto no aporta su valor: si de él depende otro, ese otro lo ve vacío. Por eso la
- * visibilidad se calcula por pasadas hasta que deja de cambiar. Cada pasada parte de la visibilidad
- * de la anterior, sin mezclarla con la que se va calculando, y el número de pasadas tiene un tope:
- * así el resultado es el mismo aquí y en el navegador (`assets/js/rules.js`), también cuando dos
- * elementos dependen el uno del otro.
+ * Se recorre el formulario una sola vez, en su orden. La condición de un elemento solo ve los
+ * valores de los campos anteriores que se muestran: un campo oculto, o uno que viene después,
+ * cuenta como vacío. Así no hay dependencias circulares que resolver y el resultado es el mismo
+ * aquí y en el navegador (`assets/js/rules.js`), que sigue el mismo recorrido.
+ *
+ * Un elemento con padre (un campo dentro de un paso) solo se muestra si su padre se muestra.
  */
 final class Visibility_Resolver {
 
@@ -30,34 +31,24 @@ final class Visibility_Resolver {
 	/**
 	 * Calcula qué elementos se muestran.
 	 *
-	 * @param array<string, array<string, mixed>>  $conditions Condición de cada elemento, por su identificador; vacía si se muestra siempre.
+	 * @param array<string, array<string, mixed>>  $conditions Condición de cada elemento, por su identificador y en el orden del formulario; vacía si se muestra siempre.
 	 * @param array<string, string|string[]|mixed> $values     Valores, por identificador de campo.
+	 * @param array<string, string>                $parents    Identificador del padre de cada elemento que lo tiene. El padre va antes que sus hijos.
 	 * @return array<string, bool> Si se muestra cada elemento, por su identificador.
 	 */
-	public function resolve( array $conditions, array $values ): array {
-		$visible = array_fill_keys( array_keys( $conditions ), true );
-		$passes  = count( $conditions );
+	public function resolve( array $conditions, array $values, array $parents = array() ): array {
+		$visible = array();
+		$current = array();
 
-		for ( $pass = 0; $pass < $passes; $pass++ ) {
-			$current = $values;
+		foreach ( $conditions as $id => $condition ) {
+			$parent = $parents[ $id ] ?? null;
+			$shown  = ( null === $parent || false !== ( $visible[ $parent ] ?? true ) ) && $this->rules->passes( $condition, $current );
 
-			foreach ( $visible as $id => $shown ) {
-				if ( ! $shown ) {
-					unset( $current[ $id ] );
-				}
+			$visible[ $id ] = $shown;
+
+			if ( $shown && array_key_exists( $id, $values ) ) {
+				$current[ $id ] = $values[ $id ];
 			}
-
-			$next = array();
-
-			foreach ( $conditions as $id => $condition ) {
-				$next[ $id ] = $this->rules->passes( $condition, $current );
-			}
-
-			if ( $next === $visible ) {
-				break;
-			}
-
-			$visible = $next;
 		}
 
 		return $visible;

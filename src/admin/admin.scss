@@ -414,6 +414,13 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		margin-top: 16px;
 	}
 
+	// Un paso parte la lista: los campos que le siguen son los suyos.
+	&__item.is-section {
+		margin-top: 16px;
+		border-color: $accent;
+		border-inline-start-width: 4px;
+	}
+
 	&__id {
 		margin: 16px 0 0;
 		color: $muted;

@@ -30,6 +30,11 @@ final class Frontend_Assets {
 	public const RULES_MODULE_ID = '@formulario-mensaje/rules';
 
 	/**
+	 * Identificador del módulo de los formularios por pasos.
+	 */
+	public const STEPS_MODULE_ID = '@formulario-mensaje/steps';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $plugin_file Ruta del fichero principal del plugin.
@@ -47,7 +52,8 @@ final class Frontend_Assets {
 		wp_register_style( self::STYLE_HANDLE, $this->style_url(), array(), $this->version );
 		// El motor de reglas es un módulo aparte: WordPress lo resuelve con su mapa de importación y su versión.
 		wp_register_script_module( self::RULES_MODULE_ID, plugins_url( 'assets/js/rules.js', $this->plugin_file ), array(), $this->version );
-		wp_register_script_module( self::MODULE_ID, plugins_url( 'assets/js/form.js', $this->plugin_file ), array( self::RULES_MODULE_ID ), $this->version );
+		wp_register_script_module( self::STEPS_MODULE_ID, plugins_url( 'assets/js/steps.js', $this->plugin_file ), array(), $this->version );
+		wp_register_script_module( self::MODULE_ID, plugins_url( 'assets/js/form.js', $this->plugin_file ), array( self::RULES_MODULE_ID, self::STEPS_MODULE_ID ), $this->version );
 	}
 
 	/**

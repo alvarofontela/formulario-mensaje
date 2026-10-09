@@ -232,7 +232,7 @@ Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fa
 | 6. Constructor avanzado | Hecha |
 | 7. Estilo, bloque y Elementor | Hecha |
 | 8. Lógica condicional en campos | Hecha |
-| 9. Formularios por pasos | Pendiente |
+| 9. Formularios por pasos | Hecha |
 | 10. Ficheros | Pendiente |
 | 11. Extensión | Pendiente |
 
@@ -285,13 +285,26 @@ Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel
 
 No verificado contra servicios reales: Resend se ha probado con un doble de la HTTP API (petición, cabecera de autorización, errores) y el SMTP contra Mailpit, que no cifra ni pide credenciales. Quedan sin probar STARTTLS, SSL y la autenticación contra un servidor real.
 
+### Fase 9: lo que se decidió al hacerla
+
+- **Un paso es un elemento más de la lista de campos** (tipo «Paso», en el grupo de maquetación): los campos que le siguen, hasta el siguiente paso, son los suyos. No hay una estructura aparte que mantener, y ordenar, duplicar o borrar funciona igual. Los campos anteriores al primer paso forman un paso inicial sin título.
+- **Con JavaScript** los pasos se muestran de uno en uno, con una barra de progreso («Paso 2 de 3: título»), botones Anterior y Siguiente, y el de enviar solo en el último. Al cambiar de paso el foco va a su título. Pulsar Intro en un paso intermedio avanza; no envía.
+- **Cada paso se valida en el servidor antes de avanzar** (`POST …/forms/<id>/validate`): es la misma validación del envío, limitada a los campos de ese paso, y no acepta ni guarda nada. Los datos se guardan y las acciones se disparan solo al enviar el último paso, que vuelve a validar el formulario entero; si entonces hay un error en otro paso, se vuelve a él.
+- **Pasos condicionales**: la condición de un paso decide si se muestra. Un paso que no se muestra se salta, no cuenta en la barra de progreso y sus campos no forman parte del envío.
+- **Sin JavaScript** los pasos se ven todos seguidos, como secciones con su título, y el formulario se envía de una vez, como estaba previsto. El servidor aplica igualmente las condiciones.
+- **Sin estado en el servidor entre pasos**: no hay borradores ni sesiones. Si el visitante recarga la página, empieza de nuevo.
+
+Cambio sobre la fase 8, a raíz de la revisión de seguridad de su commit: la visibilidad se calculaba por pasadas hasta estabilizarse, con un tope que no era el mismo en servidor y navegador; con campos que dependían unos de otros en círculo podían no coincidir, y un campo obligatorio a la vista quedar sin validar. Ahora **un campo solo puede depender de los que van antes que él** (el saneado descarta las demás reglas y el constructor solo ofrece los anteriores) y la visibilidad se resuelve en un único recorrido, en el orden del formulario, igual en los dos lados. Un campo posterior, o uno oculto, cuenta como vacío.
+
+Limitación conocida: un campo oculto de valor fijo no se imprime en la página, así que una condición que dependa de él se cumple o no según el servidor, pero el navegador lo ve vacío mientras se rellena.
+
 ### Fase 8: lo que se decidió al hacerla
 
 - **Cada campo puede llevar una condición para mostrarse** («Mostrar solo si…»), con el mismo editor de reglas que las notificaciones y los webhooks. Vale también para los elementos de presentación (un párrafo, un título). Como el ancho, es una propiedad del campo en la definición (`condition`), no una opción de cada tipo.
 - **Un campo oculto no forma parte del envío**: no se valida aunque sea obligatorio, su valor se descarta aunque la petición lo traiga, y no aparece en los correos, en los webhooks ni en el envío guardado. Quien depende de un campo oculto lo ve vacío.
 - **Decide el servidor.** El navegador muestra y oculta para que el formulario sea cómodo, pero al recibir el envío el servidor vuelve a calcular qué campos correspondían, con sus propias reglas y sobre los valores ya saneados.
 - **El mismo motor en los dos lados**: `Rule_Evaluator` y `Visibility_Resolver` en PHP y `assets/js/rules.js` en el navegador, comprobados contra los mismos casos (`tests/fixtures/reglas.json`), que ejecutan PHPUnit y Playwright. Un cambio en las reglas se hace en los dos y se añade su caso al fichero.
-- **Dependencias en cadena y circulares**: la visibilidad se calcula por pasadas hasta que deja de cambiar, con un tope igual al número de elementos; el resultado es el mismo en servidor y navegador aunque dos campos dependan el uno del otro. Un campo no puede depender de sí mismo: esa regla se descarta al guardar.
+- **Dependencias en cadena**: un campo solo puede depender de los que van antes que él, y la visibilidad se resuelve en un único recorrido en el orden del formulario (ver el cambio anotado en la fase 9).
 - **Sin JavaScript se ven todos los campos** y el servidor aplica las condiciones al recibir el envío, como estaba previsto. Con JavaScript, los controles de un campo oculto se desactivan, así que ni viajan ni los valida el navegador.
 - **El motor de reglas del navegador es un módulo aparte**, declarado como dependencia del script del formulario: WordPress lo resuelve con su mapa de importación y lo precarga. Se carga en toda página con formulario, tenga o no condiciones; ocupa poco y evita que los campos condicionales parpadeen al abrir la página.
 

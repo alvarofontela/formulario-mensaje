@@ -574,5 +574,10 @@
   "Form colors": "Colores del formulario",
   "Form spacing and borders": "Separación y bordes del formulario",
   "Conditional": "Condicional",
-  "Show only if": "Mostrar solo si"
+  "Show only if": "Mostrar solo si",
+  "Step": "Paso",
+  "Step title": "Título del paso",
+  "Step {current} of {total}": "Paso {current} de {total}",
+  "Position of the step to validate, starting at 0.": "Posición del paso que se valida, empezando en 0.",
+  "A field can only depend on the fields placed before it.": "Un campo solo puede depender de los campos que van antes que él."
 }

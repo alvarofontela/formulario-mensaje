@@ -12,6 +12,7 @@ use Formulario_Mensaje\Container;
 use Formulario_Mensaje\Forms\Form_Style;
 use Formulario_Mensaje\Fields\Field_Markup;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
+use Formulario_Mensaje\Fields\Step_Layout;
 use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Service_Provider;
 use Formulario_Mensaje\Settings\Settings_Repository;
@@ -48,7 +49,8 @@ final class Frontend_Provider implements Service_Provider {
 				$c->get( Field_Type_Registry::class ),
 				$c->get( Field_Markup::class ),
 				$c->get( Captcha_Service::class ),
-				$c->get( Form_Style::class )
+				$c->get( Form_Style::class ),
+				$c->get( Step_Layout::class )
 			)
 		);
 

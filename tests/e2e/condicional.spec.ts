@@ -76,7 +76,7 @@ test('el motor de reglas del navegador da el mismo resultado que el del servidor
         visibility: shared.visibility.map((item: any) => {
           const ids = Object.keys(item.conditions);
           const visible = engine.resolveVisibility(
-            ids.map((id) => ({ id, condition: item.conditions[id] })),
+            ids.map((id) => ({ id, condition: item.conditions[id], parent: item.parents?.[id] })),
             item.values,
           );
 
@@ -179,7 +179,7 @@ test('la condición de un campo se define en el constructor', async ({ browser }
   await builder.getByLabel('Campo', { exact: true }).selectOption({ label: 'Motivo' });
   await builder.getByLabel('Valor', { exact: true }).selectOption({ label: 'Queja' });
 
-  // Un campo no puede depender de sí mismo: no se ofrece en la lista.
+  // Un campo solo puede depender de los que van antes que él: son los únicos que se ofrecen.
   await expect(builder.getByLabel('Campo', { exact: true }).locator('option')).toHaveText(['Elige un campo', 'Nombre', 'Correo', 'Motivo']);
   await expect(builder.locator('.fm-fields__item', { hasText: 'Mensaje' })).toContainText('Condicional');
 
