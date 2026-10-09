@@ -37,8 +37,8 @@ interface Field_Type {
 	 * Opciones que admite un campo de este tipo.
 	 *
 	 * Cada elemento describe un control: `key`, `type` (`text`, `textarea`, `html`, `toggle`, `select`,
-	 * `options` o `css_class`), `label` y `default`; opcionalmente `help`, `choices` (para `select`) y
-	 * `show_if` (`key` y `values`) para mostrarlo solo según el valor de otra opción. Con este esquema
+	 * `checklist`, `options` o `css_class`), `label` y `default`; opcionalmente `help`, `choices` (para
+	 * `select` y `checklist`) y `show_if` (`key` y `values`) para mostrarlo solo según el valor de otra opción. Con este esquema
 	 * se sanean las opciones al guardar y se pinta el panel de ajustes del constructor.
 	 *
 	 * @return array<int, array<string, mixed>>

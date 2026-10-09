@@ -82,6 +82,11 @@ export class AdminApi {
     await this.send('put', `/formulario-mensaje/v1/forms/${id}`, { title, definition });
   }
 
+  /** Devuelve un formulario con su definición. */
+  async getForm(id: number): Promise<{ id: number; title: string; definition: FormDefinition }> {
+    return this.send('get', `/formulario-mensaje/v1/forms/${id}`);
+  }
+
   /** Crea una página publicada con el contenido indicado y devuelve su dirección. */
   async createPage(title: string, content: string): Promise<{ id: number; link: string }> {
     return this.send('post', '/wp/v2/pages', { title, content, status: 'publish' });

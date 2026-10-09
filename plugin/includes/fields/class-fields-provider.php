@@ -10,9 +10,9 @@ namespace Formulario_Mensaje\Fields;
 use Formulario_Mensaje\Container;
 use Formulario_Mensaje\Service_Provider;
 use Formulario_Mensaje\Support\Inline_Html;
-use Formulario_Mensaje\Uploads\File_Types;
 use Formulario_Mensaje\Support\Php_Request_Query;
 use Formulario_Mensaje\Support\Request_Query;
+use Formulario_Mensaje\Uploads\File_Types;
 
 defined( 'ABSPATH' ) || exit;
 

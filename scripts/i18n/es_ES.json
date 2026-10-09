@@ -617,5 +617,40 @@
   "The file is too large. This site accepts files of up to %s.": "El fichero pesa demasiado. Este sitio acepta ficheros de hasta %s.",
   "The files could not be stored. Please try again later.": "No se han podido guardar los ficheros. Inténtalo de nuevo más tarde.",
   "The files are too large to be sent. Please choose smaller files and try again.": "Los ficheros pesan demasiado para enviarlos. Elige ficheros más pequeños e inténtalo de nuevo.",
-  "Files": "Ficheros"
+  "Files": "Ficheros",
+  "List forms": "Listar formularios",
+  "Lists the forms created with Formulario Mensaje, with their title, number of fields and the shortcode that inserts each one. By default it returns the published forms; it can return the ones in the trash instead.": "Lista los formularios creados con Formulario Mensaje, con su título, su número de campos y el shortcode que inserta cada uno. Por defecto devuelve los publicados; puede devolver, en su lugar, los de la papelera.",
+  "Which forms to list: the published ones or the ones in the trash.": "Qué formularios listar: los publicados o los de la papelera.",
+  "Date of the last change, in the site time zone.": "Fecha del último cambio, en la zona horaria del sitio.",
+  "Get a form": "Leer un formulario",
+  "Returns the full definition of one form: its fields, settings, style, notifications and webhooks. Secrets such as webhook signing keys and header values are never included.": "Devuelve la definición completa de un formulario: sus campos, ajustes, estilo, notificaciones y webhooks. Nunca incluye secretos, como las claves de firma de los webhooks o el valor de sus cabeceras.",
+  "Identifier of the form.": "Identificador del formulario.",
+  "Fields, settings, style and actions of the form.": "Campos, ajustes, estilo y acciones del formulario.",
+  "Get submissions": "Leer envíos",
+  "Searches the stored submissions and returns what each visitor sent, newest first. It can be limited to one form, to a text, to a date range or to the submissions with a failed delivery. The submissions contain personal data.": "Busca entre los envíos guardados y devuelve lo que envió cada visitante, del más reciente al más antiguo. Se puede limitar a un formulario, a un texto, a un intervalo de fechas o a los envíos con alguna entrega fallida. Los envíos contienen datos personales.",
+  "Only the submissions of this form.": "Solo los envíos de este formulario.",
+  "Text to look for in the reference number and in the values sent.": "Texto que buscar en el número de referencia y en los valores enviados.",
+  "Only the submissions with a notification or webhook that could not be delivered.": "Solo los envíos con una notificación o un webhook que no se pudo entregar.",
+  "Only the submissions received at or after this moment (ISO 8601).": "Solo los envíos recibidos en este momento o después (ISO 8601).",
+  "Only the submissions received at or before this moment (ISO 8601).": "Solo los envíos recibidos en este momento o antes (ISO 8601).",
+  "Number of submissions that match, in all the pages.": "Número de envíos que coinciden, contando todas las páginas.",
+  "Get submission counts": "Contar envíos",
+  "Returns how many submissions are stored, in total and for each form. It takes no input and returns no personal data.": "Devuelve cuántos envíos hay guardados, en total y por formulario. No necesita ningún dato de entrada y no devuelve datos personales.",
+  "Title of the form; empty if the form no longer exists.": "Título del formulario; vacío si el formulario ya no existe.",
+  "Forms of the site and the submissions they have received.": "Formularios del sitio y los envíos que han recibido.",
+  "The file %s could not be written.": "No se ha podido escribir el fichero %s.",
+  "Form exported to %s.": "Formulario exportado a %s.",
+  "The file %s could not be read.": "No se ha podido leer el fichero %s.",
+  "Form imported with the identifier %d. Its actions are paused until you review them.": "Formulario importado con el identificador %d. Sus acciones quedan en pausa hasta que las revises.",
+  "%1$d submission exported to %2$s.": [
+    "%1$d envío exportado a %2$s.",
+    "%1$d envíos exportados a %2$s."
+  ],
+  "The value of --%s is not a date in the YYYY-MM-DD format.": "El valor de --%s no es una fecha con el formato AAAA-MM-DD.",
+  "%d delivery processed.": [
+    "%d entrega procesada.",
+    "%d entregas procesadas."
+  ],
+  "Page of results, starting at 1.": "Página de resultados, empezando en 1.",
+  "Submissions per page.": "Envíos por página."
 }

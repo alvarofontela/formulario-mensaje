@@ -87,6 +87,8 @@ final class Plugin {
 			new Elementor\Elementor_Provider(),
 			new Rest\Rest_Provider(),
 			new Admin\Admin_Provider(),
+			new Abilities\Abilities_Provider(),
+			new Cli\Cli_Provider(),
 		);
 	}
 }

@@ -5,7 +5,7 @@ Recibe datos de visitantes anónimos: trata toda entrada del formulario como con
 ## Qué es producción y qué es entorno
 
 - `plugin/` es el código que llega a producción y se revisa con todo el rigor.
-- `scripts/`, `tests/`, `rt.cmd`, `rt.sh`, `phpunit.xml.dist` y `playwright.config.ts` son el entorno local de desarrollo. Sus credenciales, su `WP_DEBUG` y las rutas públicas `rt/v1` del mu-plugin son de un WordPress desechable que solo escucha en `127.0.0.1`: están ahí a propósito. Señala esas mismas cosas si aparecen dentro de `plugin/`.
+- `scripts/`, `tests/` y los ficheros de la raíz son el entorno local de desarrollo. Sus credenciales, su `WP_DEBUG` y las rutas públicas `rt/v1` del mu-plugin son de un WordPress desechable que solo escucha en `127.0.0.1`: están ahí a propósito. Señala esas mismas cosas si aparecen dentro de `plugin/`.
 
 ## Superficies que ya existen
 
@@ -19,24 +19,25 @@ Recibe datos de visitantes anónimos: trata toda entrada del formulario como con
 - **Estilo.** `Form_Style` solo admite colores hexadecimales y píxeles, y vuelve a sanear lo que imprime en `style`.
 - **Valores de los campos.** Llegan sin sanear al servicio de envío: solo se leen las claves de los campos del formulario y cada valor lo sanea su `Input_Field_Type`. Los campos cuya condición no se cumple se descartan en el servidor. Las etiquetas (`{field:…}`) se sustituyen en una sola pasada y, en HTML, escapadas.
 - **Ficheros.** Solo los campos `Upload_Field_Type` los reciben: tipos de la lista cerrada `File_Types` (sin scripts, HTML ni SVG), comprobados por contenido y movidos con `wp_handle_upload()` a una carpeta con `.htaccess`, con nombre aleatorio `.dat`. Solo los sirve `admin_post(_nopriv)_formulario_mensaje_file`, siempre como descarga: capability de ver envíos y nonce, o firma HMAC con caducidad (`Download_Links`). Servirlos de otro modo es un hallazgo.
+- **Abilities y WP-CLI.** Las abilities `formulario-mensaje/*` (`wp-abilities/v1`) solo leen, comprueban la capability de lo que leen y no devuelven secretos ni IP; una que escriba es un hallazgo. Los comandos de WP-CLI usan los ficheros que indica quien los ejecuta (`File_Access`).
 - **Redirección tras el envío.** El destino sale de la definición guardada y pasa por `Redirect_Policy` (host del sitio o lista de los ajustes) al guardar y en cada envío. Un destino tomado de la petición es un hallazgo.
 - **Mensaje de éxito.** Lo compone el servidor (plantilla por `Inline_Html::filter()`, datos por `esc_html()`) y el script lo inserta con `innerHTML`. Otro uso de `innerHTML` con datos es un hallazgo.
 
 ## Reglas del plugin
 
-1. **Autorización además de nonce.** Un nonce solo protege de CSRF. Toda acción que no sea el envío público del formulario (ajustes, acciones `admin_post_*` y `wp_ajax_*`, rutas REST, cualquier lectura o borrado de envíos) comprueba una capability con `current_user_can()`. `is_admin()` no es una comprobación de permisos.
-2. **Rutas REST.** Toda ruta declara `permission_callback`. `__return_true` solo es aceptable en la ruta pública de envío. Los argumentos se validan con `args` (`validate_callback`, `sanitize_callback`) o con un schema.
+1. **Autorización además de nonce.** Un nonce solo protege de CSRF. Toda acción que no sea el envío público del formulario (ajustes, `admin_post_*`, `wp_ajax_*`, rutas REST, envíos) comprueba una capability con `current_user_can()`. `is_admin()` no es una comprobación de permisos.
+2. **Rutas REST.** Toda ruta declara `permission_callback`. `__return_true` solo es aceptable en la ruta pública de envío. Los argumentos se validan con `args` o con un schema.
 3. **Acceso por identificador.** Si una petición recibe el id de un formulario o de un envío, se comprueba que el usuario puede acceder a ese objeto concreto, no solo que existe (IDOR).
-4. **Entrada.** Se leen claves concretas, nunca `$_POST`, `$_GET` o `$_REQUEST` enteros; primero `wp_unslash()` y después la función del tipo de dato (`sanitize_text_field`, `sanitize_email` con `is_email`, `absint`, `sanitize_key`, `esc_url_raw`).
-5. **Salida.** Escapado tardío y según el contexto: `esc_html`, `esc_attr`, `esc_url`, `wp_kses_post`; los datos para JavaScript, con `wp_json_encode` o `wp_add_inline_script`. Los datos de un envío nunca son fiables, tampoco en la administración (XSS almacenado contra el administrador) ni en correos HTML.
+4. **Entrada.** Se leen claves concretas, nunca `$_POST`, `$_GET` o `$_REQUEST` enteros; primero `wp_unslash()` y después la función del tipo de dato (`sanitize_text_field`, `sanitize_email` con `is_email`, `absint`, `esc_url_raw`).
+5. **Salida.** Escapado tardío y según el contexto: `esc_html`, `esc_attr`, `esc_url`, `wp_kses_post`; los datos para JavaScript, con `wp_json_encode`. Los datos de un envío nunca son fiables, tampoco en la administración (XSS almacenado contra el administrador) ni en correos HTML.
 6. **SQL.** Toda consulta con datos variables pasa por `$wpdb->prepare()`, con `%i` para tablas y columnas y `$wpdb->esc_like()` en `LIKE`. Nada se interpola ni se concatena, tampoco en `ORDER BY` o `LIMIT`.
-7. **Correo.** Nada que venga del formulario llega a las cabeceras (`From`, `Reply-To`, `Cc`, `Bcc`, asunto) sin validarse con `is_email()` y sin eliminar los saltos de línea: es inyección de cabeceras. El destinatario sale de la configuración, no de la petición. El remitente no se toma del visitante; su dirección va, como mucho, en `Reply-To`.
-8. **Abuso del envío público.** El nonce de un visitante anónimo no es autenticación ni antispam. La IP del cliente no se toma de cabeceras falsificables (`X-Forwarded-For`, `Client-IP`) salvo configuración explícita.
+7. **Correo.** Nada que venga del formulario llega a las cabeceras (`From`, `Reply-To`, `Cc`, `Bcc`, asunto) sin validarse con `is_email()` y sin eliminar los saltos de línea. El destinatario sale de la configuración, no de la petición. El remitente no se toma del visitante; su dirección va, como mucho, en `Reply-To`.
+8. **Abuso del envío público.** La IP del cliente no se toma de cabeceras falsificables (`X-Forwarded-For`, `Client-IP`) salvo configuración explícita.
 9. **Ficheros.** Nunca `move_uploaded_file()` ni el nombre original como ruta. Las rutas con datos externos se validan con `realpath()` dentro del directorio esperado (travesía).
 10. **Peticiones salientes.** Siempre con `wp_safe_remote_*`, no `wp_remote_*` (SSRF), y sin desactivar `sslverify`.
 11. **Redirecciones.** Con destino variable, `wp_safe_redirect()` seguido de `exit`; `wp_redirect()` solo con destinos fijos.
 12. **Deserialización y ejecución.** Sin `unserialize()` ni `maybe_unserialize()` sobre datos que vengan de una petición o de un envío. Sin `eval`, `extract`, funciones de shell ni `include`/`require` con rutas variables.
 13. **Exportación.** En un CSV, las celdas que empiezan por `=`, `+`, `-`, `@`, tabulador o retorno de carro se neutralizan.
 14. **Secretos y datos personales.** Sin claves, tokens ni contraseñas en el código: van en opciones o en constantes de `wp-config.php`, y no se exponen por REST, `wp_localize_script` ni HTML. Los envíos contienen datos personales: no se escriben en `error_log` ni en `debug.log`, ni en URLs, ni en respuestas a usuarios sin permiso.
-15. **Tokens.** Lo impredecible se genera con `wp_generate_password()` o `random_bytes()`, nunca con `md5`, `uniqid`, `rand` o la hora, y se compara con `hash_equals()`.
+15. **Tokens.** Lo impredecible se genera con `wp_generate_password()` o `random_bytes()`, nunca con `md5`, `uniqid` o `rand`, y se compara con `hash_equals()`.
 16. **Acceso directo.** Todo fichero PHP empieza con `defined( 'ABSPATH' ) || exit;`.

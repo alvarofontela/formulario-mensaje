@@ -187,7 +187,7 @@ Hace falta Windows con PowerShell 7, Node.js, git y Python 3.10 o posterior (el 
 
 Límites que conviene conocer al tocar esos ficheros:
 
-- Las reglas comparten un máximo de 8192 caracteres con las de usuario (`~/.claude/claude-security-guidance.md`), que van delante: lo que sobra se corta por el final. Hoy ocupan unos 8175, así que casi no queda margen: al añadir texto hay que recortar otro, y medirlo. Se envían al modelo en cada revisión, así que no llevan secretos.
+- Las reglas comparten un máximo de 8192 caracteres con las de usuario (`~/.claude/claude-security-guidance.md`), que van delante: lo que sobra se corta por el final. El plugin añade unos 30 caracteres de envoltorio, así que el fichero no puede pasar de 8160 (`len()` en Python, no bytes). Hoy ocupa 8155: al añadir texto hay que recortar otro, medirlo y comprobar en `~/.claude/security/log.txt` que no aparece «truncating». Se envían al modelo en cada revisión, así que no llevan secretos.
 - Como mucho 50 patrones, con avisos de hasta 1024 caracteres. Un patrón mal formado o con una expresión regular que el plugin considere lenta se descarta sin avisar: tras cambiarlos, mira `~/.claude/security/log.txt`. Cada aviso sale una vez por fichero y sesión, y solo mira el texto que se escribe en esa edición.
 - La revisión de commits no lee las reglas del proyecto; tiene las suyas y puede leer otros ficheros del repositorio para seguir el flujo de los datos.
 - Las revisiones con modelo no miran nada dentro de `vendor/`, `node_modules/`, `build/` ni `dist/`, ni los ficheros `.min.js`: se revisan los fuentes, no lo compilado. Tampoco miran los ficheros que git ignora.
@@ -245,8 +245,11 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 | `plugin/assets/` | CSS y JavaScript del formulario en el frontend. No se compilan: el script es un módulo sin dependencias |
 | `src/` | Fuentes de lo que sí se compila: la aplicación de administración (`src/admin/`) y el bloque (`src/blocks/form/`) |
 | `plugin/build/`, `plugin/languages/` | Generados (ver «Qué no se edita a mano») |
+| `docs/` | Documentación para quien extiende el plugin: `hooks.md` y `extender.md`. Un hook, un comando o una ability nuevos se documentan ahí en la misma tarea |
 
 Para añadir un tipo de acción (como el correo o el webhook): una clase que implemente `Action_Type` y su proveedor. `is_deferred()` decide si se ejecuta mientras el visitante espera o en segundo plano, por la cola (`plugin/includes/queue/`), con reintentos. La cola no es una tabla aparte: son las filas en estado pendiente del registro de entregas.
+
+Para añadir un comando de WP-CLI: un método público en la clase de su grupo (`plugin/includes/cli/`) o una clase nueva registrada en `Cli_Provider`. El docblock es la ayuda que muestra `wp help`, así que va en inglés y sin notas de diseño; esas van en el comentario que precede a la clase. Para añadir una ability: una clase que implemente `Ability` (`plugin/includes/abilities/`) y una línea en `Abilities_Provider`. Hoy todas son de solo lectura y el registro las anota así; una que escriba obliga a ampliar el contrato. Comandos y abilities son adaptadores: llaman al servicio, no a una ruta REST.
 
 Los ficheros de los envíos (`plugin/includes/uploads/`): un tipo de campo que los recibe implementa `Upload_Field_Type` y su dato son los ficheros, no un valor de la petición. `Upload_Store` los guarda en el almacén privado y los borra; `Download_Links` y `Download_Controller` son la única vía de descarga. Para admitir un tipo de fichero nuevo se añade a un grupo de `File_Types`, y nunca nada que un servidor o un navegador ejecute o interprete.
 
@@ -280,6 +283,8 @@ Para añadir un tipo de campo: una clase en `plugin/includes/fields/types/` que 
 - Los servicios externos se sustituyen por dobles: las peticiones HTTP, con el filtro `pre_http_request`; el SMTP se prueba contra Mailpit (`127.0.0.1:1025`, sin cifrado ni credenciales). Los tests de Playwright que cambian los ajustes de correo los devuelven a los de fábrica al terminar (`AdminApi.saveMailSettings({})`).
 - En PHPUnit no hay subidas HTTP, así que `wp_handle_upload()` rechazaría cualquier fichero: los tests de ficheros componen el servicio de envío con `Movedor_De_Pruebas` (`tests/phpunit/FicherosTest.php`). La subida de verdad la prueba Playwright con `setInputFiles()`.
 - Dentro de un test de Playwright, `request.newContext()` hereda la sesión de administrador de la configuración: una petición anónima necesita `storageState: { cookies: [], origins: [] }`.
+- Los comandos de WP-CLI no se pueden cargar en PHPUnit (no hay WP-CLI): los prueba `tests/e2e/cli.spec.ts` lanzando el WP-CLI del entorno con `spawnSync`. Las rutas de fichero se pasan relativas a la raíz del proyecto: PowerShell parte un argumento como `--file=C:/…` por los dos puntos.
+- Las abilities se prueban en PHPUnit con `wp_get_ability( … )->execute()`, que valida la entrada y comprueba el permiso como cualquier cliente, y por la REST API del núcleo (`/wp-abilities/v1/abilities/<nombre>/run`, con `GET` por ser de solo lectura).
 - `tests/phpunit/EntornoTest.php` y `tests/e2e/entorno.spec.ts` solo comprueban el entorno; sirven de plantilla.
 
 ## A tener en cuenta

@@ -11,6 +11,7 @@ msgstr ""
 
 #. Plugin Name of the plugin
 #: formulario-mensaje.php
+#: includes/abilities/class-ability-registrar.php:38
 msgid "Formulario Mensaje"
 msgstr "Formulario Mensaje"
 
@@ -23,6 +24,106 @@ msgstr "Constructor de formularios ligero y auditable: formularios con sus propi
 #: formulario-mensaje.php
 msgid "Álvaro Fontela"
 msgstr "Álvaro Fontela"
+
+#: includes/abilities/class-ability-registrar.php:39
+msgid "Forms of the site and the submissions they have received."
+msgstr "Formularios del sitio y los envíos que han recibido."
+
+#: includes/abilities/class-get-form-ability.php:48
+msgid "Get a form"
+msgstr "Leer un formulario"
+
+#: includes/abilities/class-get-form-ability.php:55
+msgid "Returns the full definition of one form: its fields, settings, style, notifications and webhooks. Secrets such as webhook signing keys and header values are never included."
+msgstr "Devuelve la definición completa de un formulario: sus campos, ajustes, estilo, notificaciones y webhooks. Nunca incluye secretos, como las claves de firma de los webhooks o el valor de sus cabeceras."
+
+#: includes/abilities/class-get-form-ability.php:70
+msgid "Identifier of the form."
+msgstr "Identificador del formulario."
+
+#: includes/abilities/class-get-form-ability.php:92
+msgid "Fields, settings, style and actions of the form."
+msgstr "Campos, ajustes, estilo y acciones del formulario."
+
+#: includes/abilities/class-get-form-ability.php:115
+#: includes/admin/class-export-controller.php:51
+#: includes/cli/class-form-command.php:137
+#: includes/cli/class-submission-command.php:72
+#: includes/forms/class-form-service.php:210
+#: includes/forms/class-post-form-repository.php:86
+#: includes/rest/class-form-transfer-controller.php:131
+#: includes/rest/class-forms-controller.php:220
+#: includes/rest/class-forms-controller.php:275
+msgid "The form does not exist."
+msgstr "El formulario no existe."
+
+#: includes/abilities/class-get-submission-counts-ability.php:44
+msgid "Get submission counts"
+msgstr "Contar envíos"
+
+#: includes/abilities/class-get-submission-counts-ability.php:51
+msgid "Returns how many submissions are stored, in total and for each form. It takes no input and returns no personal data."
+msgstr "Devuelve cuántos envíos hay guardados, en total y por formulario. No necesita ningún dato de entrada y no devuelve datos personales."
+
+#: includes/abilities/class-get-submission-counts-ability.php:86
+msgid "Title of the form; empty if the form no longer exists."
+msgstr "Título del formulario; vacío si el formulario ya no existe."
+
+#: includes/abilities/class-get-submissions-ability.php:48
+msgid "Get submissions"
+msgstr "Leer envíos"
+
+#: includes/abilities/class-get-submissions-ability.php:55
+msgid "Searches the stored submissions and returns what each visitor sent, newest first. It can be limited to one form, to a text, to a date range or to the submissions with a failed delivery. The submissions contain personal data."
+msgstr "Busca entre los envíos guardados y devuelve lo que envió cada visitante, del más reciente al más antiguo. Se puede limitar a un formulario, a un texto, a un intervalo de fechas o a los envíos con alguna entrega fallida. Los envíos contienen datos personales."
+
+#: includes/abilities/class-get-submissions-ability.php:70
+msgid "Only the submissions of this form."
+msgstr "Solo los envíos de este formulario."
+
+#: includes/abilities/class-get-submissions-ability.php:75
+msgid "Text to look for in the reference number and in the values sent."
+msgstr "Texto que buscar en el número de referencia y en los valores enviados."
+
+#: includes/abilities/class-get-submissions-ability.php:80
+msgid "Only the submissions with a notification or webhook that could not be delivered."
+msgstr "Solo los envíos con una notificación o un webhook que no se pudo entregar."
+
+#: includes/abilities/class-get-submissions-ability.php:85
+msgid "Only the submissions received at or after this moment (ISO 8601)."
+msgstr "Solo los envíos recibidos en este momento o después (ISO 8601)."
+
+#: includes/abilities/class-get-submissions-ability.php:90
+msgid "Only the submissions received at or before this moment (ISO 8601)."
+msgstr "Solo los envíos recibidos en este momento o antes (ISO 8601)."
+
+#: includes/abilities/class-get-submissions-ability.php:96
+msgid "Page of results, starting at 1."
+msgstr "Página de resultados, empezando en 1."
+
+#: includes/abilities/class-get-submissions-ability.php:103
+msgid "Submissions per page."
+msgstr "Envíos por página."
+
+#: includes/abilities/class-get-submissions-ability.php:122
+msgid "Number of submissions that match, in all the pages."
+msgstr "Número de envíos que coinciden, contando todas las páginas."
+
+#: includes/abilities/class-list-forms-ability.php:41
+msgid "List forms"
+msgstr "Listar formularios"
+
+#: includes/abilities/class-list-forms-ability.php:48
+msgid "Lists the forms created with Formulario Mensaje, with their title, number of fields and the shortcode that inserts each one. By default it returns the published forms; it can return the ones in the trash instead."
+msgstr "Lista los formularios creados con Formulario Mensaje, con su título, su número de campos y el shortcode que inserta cada uno. Por defecto devuelve los publicados; puede devolver, en su lugar, los de la papelera."
+
+#: includes/abilities/class-list-forms-ability.php:64
+msgid "Which forms to list: the published ones or the ones in the trash."
+msgstr "Qué formularios listar: los publicados o los de la papelera."
+
+#: includes/abilities/class-list-forms-ability.php:88
+msgid "Date of the last change, in the site time zone."
+msgstr "Fecha del último cambio, en la zona horaria del sitio."
 
 #: includes/admin/class-admin-data.php:72
 msgid "Basic fields"
@@ -86,15 +187,6 @@ msgstr "Esta pantalla necesita JavaScript."
 msgid "Sorry, you are not allowed to view submissions."
 msgstr "Lo siento, no tienes permisos para ver los envíos."
 
-#: includes/admin/class-export-controller.php:51
-#: includes/forms/class-form-service.php:210
-#: includes/forms/class-post-form-repository.php:86
-#: includes/rest/class-form-transfer-controller.php:131
-#: includes/rest/class-forms-controller.php:220
-#: includes/rest/class-forms-controller.php:275
-msgid "The form does not exist."
-msgstr "El formulario no existe."
-
 #. translators: 1: name of the site, 2: number of failed actions.
 #: includes/alerts/class-failure-alert.php:116
 #, php-format
@@ -149,6 +241,53 @@ msgstr "Google reCAPTCHA v3"
 #: includes/captcha/class-turnstile-provider.php:41
 msgid "Cloudflare Turnstile"
 msgstr "Cloudflare Turnstile"
+
+#. translators: %s: path of a file.
+#: includes/cli/class-form-command.php:151
+#: includes/cli/class-submission-command.php:83
+#, php-format
+msgid "The file %s could not be written."
+msgstr "No se ha podido escribir el fichero %s."
+
+#. translators: %s: path of a file.
+#: includes/cli/class-form-command.php:155
+#, php-format
+msgid "Form exported to %s."
+msgstr "Formulario exportado a %s."
+
+#. translators: %s: path of a file.
+#: includes/cli/class-form-command.php:185
+#, php-format
+msgid "The file %s could not be read."
+msgstr "No se ha podido leer el fichero %s."
+
+#. translators: %d: identifier of a form.
+#: includes/cli/class-form-command.php:202
+#, php-format
+msgid "Form imported with the identifier %d. Its actions are paused until you review them."
+msgstr "Formulario importado con el identificador %d. Sus acciones quedan en pausa hasta que las revises."
+
+#. translators: %d: number of deliveries.
+#: includes/cli/class-queue-command.php:66
+#, php-format
+msgid "%d delivery processed."
+msgid_plural "%d deliveries processed."
+msgstr[0] "%d entrega procesada."
+msgstr[1] "%d entregas procesadas."
+
+#. translators: 1: number of submissions, 2: path of a file.
+#: includes/cli/class-submission-command.php:110
+#, php-format
+msgid "%1$d submission exported to %2$s."
+msgid_plural "%1$d submissions exported to %2$s."
+msgstr[0] "%1$d envío exportado a %2$s."
+msgstr[1] "%1$d envíos exportados a %2$s."
+
+#. translators: %s: name of a command option.
+#: includes/cli/class-submission-command.php:135
+#, php-format
+msgid "The value of --%s is not a date in the YYYY-MM-DD format."
+msgstr "El valor de --%s no es una fecha con el formato AAAA-MM-DD."
 
 #: includes/elementor/class-form-widget.php:42
 msgid "Form (Formulario Mensaje)"
@@ -1190,8 +1329,8 @@ msgstr "PDF"
 msgid "Office documents (Word, Excel, PowerPoint, OpenDocument, TXT, CSV)"
 msgstr "Documentos de oficina (Word, Excel, PowerPoint, OpenDocument, TXT, CSV)"
 
-#: includes/uploads/class-upload-store.php:244
-#: includes/uploads/class-upload-store.php:259
+#: includes/uploads/class-upload-store.php:245
+#: includes/uploads/class-upload-store.php:260
 #: includes/uploads/class-wp-upload-mover.php:60
 msgid "The file could not be stored."
 msgstr "No se ha podido guardar el fichero."

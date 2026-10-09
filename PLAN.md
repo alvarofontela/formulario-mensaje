@@ -234,7 +234,7 @@ Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fa
 | 8. Lógica condicional en campos | Hecha |
 | 9. Formularios por pasos | Hecha |
 | 10. Ficheros | Hecha |
-| 11. Extensión | Pendiente |
+| 11. Extensión | Hecha |
 
 ### Fase 1: lo que se decidió al hacerla
 
@@ -284,6 +284,21 @@ Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel
 - **Hooks**: el filtro `formulario_mensaje_email_message` recibe ahora un mensaje que puede llevar HTML.
 
 No verificado contra servicios reales: Resend se ha probado con un doble de la HTTP API (petición, cabecera de autorización, errores) y el SMTP contra Mailpit, que no cifra ni pide credenciales. Quedan sin probar STARTTLS, SSL y la autenticación contra un servidor real.
+
+### Fase 11: lo que se decidió al hacerla
+
+- **Comandos de WP-CLI** bajo `wp formulario-mensaje`: `form list`, `form export`, `form import`, `submission export` y `queue process`. Cada grupo es una clase que recibe sus servicios por el constructor y se registra en `cli_init`, que solo se dispara bajo WP-CLI: en una petición web no se carga nada de esto. Los mensajes son traducibles; la ayuda (`wp help …`) sale de los docblocks y va en inglés, como el resto de la interfaz.
+- **Los comandos no comprueban capabilities**: quien ejecuta WP-CLI ya tiene acceso completo al servidor. Leen y escriben los ficheros que esa persona indica (`File_Access`, que solo usan ellos y solo admite rutas locales). Lo que se importa pasa por el mismo saneado que en la administración, y la exportación de envíos, por el mismo exportador, con las fórmulas neutralizadas.
+- **El mantenimiento diario no tiene comando propio**: `wp cron event run formulario_mensaje_daily_maintenance` ya lo lanza. La cola sí, porque es lo que hay que poder empujar cuando el cron del sitio está parado.
+- **Cuatro abilities, todas de solo lectura**: `list-forms`, `get-form`, `get-submissions` y `get-submission-counts`, en la categoría `formulario-mensaje`. Se agrupan por la pregunta que responden, no por ruta REST: una sola para los envíos, con filtros. Cada una comprueba la capability de lo que lee en cada ejecución y llama al mismo servicio que la administración, no a la ruta REST.
+- **Lo que escribe o borra no se ofrece como ability**, a propósito: crear o cambiar formularios, borrar envíos y los ajustes se hacen en la administración. Es la decisión conservadora para un plugin que guarda datos personales; ampliar es añadir clases que implementen `Ability`.
+- **`get-form` devuelve el documento de exportación**, sin secretos, y `get-submissions` no devuelve ni la IP ni el navegador del visitante.
+- **Visibles por la REST API de abilities y para el adaptador de MCP** (`show_in_rest` y `mcp.public`). El permiso se comprueba igual por cualquier vía.
+- **Documentación para desarrolladores** en `docs/`: `hooks.md` (acciones, filtros, tareas programadas y lo que ofrece el script del navegador) y `extender.md` (tipos de campo, de acción, servicios de captcha, plantillas, WP-CLI y abilities). La referencia exacta de cada hook sigue siendo su docblock.
+
+Límite conocido: el constructor solo tiene editor para las notificaciones y los webhooks. Un tipo de acción de terceros se ejecuta y queda en el registro de entregas, pero hay que añadirlo a la definición por una plantilla o una importación.
+
+No se ha probado con un cliente MCP real ni con el adaptador de MCP de WordPress instalado: las abilities se han probado ejecutándolas desde PHP y por la REST API de abilities del núcleo. Los comandos se han probado con el WP-CLI del entorno.
 
 ### Fase 10: lo que se decidió al hacerla
 
