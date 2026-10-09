@@ -2,7 +2,7 @@
 
 Fichero de contexto con las decisiones de producto y técnicas tomadas con el usuario el 2026-10-08 (tres tandas de preguntas) y el reparto en fases. Las reglas de trabajo (tests, lint, seguridad, idioma, git, SOLID y buenas prácticas de WordPress) están en `CLAUDE.md`; aquí solo se desarrolla la última, por su peso en la arquitectura.
 
-**Estado: en desarrollo.** El 2026-10-09 el usuario pidió desarrollar las 11 fases de principio a fin y de forma desatendida, con un commit local por fase. El avance y lo decidido en cada fase está en «Estado del desarrollo», al final.
+**Estado: las 11 fases están hechas** (2026-10-09), cada una en su commit local y sin push. El usuario pidió desarrollarlas de principio a fin y de forma desatendida, para afinar después el resultado; lo que queda por comprobar fuera del entorno local está en «Pendiente de verificar fuera del entorno». El avance y lo decidido en cada fase está en «Estado del desarrollo», al final.
 
 ## Qué es
 
@@ -235,6 +235,18 @@ Decisiones del 2026-10-09 para el desarrollo desatendido: un commit local por fa
 | 9. Formularios por pasos | Hecha |
 | 10. Ficheros | Hecha |
 | 11. Extensión | Hecha |
+
+### Pendiente de verificar fuera del entorno
+
+Todo lo siguiente está probado contra dobles locales o no se ha podido probar aquí. Conviene comprobarlo en una web real antes de dar el plugin por estable:
+
+- **Correo**: Resend con una clave real, y SMTP con cifrado y autenticación (aquí solo contra Mailpit, sin cifrar).
+- **Captchas**: reCAPTCHA v3 de principio a fin, y los scripts reales de los tres servicios en el navegador (la verificación en servidor de Turnstile y hCaptcha sí se probó con sus claves públicas de prueba).
+- **Webhooks**: contra n8n o un CRM de verdad.
+- **Ficheros**: en nginx (donde el `.htaccess` del almacén no se aplica y conviene una regla `deny`), y con documentos de oficina reales.
+- **Elementor Pro** y sus contenedores con rejilla.
+- **Abilities** con un cliente MCP real y el adaptador de MCP de WordPress.
+- **Otros temas y plugins**: todo se ha probado con el tema por defecto y, salvo Elementor, sin más plugins activos.
 
 ### Fase 1: lo que se decidió al hacerla
 
