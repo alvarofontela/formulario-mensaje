@@ -268,13 +268,14 @@
 .formulario-mensaje .fm-success {
 	margin: 0;
 	padding: 0.875em 1em;
-	border-inline-start: 4px solid var(--fm-error-color);
+	/* Un borde entero, del mismo grosor que el de los campos: el aviso se distingue por el color y el fondo. */
+	border: var(--fm-border-width) solid var(--fm-error-color);
 	border-radius: var(--fm-border-radius);
 	background-color: rgba(179, 45, 46, 0.08);
 }
 
 .formulario-mensaje .fm-success {
-	border-inline-start-color: var(--fm-success-color);
+	border-color: var(--fm-success-color);
 	background-color: rgba(26, 127, 55, 0.08);
 }
 

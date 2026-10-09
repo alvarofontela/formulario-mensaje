@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "plugin/assets/css/form.css"
+        ],
+        "createdAt": "2026-10-09T14:02:13.309Z",
+        "reason": "Claude decided, not user-confirmed: it is the fill of a progress bar; animating width on one small element is the literal motion, scaleX would distort its rounded ends, and prefers-reduced-motion already disables it"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/admin/admin.scss"
+        ],
+        "createdAt": "2026-10-09T14:02:13.953Z",
+        "reason": "Claude decided, not user-confirmed: the remaining match (.fm-condition __group) is a neutral-grey indentation guide for nested rules, not an accent on a card; the accent side border on step rows was removed"
+      }
+    ]
+  }
+}

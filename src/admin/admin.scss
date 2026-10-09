@@ -418,7 +418,7 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 	&__item.is-section {
 		margin-top: 16px;
 		border-color: $accent;
-		border-inline-start-width: 4px;
+		background: color-mix(in srgb, $accent 6%, #fff);
 	}
 
 	&__id {
