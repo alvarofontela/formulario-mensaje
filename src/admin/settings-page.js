@@ -183,7 +183,7 @@ export default function SettingsPage() {
 				const warnings = [
 					mailResponse.discarded?.includes( 'smtp_password' ) &&
 						__(
-							'The SMTP server has changed, so the stored password has been deleted: enter the new server’s password.',
+							'The SMTP connection has changed, so the stored password has been deleted: enter the password of the new connection.',
 							'formulario-mensaje'
 						),
 					mailResponse.locked?.length > 0 &&

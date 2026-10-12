@@ -3042,10 +3042,6 @@ msgid "Cleanup done."
 msgstr "Limpieza hecha."
 
 #: build/admin/index.js:52
-msgid "The SMTP server has changed, so the stored password has been deleted: enter the new server’s password."
-msgstr "El servidor SMTP ha cambiado, así que la contraseña guardada se ha borrado: escribe la del servidor nuevo."
-
-#: build/admin/index.js:52
 msgid "The captcha service has changed, so the stored secret key has been deleted: enter the new service’s secret key."
 msgstr "El servicio de captcha ha cambiado, así que la clave secreta guardada se ha borrado: escribe la del servicio nuevo."
 
@@ -3261,3 +3257,7 @@ msgstr "La contraseña está definida en wp-config.php, así que el servidor, el
 #: build/admin/index.js:52
 msgid "The SMTP connection has not been changed: its password is defined in wp-config.php and is only sent to the server it was set up for."
 msgstr "La conexión SMTP no se ha cambiado: su contraseña está definida en wp-config.php y solo se envía al servidor para el que se configuró."
+
+#: build/admin/index.js:52
+msgid "The SMTP connection has changed, so the stored password has been deleted: enter the password of the new connection."
+msgstr "La conexión SMTP ha cambiado, así que la contraseña guardada se ha borrado: escribe la contraseña de la conexión nueva."

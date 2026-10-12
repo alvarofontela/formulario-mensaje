@@ -14,9 +14,10 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Guarda los ajustes de correo junto con sus credenciales.
  *
- * La contraseña de SMTP pertenece al servidor para el que se escribió: si el servidor cambia y no
- * llega una contraseña nueva, la guardada se descarta. Sin esta regla, bastaría apuntar los ajustes
- * a otro servidor para que el plugin le entregase una contraseña que nadie puede leer.
+ * La contraseña de SMTP pertenece al destino para el que se escribió (servidor, puerto y cifrado):
+ * si cambia alguno y no llega una contraseña nueva, la guardada se descarta. Sin esta regla,
+ * bastaría apuntar los ajustes a otro servidor, a otro puerto de la misma máquina o quitar el
+ * cifrado para que el plugin entregase una contraseña que nadie puede leer.
  *
  * Una contraseña definida como constante en `wp-config.php` no se puede descartar, así que lo que
  * queda fijo es su destino: mientras exista la constante, ni el servidor, ni el puerto ni el
@@ -66,7 +67,8 @@ final class Mail_Settings_Service {
 			$settings = $settings->with_smtp_destination_of( $previous );
 		}
 
-		$host_changed = strtolower( $previous->smtp_host ) !== strtolower( $settings->smtp_host );
+		// Tras aplicar el bloqueo: con una constante ya no queda ningún cambio de destino.
+		$destination_changed = array() !== $settings->smtp_destination_changes( $previous );
 
 		$this->settings->save( $settings );
 
@@ -82,7 +84,7 @@ final class Mail_Settings_Service {
 
 		$new_password = is_string( $secrets[ Mail_Settings::SECRET_SMTP_PASSWORD ] ?? null ) && '' !== $secrets[ Mail_Settings::SECRET_SMTP_PASSWORD ];
 
-		if ( $host_changed && ! $new_password && Secret_Vault::SOURCE_STORED === $this->secrets->source( Mail_Settings::SECRET_SMTP_PASSWORD ) ) {
+		if ( $destination_changed && ! $new_password && Secret_Vault::SOURCE_STORED === $this->secrets->source( Mail_Settings::SECRET_SMTP_PASSWORD ) ) {
 			$this->secrets->set( Mail_Settings::SECRET_SMTP_PASSWORD, '' );
 			$discarded[] = Mail_Settings::SECRET_SMTP_PASSWORD;
 		}

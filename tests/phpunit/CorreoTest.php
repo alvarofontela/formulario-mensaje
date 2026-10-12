@@ -251,10 +251,22 @@ class CorreoTest extends Caso_Formulario {
 
 		$this->rest( 'PUT', '/settings/mail', array( 'settings' => $ajustes, 'secrets' => array( 'smtp_password' => 'secreta' ) ) );
 
-		// Guardar otra cosa sin tocar el servidor la conserva, aunque cambien las mayúsculas.
-		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'SMTP.Example.org', 'smtp_port' => 465 ) + $ajustes ) )->get_data();
+		// Guardar otra cosa sin tocar el destino la conserva, aunque cambien las mayúsculas del servidor.
+		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'SMTP.Example.org', 'from_name' => 'Mi Tienda' ) + $ajustes ) )->get_data();
 		$this->assertSame( array(), $respuesta['discarded'] );
 		$this->assertSame( 'secreta', $almacen->get( 'smtp_password' ) );
+
+		// Otro puerto del mismo servidor puede ser de otro, y sin cifrado viajaría en claro: también se descarta.
+		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_port' => 2525 ) + $ajustes ) )->get_data();
+		$this->assertSame( array( 'smtp_password' ), $respuesta['discarded'] );
+		$this->assertSame( '', $almacen->get( 'smtp_password' ) );
+
+		$this->rest( 'PUT', '/settings/mail', array( 'settings' => $ajustes, 'secrets' => array( 'smtp_password' => 'secreta' ) ) );
+		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_encryption' => 'none' ) + $ajustes ) )->get_data();
+		$this->assertSame( array( 'smtp_password' ), $respuesta['discarded'] );
+		$this->assertSame( '', $almacen->get( 'smtp_password' ) );
+
+		$this->rest( 'PUT', '/settings/mail', array( 'settings' => $ajustes, 'secrets' => array( 'smtp_password' => 'secreta' ) ) );
 
 		// Apuntar a otro servidor sin escribir su contraseña no le entrega la del anterior.
 		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'smtp.atacante.example' ) + $ajustes ) )->get_data();
