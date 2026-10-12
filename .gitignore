@@ -1,3 +1,41 @@
+# Lo que no se sube al repositorio. Un patrón que empieza por «/» solo vale en la raíz del proyecto;
+# los demás, en cualquier carpeta. Para saber qué regla ignora un fichero: git check-ignore -v <ruta>
+
+# ── Secretos y credenciales ──────────────────────────────────────────────────
+# Nada de esto se versiona aunque sea «de pruebas»: una clave que llega a un remoto hay que darla por
+# comprometida y cambiarla. Los secretos del plugin (SMTP, Resend, captcha) viven cifrados en la base de
+# datos del sitio, no en ficheros.
+# .mcp.json lleva la clave de Context7 en claro: cada persona crea el suyo (ver CLAUDE.md).
+/.mcp.json
+.env
+.env.*
+!.env.example
+# Credenciales de Composer (repositorios privados, tokens de GitHub) y de npm.
+auth.json
+.npmrc
+# Claves privadas y almacenes de certificados.
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+id_rsa*
+id_ed25519*
+# Un wp-config.php suelto trae las credenciales de la base de datos y las salts.
+wp-config.php
+wp-config-*.php
+
+# ── Datos de sitios reales ───────────────────────────────────────────────────
+# Volcados de base de datos y exportaciones de mensajes: llevan datos personales de visitantes.
+# Las instantáneas de `rt snapshot` ya quedan dentro de .runtime.
+*.sql
+*.sql.gz
+*.sql.zip
+*.sqlite
+*.sqlite3
+*.dump
+/*.csv
+
 # ── Entorno local ────────────────────────────────────────────────────────────
 # Binarios portables, WordPress, base de datos, claves, logs y navegador de Playwright.
 # Se regenera entero con `rt setup`.
@@ -9,7 +47,20 @@ node_modules/
 /composer.phar
 /wp-cli.phar
 
-# ── Resultados de tests ──────────────────────────────────────────────────────
+# ── Compilados y paquetes ────────────────────────────────────────────────────
+# plugin/build/ y plugin/languages/ sí se versionan, para que plugin/ sea instalable tal cual.
+# Lo que sigue son los paquetes para distribuir y los restos de compilar en modo desarrollo.
+/build/
+/dist/
+/*.zip
+/*.tar.gz
+/*.tgz
+*.map
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+
+# ── Resultados de tests y de análisis ────────────────────────────────────────
 # Hoy van a .runtime/tmp; estas rutas cubren las ubicaciones por defecto de cada herramienta.
 /test-results/
 /playwright-report/
@@ -20,38 +71,51 @@ node_modules/
 .phpunit.cache/
 /coverage/
 /clover.xml
+.phpcs-cache
+.php-cs-fixer.cache
+# Perfiles y trazas de Xdebug.
+cachegrind.out.*
+*.prof
+*.xt
 
 # ── Configuración personal que sustituye a la versionada ─────────────────────
 /phpunit.xml
 /phpcs.xml
 /.phpcs.xml
+/phpstan.neon
 /wp-cli.local.yml
-.env
-.env.*
-!.env.example
 
-# ── Paquetes del plugin para distribuir ──────────────────────────────────────
-/build/
-/dist/
-/*.zip
+# ── Directorio de WordPress.org ──────────────────────────────────────────────
+# Copia de trabajo del SVN del directorio, si se descarga dentro del proyecto: es otro repositorio.
+/svn/
+.svn/
 
 # ── Claude Code y herramientas de análisis ───────────────────────────────────
-# CLAUDE.md y .claude/settings.json sí se versionan; lo de abajo es de cada máquina.
-# .mcp.json lleva la clave de Context7 en claro: cada persona crea el suyo.
-/.mcp.json
+# CLAUDE.md, .claude/settings.json, las skills y las reglas de seguridad sí se versionan; lo de abajo
+# es de cada máquina.
 /.claude/settings.local.json
 /.claude/claude-security-guidance.local.md
 /.claude/security-patterns.local.*
+/.claude/worktrees/
 /CLAUDE.local.md
 /graphify-out/
+# De .impeccable solo se versiona config.json.
+/.impeccable/hook.cache.json
+/.impeccable/hook.pending.json
+/.impeccable/config.local.json
 
 # ── Editores ─────────────────────────────────────────────────────────────────
 /.vscode/*
 !/.vscode/extensions.json
 !/.vscode/launch.json
 /.idea/
+/.fleet/
+/.history/
 *.code-workspace
+*.sublime-project
+*.sublime-workspace
 *.swp
+*.swo
 *~
 
 # ── Sistema operativo ────────────────────────────────────────────────────────
@@ -59,10 +123,17 @@ Thumbs.db
 ehthumbs.db
 [Dd]esktop.ini
 $RECYCLE.BIN/
+*.lnk
 .DS_Store
+._*
+.Spotlight-V100
+.Trashes
 
 # ── Logs y temporales ────────────────────────────────────────────────────────
 *.log
 *.tmp
+*.temp
 *.bak
 *.orig
+*.rej
+*.pid
