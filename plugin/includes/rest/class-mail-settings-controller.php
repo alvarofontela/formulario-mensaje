@@ -137,14 +137,14 @@ final class Mail_Settings_Controller {
 	 * @param WP_REST_Request $request Petición.
 	 */
 	public function update_settings( WP_REST_Request $request ): WP_REST_Response {
-		$settings  = $this->sanitizer->sanitize( $request['settings'] );
-		$discarded = $this->service->update(
-			$settings,
+		$update = $this->service->update(
+			$this->sanitizer->sanitize( $request['settings'] ),
 			is_array( $request['secrets'] ) ? $request['secrets'] : array(),
 			array_filter( (array) $request['clear'], 'is_string' )
 		);
 
-		return $this->respond( $settings, $discarded );
+		// Se responde con lo que ha quedado guardado, que puede no ser todo lo que llegó.
+		return $this->respond( $update->settings, $update->discarded, $update->locked );
 	}
 
 	/**
@@ -171,8 +171,9 @@ final class Mail_Settings_Controller {
 	 *
 	 * @param Mail_Settings $settings  Ajustes de correo.
 	 * @param string[]      $discarded Credenciales descartadas al guardar sin que nadie lo pidiera.
+	 * @param string[]      $locked    Ajustes que no se han cambiado al guardar porque están bloqueados.
 	 */
-	private function respond( Mail_Settings $settings, array $discarded = array() ): WP_REST_Response {
+	private function respond( Mail_Settings $settings, array $discarded = array(), array $locked = array() ): WP_REST_Response {
 		$secrets = array();
 
 		foreach ( Mail_Settings_Service::SECRETS as $name ) {
@@ -187,6 +188,7 @@ final class Mail_Settings_Controller {
 				'settings'  => $settings->to_array(),
 				'secrets'   => $secrets,
 				'discarded' => $discarded,
+				'locked'    => $locked,
 			)
 		);
 	}

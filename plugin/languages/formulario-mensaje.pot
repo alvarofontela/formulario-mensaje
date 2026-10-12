@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-12T15:32:32+02:00\n"
+"POT-Creation-Date: 2026-10-12T15:52:02+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: formulario-mensaje\n"
@@ -175,7 +175,7 @@ msgid "Messages"
 msgstr ""
 
 #: includes/admin/class-admin-menu.php:135
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Forms settings"
 msgstr ""
 
@@ -466,7 +466,7 @@ msgstr ""
 #: includes/fields/class-common-settings.php:157
 #: includes/fields/types/class-email-field-type.php:30
 #: includes/forms/class-form-templates.php:77
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Email"
 msgstr ""
 
@@ -508,6 +508,7 @@ msgstr ""
 
 #: includes/fields/class-common-settings.php:132
 #: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "None"
 msgstr ""
 
@@ -1070,11 +1071,11 @@ msgstr ""
 msgid "The email transport chosen in the settings is not available."
 msgstr ""
 
-#: includes/mail/class-smtp-transport.php:62
+#: includes/mail/class-smtp-transport.php:63
 msgid "The SMTP server is not configured."
 msgstr ""
 
-#: includes/mail/class-smtp-transport.php:68
+#: includes/mail/class-smtp-transport.php:69
 msgid "Set a sender address in the email settings: this site’s default address is not a valid email address."
 msgstr ""
 
@@ -1787,13 +1788,13 @@ msgstr ""
 
 #. translators: %s: email address.
 #: build/admin/index.js:10
-#: build/admin/index.js:45
+#: build/admin/index.js:46
 #, js-format
 msgid "Test sent to %s."
 msgstr ""
 
 #: build/admin/index.js:10
-#: build/admin/index.js:45
+#: build/admin/index.js:46
 msgid "Send test"
 msgstr ""
 
@@ -2778,7 +2779,7 @@ msgid "Keep the stored one"
 msgstr ""
 
 #: build/admin/index.js:44
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Captcha"
 msgstr ""
 
@@ -2827,17 +2828,17 @@ msgid "Send with"
 msgstr ""
 
 #: build/admin/index.js:44
-#: build/admin/index.js:50
+#: build/admin/index.js:51
 msgid "WordPress, like the rest of the site"
 msgstr ""
 
 #: build/admin/index.js:44
-#: build/admin/index.js:50
+#: build/admin/index.js:51
 msgid "An SMTP server"
 msgstr ""
 
 #: build/admin/index.js:44
-#: build/admin/index.js:50
+#: build/admin/index.js:51
 msgid "Resend"
 msgstr ""
 
@@ -2845,341 +2846,351 @@ msgstr ""
 msgid "Server"
 msgstr ""
 
-#: build/admin/index.js:44
+#. translators: %s: name of a PHP constant.
+#: build/admin/index.js:45
+#, js-format
+msgid "The password is defined in wp-config.php, so the server it is sent to cannot be changed here. To use another server, remove the constant %s, change the server and define it again."
+msgstr ""
+
+#: build/admin/index.js:45
 msgid "Port"
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "Encryption"
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "STARTTLS (usually port 587)"
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "SSL/TLS (usually port 465)"
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "The server requires a username and password"
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "Username"
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "Password"
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "Resend API key"
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "Resend only sends from an address on a domain verified in your Resend account: fill in the sender address below."
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "Sender address"
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "Leave empty to use the site’s address."
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "Sender name"
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "Leave empty to use the site name."
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "Send a test email to"
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "Save the settings first: the test uses the saved ones."
 msgstr ""
 
-#: build/admin/index.js:44
+#: build/admin/index.js:45
 msgid "Checks that the emails are delivered with these settings."
 msgstr ""
 
-#: build/admin/index.js:45
+#: build/admin/index.js:46
 msgid "Email appearance"
 msgstr ""
 
-#: build/admin/index.js:45
+#: build/admin/index.js:46
 msgid "Branding for the notifications sent in HTML format."
 msgstr ""
 
-#: build/admin/index.js:45
+#: build/admin/index.js:46
 msgid "Logo"
 msgstr ""
 
-#: build/admin/index.js:45
+#: build/admin/index.js:46
 msgid "Image address. Without a logo, the emails show the site name."
 msgstr ""
 
-#: build/admin/index.js:45
+#: build/admin/index.js:46
 msgid "Email logo"
 msgstr ""
 
-#: build/admin/index.js:45
+#: build/admin/index.js:46
 msgid "Choose image"
 msgstr ""
 
-#: build/admin/index.js:45
+#: build/admin/index.js:46
 msgid "Brand color"
 msgstr ""
 
-#: build/admin/index.js:45
+#: build/admin/index.js:46
 msgid "Footer text"
 msgstr ""
 
-#: build/admin/index.js:45
+#: build/admin/index.js:46
 msgid "For example, the company name and address. Without it, the footer shows the site name."
 msgstr ""
 
 #. translators: 1: name of the sender, 2: email address of the sender.
-#: build/admin/index.js:46
+#: build/admin/index.js:47
 #, js-format
 msgid "They go out as “%1$s” from %2$s."
 msgstr ""
 
 #. translators: %s: email address of the sender.
-#: build/admin/index.js:47
+#: build/admin/index.js:48
 #, js-format
 msgid "They go out from %s."
 msgstr ""
 
 #. translators: %s: name of the sender.
-#: build/admin/index.js:48
+#: build/admin/index.js:49
 #, js-format
 msgid "They go out as “%s”, from the site’s address."
 msgstr ""
 
-#: build/admin/index.js:48
+#: build/admin/index.js:49
 msgid "They go out with the site’s name and address."
 msgstr ""
 
 #. translators: %d: number of failed deliveries.
-#: build/admin/index.js:49
+#: build/admin/index.js:50
 #, js-format
 msgid "%d delivery failed"
 msgid_plural "%d deliveries failed"
 msgstr[0] ""
 msgstr[1] ""
 
-#: build/admin/index.js:49
+#: build/admin/index.js:50
 msgid "Something a form had to send did not arrive. You can send it again or dismiss it."
 msgstr ""
 
-#: build/admin/index.js:49
+#: build/admin/index.js:50
 msgid "See them"
 msgstr ""
 
 #. translators: %s: how the emails are sent, like "An SMTP server".
-#: build/admin/index.js:50
+#: build/admin/index.js:51
 #, js-format
 msgid "Emails are sent with: %s"
 msgstr ""
 
-#: build/admin/index.js:50
+#: build/admin/index.js:51
 msgid "Change"
 msgstr ""
 
-#: build/admin/index.js:50
+#: build/admin/index.js:51
 msgid "Spam protection is on"
 msgstr ""
 
-#: build/admin/index.js:50
+#: build/admin/index.js:51
 msgid "It works on its own in every form. There is nothing to set up."
 msgstr ""
 
-#: build/admin/index.js:50
+#: build/admin/index.js:51
 msgid "See options"
 msgstr ""
 
 #. translators: %s: name of a captcha service.
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 #, js-format
 msgid "Captcha: %s"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "It asks whoever writes to prove they are not a robot."
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Set up"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Captcha: not needed for now"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Turn it on only if spam starts to arrive."
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "General"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Cleanup done."
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "The SMTP server has changed, so the stored password has been deleted: enter the new server’s password."
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
+msgid "The SMTP server has not been changed: its password is defined in wp-config.php and is only sent to the server it was set up for."
+msgstr ""
+
+#: build/admin/index.js:52
 msgid "The captcha service has changed, so the stored secret key has been deleted: enter the new service’s secret key."
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Settings saved."
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "For whoever maintains the site"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Technical settings. If you do not know what they are, you do not need to touch them."
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Spam protection"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Every form is protected by a hidden trap field, a minimum time to fill it in and a limit on submissions per IP address. None of them needs configuration."
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Accept submissions without JavaScript"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Forms keep working in browsers without JavaScript, but those submissions cannot prove a minimum filling time, so they only have the trap field and a stricter limit per IP address. Turn it off if you receive spam through this path."
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Visitor IP address"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "The plugin limits how many submissions an IP address can send. If the site is behind a proxy or CDN, every visitor seems to come from the proxy unless you say which one it is."
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "The site is behind"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Nothing: visitors connect directly to the server"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "Cloudflare"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "My own proxy or load balancer"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "IP addresses of the proxy"
 msgstr ""
 
-#: build/admin/index.js:51
+#: build/admin/index.js:52
 msgid "One per line. IPv4, IPv6 and CIDR ranges such as 10.0.0.0/8. The X-Forwarded-For header is only trusted when the connection comes from one of them."
 msgstr ""
 
 #. translators: 1: IP address the plugin detects for the current user, 2: IP address of the connection to the server.
-#: build/admin/index.js:52
+#: build/admin/index.js:53
 #, js-format
 msgid "Your IP address as the plugin sees it: %1$s (connection: %2$s)."
 msgstr ""
 
-#: build/admin/index.js:52
+#: build/admin/index.js:53
 msgid "Allowed redirect domains"
 msgstr ""
 
 #. translators: %s: domain of the site.
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 #, js-format
 msgid "After a submission, a form can redirect to any address on this site (%s). To redirect to another site, add its domain here."
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "Domains"
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "One per line, without https://. For example: pay.example.com"
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "Failed actions"
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "When a notification cannot be sent, or a webhook fails after all its retries, it stays on the Messages screen until someone retries or dismisses it."
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "Send me an email when an action fails"
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "At most one email every 12 hours, with the number of failures since the previous one."
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "Address for those emails"
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "Leave empty to use the site administrator’s address."
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "Days the delivery log is kept"
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "The log says what was done with each submission: which notifications and webhooks were sent, and which failed. Entries older than this are deleted, except the ones still waiting for a retry."
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "Data"
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "Once a day the plugin deletes the submissions that have exceeded the retention period of their form and the old entries of the delivery log, and sends the webhooks that were left waiting. You can run that maintenance now."
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "Run cleanup now"
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "Delete all data when the plugin is uninstalled"
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "Forms, submissions and settings are deleted when the plugin is deleted from the Plugins screen. Deactivating it never deletes anything."
 msgstr ""
 
-#: build/admin/index.js:53
+#: build/admin/index.js:54
 msgid "Save settings"
 msgstr ""
 

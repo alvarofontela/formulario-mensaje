@@ -516,7 +516,7 @@ No verificado contra servicios reales: los webhooks se han probado con dobles de
 
 Cambios sobre la fase 3, a raíz de la revisión de seguridad de su commit:
 
-- **La contraseña de SMTP va ligada a su servidor**: si se cambia el servidor sin escribir la contraseña del nuevo, la guardada se descarta y la pantalla lo avisa. Antes, apuntar los ajustes a otro servidor le habría entregado una contraseña que nadie puede leer. Una contraseña definida como constante no se puede descartar: quien la pone en `wp-config.php` decide a quién da el permiso de cambiar los ajustes.
+- **La contraseña de SMTP va ligada a su servidor**: si se cambia el servidor sin escribir la contraseña del nuevo, la guardada se descarta y la pantalla lo avisa. Antes, apuntar los ajustes a otro servidor le habría entregado una contraseña que nadie puede leer. Una contraseña definida como constante no se puede descartar, así que lo que se fija es el servidor: mientras exista la constante, el servidor ya configurado no se cambia desde el panel (revisión de seguridad del 2026-10-12; antes se aceptaba, con el argumento de que quien la pone en `wp-config.php` decide a quién da el permiso, pero ese permiso lo recibe todo administrador al activar el plugin).
 - **Las pruebas de correo tienen un límite por usuario** (10 cada 10 minutos, común a las dos pruebas): no dejan rastro en el registro, así que sin límite servirían para enviar correo en cantidad.
 - **El servidor SMTP puede ser interno a propósito** (`localhost`, un relé de la red privada), así que no se le aplica la lista de destinos seguros de la HTTP API. Se justifica en el código: solo lo configura quien gestiona los ajustes, la conexión solo habla SMTP y del fallo se devuelve el mensaje de PHPMailer recortado.
 

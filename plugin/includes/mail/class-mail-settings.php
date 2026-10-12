@@ -91,6 +91,16 @@ final class Mail_Settings {
 	}
 
 	/**
+	 * Los mismos ajustes con otro servidor SMTP.
+	 *
+	 * @param string $smtp_host Servidor SMTP.
+	 */
+	public function with_smtp_host( string $smtp_host ): self {
+		// Las claves de to_array() son los nombres de los parámetros del constructor.
+		return new self( ...array_merge( $this->to_array(), array( 'smtp_host' => $smtp_host ) ) );
+	}
+
+	/**
 	 * Nombre con el que firma el remitente: el configurado o el del sitio.
 	 */
 	public function sender_name(): string {

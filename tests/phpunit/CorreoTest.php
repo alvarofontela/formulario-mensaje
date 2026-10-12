@@ -268,6 +268,70 @@ class CorreoTest extends Caso_Formulario {
 		$this->assertSame( 'otra', $almacen->get( 'smtp_password' ) );
 	}
 
+	/**
+	 * La constante vive todo el proceso: en uno aparte, para que no la hereden los demás tests.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_con_la_contrasena_en_una_constante_el_servidor_smtp_no_se_cambia_desde_el_panel() {
+		$this->como_administrador();
+
+		$ajustes = array( 'transport' => 'smtp', 'smtp_host' => 'smtp.example.org', 'smtp_username' => 'usuario' );
+
+		// Todavía sin constante: el servidor se configura con normalidad.
+		$this->rest( 'PUT', '/settings/mail', array( 'settings' => $ajustes ) );
+
+		define( 'FORMULARIO_MENSAJE_SMTP_PASSWORD', 'solo-en-wp-config' );
+
+		// Apuntar a otro servidor le entregaría una contraseña que quien usa el panel no puede leer.
+		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'smtp.atacante.example', 'smtp_port' => 2525 ) + $ajustes ) )->get_data();
+
+		$this->assertSame( array( 'smtp_host' ), $respuesta['locked'] );
+		$this->assertSame( 'smtp.example.org', $respuesta['settings']['smtp_host'], 'La respuesta lleva lo que ha quedado guardado, no lo que se pidió.' );
+		$this->assertSame( 2525, $respuesta['settings']['smtp_port'], 'El resto de los ajustes sí se guarda.' );
+		$this->assertSame( 'smtp.example.org', $this->rest( 'GET', '/settings/mail' )->get_data()['settings']['smtp_host'] );
+		$this->assertSame( array(), $respuesta['discarded'] );
+		$this->assertSame( 'constant', $respuesta['secrets']['smtp_password']['source'] );
+
+		// Ni en dos pasos, vaciándolo primero; ni escribiendo otra contraseña, que la constante tapa.
+		$vaciado = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => '' ) + $ajustes ) )->get_data();
+		$con_otra = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'smtp.atacante.example' ) + $ajustes, 'secrets' => array( 'smtp_password' => 'otra' ) ) )->get_data();
+
+		$this->assertSame( 'smtp.example.org', $vaciado['settings']['smtp_host'] );
+		$this->assertSame( array( 'smtp_host' ), $con_otra['locked'] );
+		$this->assertSame( 'smtp.example.org', $con_otra['settings']['smtp_host'] );
+
+		// Guardar sin tocar el servidor no bloquea nada, aunque cambien las mayúsculas.
+		$igual = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'SMTP.Example.org' ) + $ajustes ) )->get_data();
+
+		$this->assertSame( array(), $igual['locked'] );
+	}
+
+	public function test_smtp_omite_una_direccion_de_respuesta_que_phpmailer_no_acepta_en_vez_de_fallar() {
+		require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
+
+		// is_email() la da por buena; el validador propio de PHPMailer, no. wp_mail() lo sustituye por
+		// is_email() para todo el proceso, así que se fija aquí el que trae de fábrica.
+		$validador = \PHPMailer\PHPMailer\PHPMailer::$validator;
+		\PHPMailer\PHPMailer\PHPMailer::$validator = 'php';
+
+		$this->assertNotFalse( is_email( 'ana..perez@example.org' ) );
+		$this->assertFalse( \PHPMailer\PHPMailer\PHPMailer::validateAddress( 'ana..perez@example.org' ) );
+
+		// Mailpit, el servidor SMTP del entorno: sin cifrado ni credenciales.
+		$smtp = new Smtp_Transport(
+			new Ajustes_Correo_En_Memoria( new Mail_Settings( transport: 'smtp', from_email: 'web@example.org', smtp_host: '127.0.0.1', smtp_port: 1025, smtp_encryption: 'none', smtp_auth: false ) ),
+			new Secret_Vault( new Secret_Cipher() )
+		);
+
+		$enviado = $smtp->send( new Email_Message( array( 'ventas@example.org' ), 'Respuesta rara', 'Cuerpo', 'ana..perez@example.org' ) );
+
+		\PHPMailer\PHPMailer\PHPMailer::$validator = $validador;
+
+		$this->assertTrue( $enviado, 'La notificación sale igual, sin dirección de respuesta.' );
+	}
+
 	public function test_las_pruebas_de_correo_tienen_un_limite_por_usuario() {
 		$this->como_administrador();
 

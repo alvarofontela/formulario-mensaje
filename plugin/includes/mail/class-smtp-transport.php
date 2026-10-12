@@ -10,6 +10,7 @@ namespace Formulario_Mensaje\Mail;
 use Formulario_Mensaje\Secrets\Secret_Vault;
 use PHPMailer\PHPMailer\Exception as Mailer_Exception;
 use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -68,11 +69,18 @@ final class Smtp_Transport implements Mail_Transport {
 			return new WP_Error( 'formulario_mensaje_smtp_no_sender', __( 'Set a sender address in the email settings: this site’s default address is not a valid email address.', 'formulario-mensaje' ) );
 		}
 
-		// Las clases de PHPMailer que trae WordPress solo se cargan cuando se envía un correo.
-		if ( ! class_exists( PHPMailer::class ) ) {
-			require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
-			require_once ABSPATH . WPINC . '/PHPMailer/SMTP.php';
-			require_once ABSPATH . WPINC . '/PHPMailer/Exception.php';
+		// Las clases de PHPMailer que trae WordPress solo se cargan cuando se envía un correo. Cada una
+		// por separado: otro código puede haber cargado ya la principal sin las demás.
+		$classes = array(
+			PHPMailer::class        => 'PHPMailer.php',
+			SMTP::class             => 'SMTP.php',
+			Mailer_Exception::class => 'Exception.php',
+		);
+
+		foreach ( $classes as $class => $file ) {
+			if ( ! class_exists( $class ) ) {
+				require_once ABSPATH . WPINC . '/PHPMailer/' . $file;
+			}
 		}
 
 		$mailer = new PHPMailer( true );
@@ -102,7 +110,9 @@ final class Smtp_Transport implements Mail_Transport {
 
 			$reply_to = $message->safe_reply_to();
 
-			if ( '' !== $reply_to ) {
+			// PHPMailer valida con más rigor que is_email(): una dirección de respuesta que no acepta se
+			// omite, en vez de dejar que su excepción haga fracasar la notificación entera.
+			if ( '' !== $reply_to && PHPMailer::validateAddress( $reply_to ) ) {
 				$mailer->addReplyTo( $reply_to );
 			}
 

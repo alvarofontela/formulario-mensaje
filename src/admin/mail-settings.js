@@ -48,6 +48,7 @@ function pickImage( onSelect ) {
  * @param {Array}    props.cleared         Nombres de las credenciales guardadas que se van a borrar.
  * @param {Function} props.onClearedChange Recibe la lista nueva.
  * @param {boolean}  props.dirty           Si hay cambios sin guardar; la prueba usa lo guardado.
+ * @param {boolean}  props.hostLocked      Si el servidor SMTP guardado no se puede cambiar: su contraseña es una constante.
  */
 export default function MailSettings( {
 	settings,
@@ -58,6 +59,7 @@ export default function MailSettings( {
 	cleared,
 	onClearedChange,
 	dirty,
+	hostLocked = false,
 } ) {
 	const [ testTo, setTestTo ] = useState( userEmail );
 	const [ testing, setTesting ] = useState( false );
@@ -138,6 +140,20 @@ export default function MailSettings( {
 								__nextHasNoMarginBottom
 								label={ __( 'Server', 'formulario-mensaje' ) }
 								placeholder="smtp.example.com"
+								disabled={ hostLocked }
+								help={
+									hostLocked
+										? sprintf(
+												/* translators: %s: name of a PHP constant. */
+												__(
+													'The password is defined in wp-config.php, so the server it is sent to cannot be changed here. To use another server, remove the constant %s, change the server and define it again.',
+													'formulario-mensaje'
+												),
+												secretStatus.smtp_password
+													.constant
+											)
+										: undefined
+								}
 								value={ settings.smtp_host }
 								onChange={ ( value ) =>
 									set( 'smtp_host', value )
