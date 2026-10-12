@@ -155,4 +155,4 @@ El detalle está en [`PLAN.md`](PLAN.md). Fuera del alcance, por decisión: mult
 
 ## Licencia
 
-[GPL-2.0-or-later](https://www.gnu.org/licenses/gpl-2.0.html), como WordPress.
+[GPL-2.0-or-later](LICENSE), como WordPress.
