@@ -28,6 +28,11 @@ final class Csv_Exporter {
 	private const FORMULA_TRIGGERS = array( '=', '+', '-', '@', "\t", "\r" );
 
 	/**
+	 * Signo de fórmula justo detrás de un carácter que otra hoja de cálculo puede usar de separador.
+	 */
+	private const TRIGGER_AFTER_SEPARATOR = '/([;|\t])(?=[=+\-@])/';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Submission_Repository $submissions Almacén de envíos.
@@ -104,11 +109,22 @@ final class Csv_Exporter {
 	/**
 	 * Neutraliza una celda que una hoja de cálculo interpretaría como fórmula.
 	 *
+	 * No basta con mirar el principio: el fichero se separa por comas, pero una hoja de cálculo
+	 * configurada con otro separador (el punto y coma, en los idiomas que usan la coma decimal) parte
+	 * la celda por él, y lo que viene detrás pasa a ser el principio de otra.
+	 *
 	 * @param string $cell Contenido de la celda.
-	 * @return string El mismo contenido, precedido de un apóstrofo si empezaba por un signo de fórmula.
+	 * @return string El mismo contenido, con un apóstrofo delante de cada signo de fórmula que esté al
+	 *                principio o justo detrás de un separador.
 	 */
 	public function neutralize( string $cell ): string {
-		return '' !== $cell && in_array( $cell[0], self::FORMULA_TRIGGERS, true ) ? "'" . $cell : $cell;
+		if ( '' === $cell ) {
+			return $cell;
+		}
+
+		$cell = (string) preg_replace( self::TRIGGER_AFTER_SEPARATOR, "$1'", $cell );
+
+		return in_array( $cell[0], self::FORMULA_TRIGGERS, true ) ? "'" . $cell : $cell;
 	}
 
 	/**

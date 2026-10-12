@@ -18,6 +18,11 @@ defined( 'ABSPATH' ) || exit;
  *
  * Lo usan los adaptadores (REST y, más adelante, WP-CLI y abilities). No comprueba permisos: eso es
  * cosa de cada adaptador.
+ *
+ * La única decisión de permisos que llega hasta aquí es la del plazo de retención: fijarlo es
+ * mandar borrar envíos guardados, que son datos personales, y gestionar formularios no da permiso
+ * para eso. El adaptador dice si quien lo pide puede, y el servicio lo aplica en el único sitio por
+ * el que pasa todo guardado.
  */
 final class Form_Service {
 
@@ -71,23 +76,25 @@ final class Form_Service {
 	/**
 	 * Crea un formulario.
 	 *
-	 * @param mixed $title          Nombre sin validar.
-	 * @param mixed $raw_definition Definición sin validar.
+	 * @param mixed $title             Nombre sin validar.
+	 * @param mixed $raw_definition    Definición sin validar.
+	 * @param bool  $can_set_retention Si quien lo pide puede fijar cuánto se conservan los envíos.
 	 * @return Form|WP_Error
 	 */
-	public function create( mixed $title, mixed $raw_definition ): Form|WP_Error {
-		return $this->save( 0, $title, $raw_definition );
+	public function create( mixed $title, mixed $raw_definition, bool $can_set_retention = true ): Form|WP_Error {
+		return $this->save( 0, $title, $raw_definition, $can_set_retention );
 	}
 
 	/**
 	 * Actualiza un formulario.
 	 *
-	 * @param int   $id             Identificador del formulario.
-	 * @param mixed $title          Nombre sin validar.
-	 * @param mixed $raw_definition Definición sin validar.
+	 * @param int   $id                Identificador del formulario.
+	 * @param mixed $title             Nombre sin validar.
+	 * @param mixed $raw_definition    Definición sin validar.
+	 * @param bool  $can_set_retention Si quien lo pide puede cambiar cuánto se conservan los envíos.
 	 * @return Form|WP_Error
 	 */
-	public function update( int $id, mixed $title = null, mixed $raw_definition = null ): Form|WP_Error {
+	public function update( int $id, mixed $title = null, mixed $raw_definition = null, bool $can_set_retention = true ): Form|WP_Error {
 		$current = $this->forms->find( $id );
 
 		if ( null === $current ) {
@@ -95,7 +102,7 @@ final class Form_Service {
 		}
 
 		// Lo que no se indica se queda como está: cambiar solo el nombre no puede vaciar los campos.
-		return $this->save( $id, $title ?? $current->title, $raw_definition ?? $current->definition->to_array() );
+		return $this->save( $id, $title ?? $current->title, $raw_definition ?? $current->definition->to_array(), $can_set_retention );
 	}
 
 	/**
@@ -148,13 +155,27 @@ final class Form_Service {
 	/**
 	 * Sanea, comprueba y guarda un formulario.
 	 *
-	 * @param int   $id             Identificador, o 0 para crear uno nuevo.
-	 * @param mixed $title          Nombre sin validar.
-	 * @param mixed $raw_definition Definición sin validar.
+	 * @param int   $id                Identificador, o 0 para crear uno nuevo.
+	 * @param mixed $title             Nombre sin validar.
+	 * @param mixed $raw_definition    Definición sin validar.
+	 * @param bool  $can_set_retention Si quien lo pide puede cambiar cuánto se conservan los envíos.
 	 * @return Form|WP_Error
 	 */
-	private function save( int $id, mixed $title, mixed $raw_definition ): Form|WP_Error {
+	private function save( int $id, mixed $title, mixed $raw_definition, bool $can_set_retention = true ): Form|WP_Error {
 		$definition = $this->sanitizer->sanitize( $raw_definition );
+
+		/*
+		 * El plazo de retención manda borrar envíos guardados sin que nadie más intervenga. Quien no
+		 * puede borrarlos tampoco puede cambiarlo, y la petición se rechaza entera: guardarla a medias
+		 * le dejaría creyendo que el plazo ha cambiado.
+		 */
+		if ( ! $can_set_retention && (int) $definition->setting( 'retention_days', 0 ) !== $this->stored_retention( $id ) ) {
+			return new WP_Error(
+				'formulario_mensaje_retention_forbidden',
+				__( 'Sorry, you are not allowed to change how long submissions are kept.', 'formulario-mensaje' ),
+				array( 'status' => rest_authorization_required_code() )
+			);
+		}
 
 		if ( ! empty( $definition->setting( 'redirect_enabled' ) ) && ! $this->redirect_policy->is_allowed( (string) $definition->setting( 'redirect_url', '' ) ) ) {
 			return new WP_Error(
@@ -205,6 +226,18 @@ final class Form_Service {
 		$title = is_scalar( $title ) ? mb_substr( Plain_Text::line( (string) $title ), 0, self::MAX_TITLE_LENGTH ) : '';
 
 		return '' === $title ? __( 'Untitled form', 'formulario-mensaje' ) : $title;
+	}
+
+	/**
+	 * Días de retención que tiene guardados un formulario.
+	 *
+	 * @param int $id Identificador del formulario, o 0 si todavía no existe.
+	 * @return int 0 si no existe: un formulario nuevo conserva sus envíos hasta que alguien los borre.
+	 */
+	private function stored_retention( int $id ): int {
+		$form = $id > 0 ? $this->forms->find( $id ) : null;
+
+		return null === $form ? 0 : (int) $form->definition->setting( 'retention_days', 0 );
 	}
 
 	/**

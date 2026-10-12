@@ -5,6 +5,8 @@ import {
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
+import { can } from './config';
+
 /**
  * Pestaña de guardado: si los envíos se guardan, con qué metadatos y durante cuánto tiempo.
  *
@@ -92,10 +94,18 @@ export default function StoragePanel( { settings, onChange } ) {
 							'Delete submissions after (days)',
 							'formulario-mensaje'
 						) }
-						help={ __(
-							'0 keeps them until someone deletes them. The cleanup runs once a day.',
-							'formulario-mensaje'
-						) }
+						disabled={ ! can.viewSubmissions }
+						help={
+							can.viewSubmissions
+								? __(
+										'0 keeps them until someone deletes them. The cleanup runs once a day.',
+										'formulario-mensaje'
+									)
+								: __(
+										'Only someone who can delete messages can change this: it deletes them automatically.',
+										'formulario-mensaje'
+									)
+						}
 						value={ String( settings.retention_days ?? 0 ) }
 						onChange={ ( value ) =>
 							set(

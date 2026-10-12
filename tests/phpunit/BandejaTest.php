@@ -286,6 +286,55 @@ class BandejaTest extends Caso_Formulario {
 		$this->assertSame( array(), $paginas->all() );
 	}
 
+	public function test_buscar_donde_esta_un_formulario_no_depende_de_como_este_escrito_el_contenido() {
+		global $wpdb;
+
+		$formulario = $this->crear_formulario();
+
+		// Contenido que escribe un autor: aperturas del bloque y del shortcode que no se cierran nunca,
+		// repetidas miles de veces. La búsqueda lo recorre una sola vez y no encuentra nada.
+		$sin_cerrar = self::factory()->post->create(
+			array(
+				'post_type'    => 'page',
+				'post_content' => str_repeat( '<!-- wp:formulario-mensaje/form {"formId":' . $formulario . ' ', 20000 ) . str_repeat( '[formulario_mensaje id="' . $formulario . '" ', 20000 ),
+			)
+		);
+
+		// Y contenido normal alrededor de mucho ruido: el bloque dentro de otros, el shortcode con su
+		// barra de cierre, otro bloque y otro shortcode que empiezan igual, y uno escrito para enseñarlo.
+		$con_ruido = self::factory()->post->create(
+			array(
+				'post_type'    => 'page',
+				'post_content' => str_repeat( '<!-- wp:paragraph --><p>Texto</p><!-- /wp:paragraph -->', 2000 )
+					. '<!-- wp:group --><!-- wp:formulario-mensaje/form {"formId":' . $formulario . ',"formStyle":{"accent":"#ff0000"}} /--><!-- /wp:group -->'
+					. '<!-- wp:formulario-mensaje/formulario-ajeno {"formId":999} /-->'
+					. '[formulario_mensaje_ajeno id="998"] [[formulario_mensaje id="997"]] [formulario_mensaje id="996" /]',
+			)
+		);
+
+		$inicio  = microtime( true );
+		$paginas = ( new Form_Placements( $wpdb ) )->all();
+
+		$this->assertLessThan( 2.0, microtime( true ) - $inicio, 'Más de un megabyte de aperturas sin cerrar no puede notarse.' );
+		$this->assertSame( array( $con_ruido ), array_column( $paginas[ $formulario ], 'id' ) );
+		$this->assertSame( array( $formulario, 996 ), array_keys( $paginas ), 'Ni el bloque ni el shortcode de nombre parecido, ni el de doble corchete.' );
+		$this->assertNotContains( $sin_cerrar, array_column( $paginas[ $formulario ], 'id' ) );
+	}
+
+	public function test_la_busqueda_lee_las_paginas_por_tandas_y_las_encuentra_todas() {
+		global $wpdb;
+
+		$formulario = $this->crear_formulario();
+		$paginas    = array();
+
+		// Más páginas de las que caben en una tanda de lectura.
+		for ( $i = 0; $i < 60; $i++ ) {
+			$paginas[] = self::factory()->post->create( array( 'post_type' => 'page', 'post_content' => '[formulario_mensaje id="' . $formulario . '"]' ) );
+		}
+
+		$this->assertEqualsCanonicalizing( $paginas, array_column( ( new Form_Placements( $wpdb ) )->all()[ $formulario ], 'id' ) );
+	}
+
 	public function test_el_menu_abre_por_los_mensajes_y_avisa_de_los_que_estan_sin_leer() {
 		global $menu, $submenu, $wpdb;
 

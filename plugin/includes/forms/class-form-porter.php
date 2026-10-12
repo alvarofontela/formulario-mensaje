@@ -68,10 +68,11 @@ final class Form_Porter {
 	/**
 	 * Crea un formulario a partir de un documento de exportación.
 	 *
-	 * @param mixed $document Documento ya decodificado, sin validar.
+	 * @param mixed $document          Documento ya decodificado, sin validar.
+	 * @param bool  $can_set_retention Si quien importa puede fijar cuánto se conservan los envíos.
 	 * @return Form|WP_Error El formulario creado.
 	 */
-	public function import( mixed $document ): Form|WP_Error {
+	public function import( mixed $document, bool $can_set_retention = true ): Form|WP_Error {
 		if ( ! is_array( $document ) || self::FORMAT !== ( $document['format'] ?? null ) || ! is_array( $document['definition'] ?? null ) ) {
 			return new WP_Error( 'formulario_mensaje_import_invalid', __( 'The file is not a form exported from Formulario Mensaje.', 'formulario-mensaje' ), array( 'status' => 400 ) );
 		}
@@ -87,7 +88,12 @@ final class Form_Porter {
 			$definition['settings']['redirect_enabled'] = false;
 		}
 
-		return $this->forms->create( $document['title'] ?? '', $definition );
+		// Igual que las acciones llegan apagadas, un plazo de retención que quien importa no puede fijar llega sin poner.
+		if ( ! $can_set_retention ) {
+			$definition['settings']['retention_days'] = 0;
+		}
+
+		return $this->forms->create( $document['title'] ?? '', $definition, $can_set_retention );
 	}
 
 	/**

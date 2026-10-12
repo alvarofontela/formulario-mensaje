@@ -61,7 +61,7 @@ final class Antispam_Provider implements Service_Provider {
 				array(
 					new Honeypot_Check(),
 					new Token_Check( $c->get( Token_Service::class ) ),
-					new Rate_Limit_Check( $c->get( Rate_Limiter::class ) ),
+					new Rate_Limit_Check( $c->get( Rate_Limiter::class ), $c->get( Ip_Matcher::class ) ),
 					$c->get( Captcha_Check::class ),
 				)
 			)

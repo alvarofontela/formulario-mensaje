@@ -53,7 +53,7 @@ msgstr "Campos, ajustes y estilo del formulario, y la lista de sus acciones sin 
 #: includes/admin/class-export-controller.php:51
 #: includes/cli/class-form-command.php:137
 #: includes/cli/class-submission-command.php:72
-#: includes/forms/class-form-service.php:214
+#: includes/forms/class-form-service.php:247
 #: includes/forms/class-post-form-repository.php:86
 #: includes/rest/class-form-transfer-controller.php:131
 #: includes/rest/class-forms-controller.php:225
@@ -237,7 +237,7 @@ msgstr[1] ""
 msgid "Your message could not be sent. Please reload the page and try again."
 msgstr "No se ha podido enviar tu mensaje. Recarga la página e inténtalo de nuevo."
 
-#: includes/antispam/class-rate-limit-check.php:74
+#: includes/antispam/class-rate-limit-check.php:83
 msgid "You have sent too many messages. Please try again in a few minutes."
 msgstr "Has enviado demasiados mensajes. Inténtalo de nuevo dentro de unos minutos."
 
@@ -606,7 +606,7 @@ msgid "Accepted: %s"
 msgstr "Aceptado: %s"
 
 #: includes/fields/types/class-date-field-type.php:30
-#: includes/storage/class-csv-exporter.php:63
+#: includes/storage/class-csv-exporter.php:68
 msgid "Date"
 msgstr "Fecha"
 
@@ -850,30 +850,30 @@ msgstr "Enviar"
 msgid "Thank you. Your message has been sent."
 msgstr "Gracias. Hemos recibido tu mensaje."
 
-#: includes/forms/class-form-porter.php:76
+#: includes/forms/class-form-porter.php:77
 #: build/admin/index.js:21
 msgid "The file is not a form exported from Formulario Mensaje."
 msgstr "El fichero no es un formulario exportado desde Formulario Mensaje."
 
-#: includes/forms/class-form-porter.php:80
+#: includes/forms/class-form-porter.php:81
 msgid "The file was exported from a newer version of Formulario Mensaje. Update the plugin and try again."
 msgstr "El fichero se exportó desde una versión más reciente de Formulario Mensaje. Actualiza el plugin y vuelve a intentarlo."
 
 #. translators: %s: name of the form that was copied.
-#: includes/forms/class-form-service.php:115
+#: includes/forms/class-form-service.php:122
 #, php-format
 msgid "%s (copy)"
 msgstr "%s (copia)"
 
-#: includes/forms/class-form-service.php:162
+#: includes/forms/class-form-service.php:183
 msgid "The redirect address is not allowed. Use an address on this site, or add its domain to the allowed domains in the plugin settings."
 msgstr "La dirección de redirección no está permitida. Usa una dirección de este sitio o añade su dominio a los dominios permitidos en los ajustes del plugin."
 
-#: includes/forms/class-form-service.php:191
+#: includes/forms/class-form-service.php:212
 msgid "The form could not be updated."
 msgstr "No se ha podido actualizar el formulario."
 
-#: includes/forms/class-form-service.php:207
+#: includes/forms/class-form-service.php:228
 msgid "Untitled form"
 msgstr "Formulario sin título"
 
@@ -1113,7 +1113,7 @@ msgid "Identifier of the notification to test."
 msgstr "Identificador de la notificación que se prueba."
 
 #: includes/rest/class-action-tests-controller.php:73
-#: includes/rest/class-mail-settings-controller.php:100
+#: includes/rest/class-mail-settings-controller.php:105
 msgid "Address the test email is sent to."
 msgstr "Dirección a la que se envía el correo de prueba."
 
@@ -1127,20 +1127,20 @@ msgstr "Identificador del webhook que se prueba."
 msgid "Sorry, you are not allowed to manage forms."
 msgstr "Lo siento, no tienes permisos para gestionar formularios."
 
-#: includes/rest/class-captcha-settings-controller.php:63
+#: includes/rest/class-captcha-settings-controller.php:64
 msgid "Captcha service, site key and score threshold."
 msgstr "Servicio de captcha, clave del sitio y puntuación mínima."
 
-#: includes/rest/class-captcha-settings-controller.php:68
+#: includes/rest/class-captcha-settings-controller.php:69
 msgid "New secret key. An empty value keeps the stored one."
 msgstr "Clave secreta nueva. Un valor vacío conserva la guardada."
 
-#: includes/rest/class-captcha-settings-controller.php:73
+#: includes/rest/class-captcha-settings-controller.php:75
 msgid "Delete the stored secret key."
 msgstr "Borrar la clave secreta guardada."
 
-#: includes/rest/class-captcha-settings-controller.php:95
-#: includes/rest/class-mail-settings-controller.php:122
+#: includes/rest/class-captcha-settings-controller.php:97
+#: includes/rest/class-mail-settings-controller.php:127
 #: includes/rest/class-maintenance-controller.php:50
 #: includes/rest/class-settings-controller.php:113
 msgid "Sorry, you are not allowed to manage the plugin settings."
@@ -1180,7 +1180,7 @@ msgstr "Método de envío, remitente y marca de los correos."
 msgid "New values for the credentials. An empty value keeps the stored one."
 msgstr "Valores nuevos de las credenciales. Un valor vacío conserva el guardado."
 
-#: includes/rest/class-mail-settings-controller.php:78
+#: includes/rest/class-mail-settings-controller.php:83
 msgid "Names of the stored credentials to delete."
 msgstr "Nombres de las credenciales guardadas que se borran."
 
@@ -1320,23 +1320,23 @@ msgstr "es menor que"
 msgid "This delivery cannot be retried."
 msgstr "Esta entrega no se puede reintentar."
 
-#: includes/storage/class-csv-exporter.php:63
+#: includes/storage/class-csv-exporter.php:68
 #: build/admin/index.js:37
 msgid "Reference"
 msgstr "Referencia"
 
-#: includes/storage/class-csv-exporter.php:63
+#: includes/storage/class-csv-exporter.php:68
 #: build/admin/index.js:37
 msgid "Page"
 msgstr "Página"
 
-#: includes/storage/class-csv-exporter.php:66
+#: includes/storage/class-csv-exporter.php:71
 #: build/admin/index.js:11
 #: build/admin/index.js:37
 msgid "IP address"
 msgstr "Dirección IP"
 
-#: includes/storage/class-csv-exporter.php:70
+#: includes/storage/class-csv-exporter.php:75
 #: build/admin/index.js:37
 msgid "Browser"
 msgstr "Navegador"
@@ -1401,11 +1401,11 @@ msgstr "Webhook"
 msgid "The destination responded with HTTP status %d."
 msgstr "El destino ha respondido con el código HTTP %d."
 
-#: includes/webhooks/class-webhook-sender.php:75
+#: includes/webhooks/class-webhook-sender.php:83
 msgid "The webhook has no destination address."
 msgstr "El webhook no tiene dirección de destino."
 
-#: includes/webhooks/class-webhook-sender.php:81
+#: includes/webhooks/class-webhook-sender.php:89
 msgid "The submission data could not be converted to JSON."
 msgstr "Los datos del envío no se han podido convertir a JSON."
 
@@ -3261,3 +3261,23 @@ msgstr "La conexión SMTP no se ha cambiado: su contraseña está definida en wp
 #: build/admin/index.js:52
 msgid "The SMTP connection has changed, so the stored password has been deleted: enter the password of the new connection."
 msgstr "La conexión SMTP ha cambiado, así que la contraseña guardada se ha borrado: escribe la contraseña de la conexión nueva."
+
+#: includes/forms/class-form-service.php:175
+msgid "Sorry, you are not allowed to change how long submissions are kept."
+msgstr "Lo siento, no tienes permiso para cambiar cuánto tiempo se conservan los envíos."
+
+#: includes/webhooks/class-destination-guard.php:53
+msgid "The webhook address could not be resolved."
+msgstr "No se ha podido resolver la dirección del webhook."
+
+#: includes/webhooks/class-destination-guard.php:57
+msgid "The webhook address points to an internal network address."
+msgstr "La dirección del webhook apunta a una dirección de la red interna."
+
+#: build/admin/index.js:11
+msgid "Only someone who can delete messages can change this: it deletes them automatically."
+msgstr "Solo puede cambiarlo quien tiene permiso para borrar mensajes: los borra automáticamente."
+
+#: build/admin/index.js:52
+msgid "The SMTP connection has not been changed: the stored password could not be deleted first. Try again."
+msgstr "La conexión SMTP no se ha cambiado: antes no se ha podido borrar la contraseña guardada. Inténtalo de nuevo."

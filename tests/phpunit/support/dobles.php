@@ -17,6 +17,7 @@ use Formulario_Mensaje\Mail\Attachment_Source;
 use Formulario_Mensaje\Submissions\Submission;
 use Formulario_Mensaje\Uploads\Upload_Mover;
 use Formulario_Mensaje\Uploads\Uploaded_File;
+use Formulario_Mensaje\Webhooks\Host_Resolver;
 
 /** Reloj que se puede adelantar a voluntad. */
 final class Reloj_Falso implements Clock {
@@ -118,6 +119,20 @@ final class Movedor_De_Pruebas implements Upload_Mover {
 		}
 
 		return array( 'path' => $directory . '/' . $filename, 'type' => $tipo['type'] );
+	}
+}
+
+/** DNS de mentira: responde lo que se le diga y cuenta las consultas. */
+final class Resolutor_Fijo implements Host_Resolver {
+	public int $consultas = 0;
+
+	/** @param array<string, string> $direcciones Dirección de cada nombre; el que no esté no se resuelve. */
+	public function __construct( public array $direcciones = array() ) {}
+
+	public function resolve( string $host ): string {
+		++$this->consultas;
+
+		return $this->direcciones[ $host ] ?? '';
 	}
 }
 

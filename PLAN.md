@@ -297,6 +297,20 @@ Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel
 
 No verificado contra servicios reales: Resend se ha probado con un doble de la HTTP API (petición, cabecera de autorización, errores) y el SMTP contra Mailpit, que no cifra ni pide credenciales. Quedan sin probar STARTTLS, SSL y la autenticación contra un servidor real.
 
+### Correcciones de la auditoría de seguridad (2026-10-12)
+
+La auditoría con la skill `security-audit` (informes en `~/security-audit-skill/formulario-mensaje/run-1/`) dejó ocho pistas pendientes de validar. Se corrigieron las ocho, con sus tests:
+
+- **Retención.** Fijar o cambiar `retention_days` es mandar borrar envíos: exige `formulario_mensaje_view_submissions`, igual que el borrado explícito. Sin ella la petición que lo cambia se rechaza entera (`Form_Service`), el plazo de un formulario importado llega sin poner y el constructor desactiva el campo.
+- **Credenciales.** La contraseña SMTP guardada se descarta antes de guardar un destino distinto, y si no se puede descartar el destino no cambia; lo mismo con la clave del captcha y su proveedor. `Secret_Vault::set()` dice si el secreto ha quedado como se pedía y no acepta más de 1000 bytes.
+- **Webhooks.** El nombre del destino se resuelve una sola vez, se comprueba esa dirección y la conexión queda fijada a ella (`Destination_Guard`, con `CURLOPT_RESOLVE`). Sin cURL no se puede fijar, y entonces la prueba de webhook no devuelve el cuerpo de la respuesta. Un servidor interno se sigue pudiendo permitir por su nombre con `http_request_host_is_external`.
+- **Límite de envíos.** Cuenta por red (el /64 de una IPv6) y, si el servidor no entrega la IP del visitante, con un cupo común por formulario en vez de sin límite.
+- **Almacén de ficheros.** Cada subcarpeta lleva su `index.html` vacío, no solo la raíz.
+- **CSV.** Se neutraliza también el signo de fórmula que va detrás de un punto y coma, una barra vertical o un tabulador.
+- **Ubicaciones.** La búsqueda de dónde está cada formulario recorre el contenido una sola vez, sin expresiones regulares, y lee las entradas por tandas.
+
+Quedan sin revisar las seis unidades que esa auditoría aplazó (validación con campos condicionales, coste del saneado en la ruta de validación, trabajo previo a la devolución del cupo, multisitio, envíos de formularios borrados y prellenado frente a cachés de página).
+
 ### Preparación para el directorio de WordPress.org (2026-10-12, versión 0.14.0)
 
 El usuario pidió pasar Plugin Check y dejar el plugin listo para el directorio oficial, lo que cambia la decisión inicial de distribuirlo solo por zip. De paso resuelve el punto abierto de las actualizaciones: las webs instaladas se actualizarán desde el directorio.

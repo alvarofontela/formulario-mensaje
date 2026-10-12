@@ -70,9 +70,14 @@ final class Mail_Settings_Controller {
 							'default'     => array(),
 						),
 						'secrets'  => array(
-							'description' => __( 'New values for the credentials. An empty value keeps the stored one.', 'formulario-mensaje' ),
-							'type'        => 'object',
-							'default'     => array(),
+							'description'          => __( 'New values for the credentials. An empty value keeps the stored one.', 'formulario-mensaje' ),
+							'type'                 => 'object',
+							// Cada valor, una cadena con tope: un secreto desmesurado se rechaza antes de tocar nada.
+							'additionalProperties' => array(
+								'type'      => 'string',
+								'maxLength' => Secret_Vault::MAX_LENGTH,
+							),
+							'default'              => array(),
 						),
 						'clear'    => array(
 							'description' => __( 'Names of the stored credentials to delete.', 'formulario-mensaje' ),

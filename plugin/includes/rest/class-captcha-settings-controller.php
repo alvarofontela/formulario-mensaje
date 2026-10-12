@@ -13,6 +13,7 @@ use Formulario_Mensaje\Captcha\Captcha_Config_Sanitizer;
 use Formulario_Mensaje\Captcha\Captcha_Provider;
 use Formulario_Mensaje\Captcha\Captcha_Provider_Registry;
 use Formulario_Mensaje\Lifecycle\Capabilities;
+use Formulario_Mensaje\Secrets\Secret_Vault;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -67,6 +68,7 @@ final class Captcha_Settings_Controller {
 						'secret'       => array(
 							'description' => __( 'New secret key. An empty value keeps the stored one.', 'formulario-mensaje' ),
 							'type'        => 'string',
+							'maxLength'   => Secret_Vault::MAX_LENGTH,
 							'default'     => '',
 						),
 						'clear_secret' => array(
@@ -110,10 +112,10 @@ final class Captcha_Settings_Controller {
 	 * @param WP_REST_Request $request Petición.
 	 */
 	public function update_settings( WP_REST_Request $request ): WP_REST_Response {
-		$config    = $this->sanitizer->sanitize( $request['settings'] );
-		$discarded = $this->config->save( $config, trim( (string) $request['secret'] ), (bool) $request['clear_secret'] );
+		$discarded = $this->config->save( $this->sanitizer->sanitize( $request['settings'] ), trim( (string) $request['secret'] ), (bool) $request['clear_secret'] );
 
-		return $this->respond( $config, $discarded );
+		// Se responde con lo que ha quedado guardado, que puede no ser lo que llegó.
+		return $this->respond( $this->config->get(), $discarded );
 	}
 
 	/**

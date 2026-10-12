@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-12T16:06:59+02:00\n"
+"POT-Creation-Date: 2026-10-12T17:14:32+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: formulario-mensaje\n"
@@ -54,7 +54,7 @@ msgstr ""
 #: includes/admin/class-export-controller.php:51
 #: includes/cli/class-form-command.php:137
 #: includes/cli/class-submission-command.php:72
-#: includes/forms/class-form-service.php:214
+#: includes/forms/class-form-service.php:247
 #: includes/forms/class-post-form-repository.php:86
 #: includes/rest/class-form-transfer-controller.php:131
 #: includes/rest/class-forms-controller.php:225
@@ -230,7 +230,7 @@ msgstr[1] ""
 msgid "Your message could not be sent. Please reload the page and try again."
 msgstr ""
 
-#: includes/antispam/class-rate-limit-check.php:74
+#: includes/antispam/class-rate-limit-check.php:83
 msgid "You have sent too many messages. Please try again in a few minutes."
 msgstr ""
 
@@ -599,7 +599,7 @@ msgid "Accepted: %s"
 msgstr ""
 
 #: includes/fields/types/class-date-field-type.php:30
-#: includes/storage/class-csv-exporter.php:63
+#: includes/storage/class-csv-exporter.php:68
 msgid "Date"
 msgstr ""
 
@@ -841,30 +841,34 @@ msgstr ""
 msgid "Thank you. Your message has been sent."
 msgstr ""
 
-#: includes/forms/class-form-porter.php:76
+#: includes/forms/class-form-porter.php:77
 #: build/admin/index.js:21
 msgid "The file is not a form exported from Formulario Mensaje."
 msgstr ""
 
-#: includes/forms/class-form-porter.php:80
+#: includes/forms/class-form-porter.php:81
 msgid "The file was exported from a newer version of Formulario Mensaje. Update the plugin and try again."
 msgstr ""
 
 #. translators: %s: name of the form that was copied.
-#: includes/forms/class-form-service.php:115
+#: includes/forms/class-form-service.php:122
 #, php-format
 msgid "%s (copy)"
 msgstr ""
 
-#: includes/forms/class-form-service.php:162
+#: includes/forms/class-form-service.php:175
+msgid "Sorry, you are not allowed to change how long submissions are kept."
+msgstr ""
+
+#: includes/forms/class-form-service.php:183
 msgid "The redirect address is not allowed. Use an address on this site, or add its domain to the allowed domains in the plugin settings."
 msgstr ""
 
-#: includes/forms/class-form-service.php:191
+#: includes/forms/class-form-service.php:212
 msgid "The form could not be updated."
 msgstr ""
 
-#: includes/forms/class-form-service.php:207
+#: includes/forms/class-form-service.php:228
 msgid "Untitled form"
 msgstr ""
 
@@ -1108,7 +1112,7 @@ msgid "Identifier of the notification to test."
 msgstr ""
 
 #: includes/rest/class-action-tests-controller.php:73
-#: includes/rest/class-mail-settings-controller.php:100
+#: includes/rest/class-mail-settings-controller.php:105
 msgid "Address the test email is sent to."
 msgstr ""
 
@@ -1122,20 +1126,20 @@ msgstr ""
 msgid "Sorry, you are not allowed to manage forms."
 msgstr ""
 
-#: includes/rest/class-captcha-settings-controller.php:63
+#: includes/rest/class-captcha-settings-controller.php:64
 msgid "Captcha service, site key and score threshold."
 msgstr ""
 
-#: includes/rest/class-captcha-settings-controller.php:68
+#: includes/rest/class-captcha-settings-controller.php:69
 msgid "New secret key. An empty value keeps the stored one."
 msgstr ""
 
-#: includes/rest/class-captcha-settings-controller.php:73
+#: includes/rest/class-captcha-settings-controller.php:75
 msgid "Delete the stored secret key."
 msgstr ""
 
-#: includes/rest/class-captcha-settings-controller.php:95
-#: includes/rest/class-mail-settings-controller.php:122
+#: includes/rest/class-captcha-settings-controller.php:97
+#: includes/rest/class-mail-settings-controller.php:127
 #: includes/rest/class-maintenance-controller.php:50
 #: includes/rest/class-settings-controller.php:113
 msgid "Sorry, you are not allowed to manage the plugin settings."
@@ -1175,7 +1179,7 @@ msgstr ""
 msgid "New values for the credentials. An empty value keeps the stored one."
 msgstr ""
 
-#: includes/rest/class-mail-settings-controller.php:78
+#: includes/rest/class-mail-settings-controller.php:83
 msgid "Names of the stored credentials to delete."
 msgstr ""
 
@@ -1315,23 +1319,23 @@ msgstr ""
 msgid "This delivery cannot be retried."
 msgstr ""
 
-#: includes/storage/class-csv-exporter.php:63
+#: includes/storage/class-csv-exporter.php:68
 #: build/admin/index.js:37
 msgid "Reference"
 msgstr ""
 
-#: includes/storage/class-csv-exporter.php:63
+#: includes/storage/class-csv-exporter.php:68
 #: build/admin/index.js:37
 msgid "Page"
 msgstr ""
 
-#: includes/storage/class-csv-exporter.php:66
+#: includes/storage/class-csv-exporter.php:71
 #: build/admin/index.js:11
 #: build/admin/index.js:37
 msgid "IP address"
 msgstr ""
 
-#: includes/storage/class-csv-exporter.php:70
+#: includes/storage/class-csv-exporter.php:75
 #: build/admin/index.js:37
 msgid "Browser"
 msgstr ""
@@ -1386,6 +1390,14 @@ msgstr ""
 msgid "The file could not be stored."
 msgstr ""
 
+#: includes/webhooks/class-destination-guard.php:53
+msgid "The webhook address could not be resolved."
+msgstr ""
+
+#: includes/webhooks/class-destination-guard.php:57
+msgid "The webhook address points to an internal network address."
+msgstr ""
+
 #: includes/webhooks/class-webhook-action.php:72
 msgid "Webhook"
 msgstr ""
@@ -1396,11 +1408,11 @@ msgstr ""
 msgid "The destination responded with HTTP status %d."
 msgstr ""
 
-#: includes/webhooks/class-webhook-sender.php:75
+#: includes/webhooks/class-webhook-sender.php:83
 msgid "The webhook has no destination address."
 msgstr ""
 
-#: includes/webhooks/class-webhook-sender.php:81
+#: includes/webhooks/class-webhook-sender.php:89
 msgid "The submission data could not be converted to JSON."
 msgstr ""
 
@@ -1903,6 +1915,10 @@ msgstr ""
 
 #: build/admin/index.js:11
 msgid "0 keeps them until someone deletes them. The cleanup runs once a day."
+msgstr ""
+
+#: build/admin/index.js:11
+msgid "Only someone who can delete messages can change this: it deletes them automatically."
 msgstr ""
 
 #: build/admin/index.js:11
@@ -3048,6 +3064,10 @@ msgstr ""
 
 #: build/admin/index.js:52
 msgid "The SMTP connection has not been changed: its password is defined in wp-config.php and is only sent to the server it was set up for."
+msgstr ""
+
+#: build/admin/index.js:52
+msgid "The SMTP connection has not been changed: the stored password could not be deleted first. Try again."
 msgstr ""
 
 #: build/admin/index.js:52

@@ -187,10 +187,16 @@ export default function SettingsPage() {
 							'formulario-mensaje'
 						),
 					mailResponse.locked?.length > 0 &&
-						__(
-							'The SMTP connection has not been changed: its password is defined in wp-config.php and is only sent to the server it was set up for.',
-							'formulario-mensaje'
-						),
+						( mailResponse.secrets?.smtp_password?.source ===
+						'constant'
+							? __(
+									'The SMTP connection has not been changed: its password is defined in wp-config.php and is only sent to the server it was set up for.',
+									'formulario-mensaje'
+								)
+							: __(
+									'The SMTP connection has not been changed: the stored password could not be deleted first. Try again.',
+									'formulario-mensaje'
+								) ),
 					captchaResponse.discarded &&
 						__(
 							'The captcha service has changed, so the stored secret key has been deleted: enter the new service’s secret key.',

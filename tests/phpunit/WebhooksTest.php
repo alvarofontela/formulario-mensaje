@@ -5,9 +5,11 @@
 
 use Formulario_Mensaje\Alerts\Failure_Alert;
 use Formulario_Mensaje\Forms\Post_Form_Repository;
+use Formulario_Mensaje\Plugin;
 use Formulario_Mensaje\Queue\Queue_Schedule;
 use Formulario_Mensaje\Queue\Retry_Policy;
 use Formulario_Mensaje\Queue\Wpdb_Delivery_Queue;
+use Formulario_Mensaje\Secrets\Secret_Cipher;
 use Formulario_Mensaje\Settings\Option_Settings_Repository;
 use Formulario_Mensaje\Settings\Settings;
 use Formulario_Mensaje\Storage\Delivery;
@@ -19,6 +21,10 @@ use Formulario_Mensaje\Storage\Wpdb_Delivery_Repository;
 use Formulario_Mensaje\Storage\Wpdb_Submission_Repository;
 use Formulario_Mensaje\Submissions\Submission;
 use Formulario_Mensaje\Submissions\Submission_Entry;
+use Formulario_Mensaje\Webhooks\Destination_Guard;
+use Formulario_Mensaje\Webhooks\Webhook_Payload_Builder;
+use Formulario_Mensaje\Webhooks\Webhook_Sender;
+use Formulario_Mensaje\Webhooks\Webhook_Signer;
 
 class WebhooksTest extends Caso_Formulario {
 
@@ -454,6 +460,90 @@ class WebhooksTest extends Caso_Formulario {
 
 		$programa->clear();
 		$this->assertFalse( wp_next_scheduled( Queue_Schedule::HOOK ) );
+	}
+
+	public function test_el_destino_de_un_webhook_se_resuelve_una_vez_y_la_conexion_queda_fijada_a_esa_direccion() {
+		$dns     = new Resolutor_Fijo( array( 'hooks.example.org' => '93.184.216.34' ) );
+		$destino = new Destination_Guard( $dns );
+
+		// El formato es el de una entrada de CURLOPT_RESOLVE: servidor, puerto y la dirección ya comprobada.
+		$this->assertSame( 'hooks.example.org:443:93.184.216.34', $destino->pin( 'https://hooks.example.org/entrada' ) );
+		$this->assertSame( 'hooks.example.org:80:93.184.216.34', $destino->pin( 'http://HOOKS.example.org/entrada?a=1' ) );
+		$this->assertSame( 'hooks.example.org:8080:93.184.216.34', $destino->pin( 'https://hooks.example.org:8080/' ) );
+
+		// Una dirección escrita como IP no tiene nombre que resolver: la valida el núcleo tal cual.
+		$consultas = $dns->consultas;
+		$this->assertSame( '', $destino->pin( 'https://203.0.114.7/entrada' ) );
+		$this->assertSame( $consultas, $dns->consultas );
+	}
+
+	public function test_un_nombre_que_apunta_a_una_direccion_interna_o_que_no_se_resuelve_no_es_un_destino() {
+		$dns     = new Resolutor_Fijo();
+		$destino = new Destination_Guard( $dns );
+
+		foreach ( array( '127.0.0.1', '10.0.0.5', '172.16.4.4', '192.168.1.20', '169.254.169.254', '0.0.0.0' ) as $interna ) {
+			$dns->direcciones = array( 'rebote.example.org' => $interna );
+			$error            = $destino->pin( 'https://rebote.example.org/' );
+
+			$this->assertWPError( $error, $interna );
+			$this->assertSame( 'formulario_mensaje_webhook_internal', $error->get_error_code() );
+		}
+
+		$this->assertSame( 'formulario_mensaje_webhook_unresolved', $destino->pin( 'https://no-existe.example.org/' )->get_error_code() );
+
+		// Un sitio puede permitir un servidor de su red por su nombre con el filtro del núcleo: se
+		// respeta, y la conexión queda fijada igualmente a la dirección comprobada.
+		$permitir = static fn ( bool $externo, string $servidor ): bool => $externo || 'n8n.interno.example' === $servidor;
+		add_filter( 'http_request_host_is_external', $permitir, 10, 2 );
+
+		$dns->direcciones = array( 'n8n.interno.example' => '10.0.0.5', 'rebote.example.org' => '10.0.0.6' );
+
+		$this->assertSame( 'n8n.interno.example:443:10.0.0.5', $destino->pin( 'https://n8n.interno.example/webhook' ) );
+		$this->assertWPError( $destino->pin( 'https://rebote.example.org/' ) );
+
+		remove_filter( 'http_request_host_is_external', $permitir, 10 );
+
+		// El propio sitio siempre es un destino, apunte adonde apunte, igual que para el núcleo.
+		$propio           = (string) wp_parse_url( home_url(), PHP_URL_HOST );
+		$dns->direcciones = array( $propio => '127.0.0.1' );
+
+		$this->assertSame( $propio . ':80:127.0.0.1', $destino->pin( 'http://' . $propio . '/wp-json/' ) );
+
+		$dns->direcciones = array();
+		$this->assertSame( '', $destino->pin( 'http://' . $propio . '/wp-json/' ), 'Si no se resuelve, se deja al servidor llegar como pueda.' );
+	}
+
+	public function test_el_envio_de_un_webhook_se_corta_si_su_nombre_apunta_a_la_red_interna() {
+		$dns    = new Resolutor_Fijo( array( 'hooks.example.org' => '169.254.169.254' ) );
+		$emisor = new Webhook_Sender(
+			Plugin::service( Webhook_Payload_Builder::class ),
+			new Webhook_Signer(),
+			new Secret_Cipher(),
+			new Reloj_Falso(),
+			new Destination_Guard( $dns ),
+			'0.0.0'
+		);
+		$envio  = new Submission( 7, 'ABCD-2345', 0, '', array( 'nombre' => new Submission_Entry( 'nombre', 'text', 'Nombre', 'Ana', 'Ana' ) ) );
+		$form   = ( new Post_Form_Repository() )->find( $this->crear_formulario() );
+
+		// Con un doble que responde antes, no va a haber conexión: ni se consulta el DNS.
+		$respuesta = $emisor->send( array( 'url' => self::DESTINO ), $envio, $form, true );
+
+		$this->assertSame( 200, $respuesta->status_code );
+		$this->assertSame( '{"recibido":true}', $respuesta->body );
+		$this->assertSame( 0, $dns->consultas );
+
+		// Sin nadie que responda antes, la petición iría a la red: se corta con su error y no sale nada.
+		remove_all_filters( 'pre_http_request' );
+
+		$error = $emisor->send( array( 'url' => self::DESTINO ), $envio, $form, true );
+
+		$this->assertWPError( $error );
+		$this->assertSame( 'formulario_mensaje_webhook_failed', $error->get_error_code() );
+		$this->assertStringContainsString( 'internal network address', $error->get_error_message() );
+		$this->assertSame( 1, $dns->consultas, 'El nombre se resuelve una sola vez.' );
+		$this->assertFalse( has_filter( 'pre_http_request' ), 'El control solo dura lo que la petición.' );
+		$this->assertFalse( has_action( 'http_api_curl' ) );
 	}
 
 	public function test_el_webhook_de_prueba_devuelve_la_respuesta_del_destino_y_no_pasa_por_la_cola() {

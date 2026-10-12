@@ -44,7 +44,9 @@ final class Captcha_Config_Repository {
 	 * Guarda los ajustes y aplica el cambio pedido sobre la clave secreta.
 	 *
 	 * La clave secreta pertenece al servicio para el que se escribió: si el proveedor cambia y no
-	 * llega una nueva, la guardada se descarta en vez de enviarse a otro servicio.
+	 * llega una nueva, la guardada se descarta en vez de enviarse a otro servicio. Se descarta antes
+	 * de guardar el proveedor nuevo, y si no se puede descartar no se guarda nada: así el proveedor
+	 * nuevo nunca convive con la clave del anterior.
 	 *
 	 * @param Captcha_Config $config Ajustes ya saneados.
 	 * @param string         $secret Clave secreta nueva; vacía para conservar la guardada.
@@ -53,30 +55,28 @@ final class Captcha_Config_Repository {
 	 */
 	public function save( Captcha_Config $config, string $secret = '', bool $clear = false ): bool {
 		$previous = $this->get();
+		$dropped  = false;
+
+		// Una clave definida como constante no se puede descartar: la controla quien edita `wp-config.php`.
+		if ( $previous->provider !== $config->provider && Secret_Vault::SOURCE_STORED === $this->secrets->source( Captcha_Config::SECRET ) ) {
+			if ( ! $this->secrets->set( Captcha_Config::SECRET, '' ) ) {
+				return false;
+			}
+
+			$dropped = true;
+		}
 
 		// Sin carga automática: solo hace falta donde hay un formulario o en la administración.
 		update_option( self::OPTION, $config->to_array(), false );
 
 		if ( '' !== $secret ) {
 			$this->secrets->set( Captcha_Config::SECRET, $secret );
-
-			return false;
-		}
-
-		if ( $clear ) {
+		} elseif ( $clear ) {
 			$this->secrets->set( Captcha_Config::SECRET, '' );
-
-			return false;
 		}
 
-		// Una clave definida como constante no se puede descartar: la controla quien edita `wp-config.php`.
-		if ( $previous->provider !== $config->provider && Secret_Vault::SOURCE_STORED === $this->secrets->source( Captcha_Config::SECRET ) ) {
-			$this->secrets->set( Captcha_Config::SECRET, '' );
-
-			return true;
-		}
-
-		return false;
+		// Se avisa cuando nadie pidió borrarla y al final no ha quedado ninguna: cuenta lo guardado.
+		return $dropped && ! $clear && Secret_Vault::SOURCE_NONE === $this->secrets->source( Captcha_Config::SECRET );
 	}
 
 	/**

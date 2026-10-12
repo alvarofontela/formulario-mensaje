@@ -332,6 +332,88 @@ class CorreoTest extends Caso_Formulario {
 		$this->assertSame( array(), $igual['locked'] );
 	}
 
+	public function test_si_la_contrasena_guardada_no_se_puede_descartar_el_destino_smtp_no_cambia() {
+		$this->como_administrador();
+
+		$ajustes = array( 'transport' => 'smtp', 'smtp_host' => 'smtp.example.org' );
+		$almacen = new Secret_Vault( new Secret_Cipher() );
+
+		$this->rest( 'PUT', '/settings/mail', array( 'settings' => $ajustes, 'secrets' => array( 'smtp_password' => 'secreta' ) ) );
+
+		// La base de datos no acepta ningún cambio en los secretos: lo guardado se queda como estaba.
+		$bloqueo = static fn ( mixed $nuevo, mixed $anterior ): mixed => $anterior;
+		add_filter( 'pre_update_option_' . Secret_Vault::OPTION, $bloqueo, 10, 2 );
+
+		$this->assertFalse( $almacen->set( 'smtp_password', '' ), 'El almacén dice que el secreto no ha quedado como se pedía.' );
+		$this->assertFalse( $almacen->set( 'smtp_password', 'otra' ), 'Ni borrar ni cambiar: nada entra.' );
+
+		// Con otro servidor y sin contraseña nueva; y con otro servidor y una contraseña nueva que tampoco
+		// se va a guardar. En los dos casos el servidor nuevo recibiría la contraseña del anterior.
+		foreach ( array( array(), array( 'smtp_password' => 'la-del-atacante' ) ) as $secretos ) {
+			$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'smtp.atacante.example' ) + $ajustes, 'secrets' => $secretos ) )->get_data();
+
+			$this->assertSame( array( 'smtp_host' ), $respuesta['locked'] );
+			$this->assertSame( 'smtp.example.org', $respuesta['settings']['smtp_host'] );
+			$this->assertSame( array(), $respuesta['discarded'] );
+			$this->assertSame( 'stored', $respuesta['secrets']['smtp_password']['source'] );
+			$this->assertSame( 'smtp.example.org', $this->rest( 'GET', '/settings/mail' )->get_data()['settings']['smtp_host'] );
+		}
+
+		remove_filter( 'pre_update_option_' . Secret_Vault::OPTION, $bloqueo, 10 );
+
+		$this->assertSame( 'secreta', $almacen->get( 'smtp_password' ) );
+
+		// Guardar el mismo valor no es un fallo, aunque WordPress no escriba nada.
+		$this->assertTrue( $almacen->set( 'otra_clave', 'valor' ) );
+		$this->assertTrue( $almacen->set( 'otra_clave', '' ) );
+		$this->assertTrue( $almacen->set( 'otra_clave', '' ) );
+	}
+
+	public function test_la_contrasena_nueva_que_no_llega_a_guardarse_no_deja_la_antigua_con_el_destino_nuevo() {
+		$this->como_administrador();
+
+		$ajustes  = array( 'transport' => 'smtp', 'smtp_host' => 'smtp.example.org' );
+		$almacen  = new Secret_Vault( new Secret_Cipher() );
+		$escritas = 0;
+
+		$this->rest( 'PUT', '/settings/mail', array( 'settings' => $ajustes, 'secrets' => array( 'smtp_password' => 'secreta' ) ) );
+
+		// Falla solo la segunda escritura de los secretos: el descarte entra, la contraseña nueva no.
+		$bloqueo = static function ( mixed $nuevo, mixed $anterior ) use ( &$escritas ): mixed {
+			return ++$escritas > 1 ? $anterior : $nuevo;
+		};
+		add_filter( 'pre_update_option_' . Secret_Vault::OPTION, $bloqueo, 10, 2 );
+
+		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'smtp.nuevo.example' ) + $ajustes, 'secrets' => array( 'smtp_password' => 'la-nueva' ) ) )->get_data();
+
+		remove_filter( 'pre_update_option_' . Secret_Vault::OPTION, $bloqueo, 10 );
+
+		$this->assertSame( 'smtp.nuevo.example', $respuesta['settings']['smtp_host'] );
+		$this->assertSame( '', $almacen->get( 'smtp_password' ), 'El servidor nuevo se queda sin contraseña, no con la del anterior.' );
+		$this->assertSame( array( 'smtp_password' ), $respuesta['discarded'], 'Y la pantalla lo avisa: lo que cuenta es lo guardado, no lo que traía la petición.' );
+	}
+
+	public function test_un_secreto_desmesurado_se_rechaza_sin_tocar_nada() {
+		$this->como_administrador();
+
+		$ajustes = array( 'transport' => 'smtp', 'smtp_host' => 'smtp.example.org' );
+		$almacen = new Secret_Vault( new Secret_Cipher() );
+		$enorme  = str_repeat( 'a', Secret_Vault::MAX_LENGTH + 1 );
+
+		$this->rest( 'PUT', '/settings/mail', array( 'settings' => $ajustes, 'secrets' => array( 'smtp_password' => 'secreta' ) ) );
+
+		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'smtp.atacante.example' ) + $ajustes, 'secrets' => array( 'smtp_password' => $enorme ) ) );
+
+		$this->assertSame( 400, $respuesta->get_status() );
+		$this->assertSame( 'smtp.example.org', $this->rest( 'GET', '/settings/mail' )->get_data()['settings']['smtp_host'] );
+		$this->assertSame( 'secreta', $almacen->get( 'smtp_password' ) );
+		$this->assertSame( 400, $this->rest( 'PUT', '/settings/captcha', array( 'settings' => array(), 'secret' => $enorme ) )->get_status() );
+
+		// Y el almacén tampoco lo acepta por ninguna otra vía.
+		$this->assertFalse( $almacen->set( 'smtp_password', $enorme ) );
+		$this->assertTrue( $almacen->set( 'smtp_password', str_repeat( 'a', Secret_Vault::MAX_LENGTH ) ) );
+	}
+
 	public function test_smtp_omite_una_direccion_de_respuesta_que_phpmailer_no_acepta_en_vez_de_fallar() {
 		require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
 

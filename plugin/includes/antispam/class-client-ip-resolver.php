@@ -40,7 +40,8 @@ final class Client_Ip_Resolver {
 	/**
 	 * IP del visitante.
 	 *
-	 * @return string Dirección IP válida, o cadena vacía si no se puede determinar (por ejemplo, en WP-CLI).
+	 * @return string Dirección IP válida, o cadena vacía si el servidor no entrega ninguna (por ejemplo, si
+	 *                recibe las conexiones por un socket Unix). El límite de envíos cuenta ese caso aparte.
 	 */
 	public function resolve(): string {
 		$remote = $this->server->get( 'REMOTE_ADDR' );

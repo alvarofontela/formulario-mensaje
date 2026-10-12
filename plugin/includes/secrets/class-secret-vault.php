@@ -23,6 +23,12 @@ final class Secret_Vault {
 	 */
 	public const OPTION = 'formulario_mensaje_secrets';
 
+	/**
+	 * Longitud máxima de un secreto, en bytes. Una contraseña o una clave de API no se le acercan; sin
+	 * tope, un valor enorme podría hacer fracasar la escritura de todos los secretos a la vez.
+	 */
+	public const MAX_LENGTH = 1000;
+
 	public const SOURCE_CONSTANT = 'constant';
 	public const SOURCE_STORED   = 'stored';
 	public const SOURCE_NONE     = 'none';
@@ -57,9 +63,14 @@ final class Secret_Vault {
 	 *
 	 * @param string $name  Nombre del secreto.
 	 * @param string $value Valor en claro.
-	 * @return bool False si no se pudo cifrar.
+	 * @return bool Si el secreto ha quedado como se pedía. False si es demasiado largo, si no se pudo
+	 *              cifrar o si la base de datos no aceptó el cambio: quien llama decide qué hacer.
 	 */
 	public function set( string $name, string $value ): bool {
+		if ( strlen( $value ) > self::MAX_LENGTH ) {
+			return false;
+		}
+
 		$stored = $this->stored();
 
 		if ( '' === $value ) {
@@ -77,7 +88,9 @@ final class Secret_Vault {
 		// Sin carga automática: solo hacen falta al conectar con el servicio.
 		update_option( self::OPTION, $stored, false );
 
-		return true;
+		// update_option() devuelve false tanto si falla como si no había nada que cambiar: lo que cuenta
+		// es lo que ha quedado guardado.
+		return $this->stored() === $stored;
 	}
 
 	/**

@@ -8,6 +8,7 @@
 use Formulario_Mensaje\Antispam\Wpdb_Rate_Limiter;
 use Formulario_Mensaje\Database\Schema;
 use Formulario_Mensaje\Lifecycle\Capabilities;
+use Formulario_Mensaje\Lifecycle\Maintenance_Schedule;
 use Formulario_Mensaje\Storage\Failure_Counter;
 use Formulario_Mensaje\Storage\Stored_Submission;
 use Formulario_Mensaje\Storage\Submission_Service;
@@ -52,6 +53,54 @@ class RevisionSeguridadTest extends Caso_Formulario {
 		// Sin pedir el borrado de envíos, gestionar formularios basta.
 		$this->assertSame( 200, $this->rest( 'DELETE', "/forms/$formulario", array( 'force' => true ) )->get_status() );
 		$this->assertNotNull( $this->envios->find( $envio ), 'Los envíos se conservan.' );
+	}
+
+	public function test_gestionar_formularios_no_basta_para_fijar_el_plazo_de_retencion_que_borra_envios() {
+		$formulario = $this->crear_formulario( array( 'settings' => array( 'retention_days' => 30 ) ) );
+		$antiguo    = $this->envios->insert(
+			new Stored_Submission( 0, $formulario, 'ABCD-2346', time() - 2 * DAY_IN_SECONDS, '', '', '', array( new Submission_Entry( 'nombre', 'text', 'Nombre', 'Ana', 'Ana' ) ) )
+		);
+		// crear_formulario() deja la sesión cerrada, como un visitante.
+		$this->como_administrador();
+		$definicion = $this->rest( 'GET', "/forms/$formulario" )->get_data()['definition'];
+
+		$gestor = self::factory()->user->create( array( 'role' => 'editor' ) );
+		wp_set_current_user( $gestor );
+		wp_get_current_user()->add_cap( Capabilities::MANAGE_FORMS );
+
+		// Bajar el plazo a un día haría que el mantenimiento diario borrase el envío: es borrar envíos.
+		$corto                               = $definicion;
+		$corto['settings']['retention_days'] = 1;
+
+		$respuesta = $this->rest( 'PUT', "/forms/$formulario", array( 'definition' => $corto ) );
+
+		$this->assertSame( 403, $respuesta->get_status() );
+		$this->assertSame( 'formulario_mensaje_retention_forbidden', $respuesta->get_data()['code'] );
+		$this->assertSame( 30, $this->rest( 'GET', "/forms/$formulario" )->get_data()['definition']['settings']['retention_days'], 'No se guarda a medias.' );
+
+		do_action( Maintenance_Schedule::HOOK );
+		$this->assertNotNull( $this->envios->find( $antiguo ), 'El envío sigue ahí.' );
+
+		// Guardar cualquier otra cosa con el plazo tal como estaba sí puede: es lo que envía el constructor.
+		$otro                                = $definicion;
+		$otro['settings']['submit_label']    = 'Enviar ya';
+		$this->assertSame( 200, $this->rest( 'PUT', "/forms/$formulario", array( 'definition' => $otro ) )->get_status() );
+		$this->assertSame( 200, $this->rest( 'PUT', "/forms/$formulario", array( 'title' => 'Otro nombre' ) )->get_status() );
+
+		// Tampoco al crear ni al importar: un formulario nuevo de este usuario nace sin plazo.
+		$this->assertSame( 403, $this->rest( 'POST', '/forms', array( 'title' => 'Nuevo', 'definition' => $corto ) )->get_status() );
+
+		$documento = $this->rest( 'GET', "/forms/$formulario/export" )->get_data();
+		$importado = $this->rest( 'POST', '/forms/import', array( 'document' => $documento ) );
+
+		$this->assertSame( 201, $importado->get_status() );
+		$this->assertSame( 0, $this->rest( 'GET', '/forms/' . $importado->get_data()['id'] )->get_data()['definition']['settings']['retention_days'], 'El plazo importado llega sin poner.' );
+
+		// Con el permiso de los envíos, el mismo cambio se guarda.
+		wp_get_current_user()->add_cap( Capabilities::VIEW_SUBMISSIONS );
+
+		$this->assertSame( 200, $this->rest( 'PUT', "/forms/$formulario", array( 'definition' => $corto ) )->get_status() );
+		$this->assertSame( 1, $this->rest( 'GET', "/forms/$formulario" )->get_data()['definition']['settings']['retention_days'] );
 	}
 
 	public function test_borrar_los_envios_de_un_formulario_los_borra_todos_aunque_sean_muchos() {

@@ -141,7 +141,7 @@ final class Form_Transfer_Controller {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function import( WP_REST_Request $request ): WP_REST_Response|WP_Error {
-		$form = $this->porter->import( $request['document'] );
+		$form = $this->porter->import( $request['document'], current_user_can( Capabilities::VIEW_SUBMISSIONS ) );
 
 		return is_wp_error( $form ) ? $form : $this->created( $form );
 	}

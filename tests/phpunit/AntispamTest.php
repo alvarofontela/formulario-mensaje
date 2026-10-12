@@ -118,7 +118,7 @@ class AntispamTest extends Caso_Formulario {
 	private function limite( Reloj_Falso $reloj ): Rate_Limit_Check {
 		global $wpdb;
 
-		return new Rate_Limit_Check( new Wpdb_Rate_Limiter( $wpdb, $this->esquema(), $reloj ) );
+		return new Rate_Limit_Check( new Wpdb_Rate_Limiter( $wpdb, $this->esquema(), $reloj ), new Ip_Matcher() );
 	}
 
 	private function peticion( string $ip, Submission_Channel $via = Submission_Channel::Rest ): Submission_Request {
@@ -191,6 +191,68 @@ class AntispamTest extends Caso_Formulario {
 		$this->assertNull( $limite->check( $sin_js, $formulario ) );
 		$this->assertNull( $limite->check( $sin_js, $formulario ) );
 		$this->assertSame( 'formulario_mensaje_rate_limited', $limite->check( $sin_js, $formulario )->get_error_code() );
+	}
+
+	public function test_un_cliente_ipv6_no_estrena_cupo_con_cada_direccion_de_su_prefijo() {
+		$limite     = $this->limite( new Reloj_Falso() );
+		$formulario = new Form( 7, 'Contacto', Form::STATUS_PUBLISHED, new Form_Definition() );
+
+		// Un cliente IPv6 elige los 64 bits bajos de su dirección: se le cuenta por su prefijo.
+		for ( $i = 1; $i <= 5; $i++ ) {
+			$this->assertNull( $limite->check( $this->peticion( "2001:db8:1:1::$i" ), $formulario ), "Dirección $i" );
+		}
+
+		$this->assertSame( 'formulario_mensaje_rate_limited', $limite->check( $this->peticion( '2001:db8:1:1:ffff:ffff:ffff:ffff' ), $formulario )->get_error_code() );
+		$this->assertNull( $limite->check( $this->peticion( '2001:db8:1:2::1' ), $formulario ), 'Otro prefijo es otro cliente.' );
+
+		// Devolver el hueco desde otra dirección del mismo prefijo libera el mismo cupo.
+		$limite->release( $this->peticion( '2001:db8:1:1::9' ), $formulario );
+		$this->assertNull( $limite->check( $this->peticion( '2001:db8:1:1::a' ), $formulario ) );
+	}
+
+	public function test_la_red_de_una_direccion_es_su_prefijo_en_ipv6_y_la_propia_direccion_en_ipv4() {
+		$comparador = new Ip_Matcher();
+
+		$this->assertSame( '203.0.113.7', $comparador->network( '203.0.113.7' ) );
+		$this->assertSame( '2001:db8:1:1::/64', $comparador->network( '2001:db8:1:1:aaaa:bbbb:cccc:dddd' ) );
+		$this->assertSame( '2001:db8:1:1::/64', $comparador->network( '2001:0db8:0001:0001::1' ), 'La forma de escribirla no cambia la red.' );
+		// Una IPv4 escrita como IPv6 no puede caer en un cupo común a todas las IPv4.
+		$this->assertSame( '203.0.113.7', $comparador->network( '::ffff:203.0.113.7' ) );
+		$this->assertSame( '', $comparador->network( 'unix:' ) );
+		$this->assertSame( '', $comparador->network( '' ) );
+	}
+
+	public function test_sin_direccion_del_visitante_el_limite_se_aplica_con_un_cupo_comun() {
+		global $wpdb;
+
+		$limite     = $this->limite( new Reloj_Falso( time() ) );
+		$formulario = new Form( 7, 'Contacto', Form::STATUS_PUBLISHED, new Form_Definition() );
+		$sin_ip     = $this->peticion( '', Submission_Channel::Fallback );
+
+		// No saber de qué dirección llega la petición no equivale a no tener límite.
+		$this->assertNull( $limite->check( $sin_ip, $formulario ) );
+		$this->assertNull( $limite->check( $sin_ip, $formulario ) );
+		$this->assertSame( 'formulario_mensaje_rate_limited', $limite->check( $sin_ip, $formulario )->get_error_code() );
+		$this->assertSame( 1, (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $this->esquema()->rate_limits_table() ) ) );
+
+		// Quien sí tiene dirección no comparte ese cupo, y el hueco se devuelve igual.
+		$this->assertNull( $limite->check( $this->peticion( '203.0.113.9', Submission_Channel::Fallback ), $formulario ) );
+		$limite->release( $sin_ip, $formulario );
+		$this->assertNull( $limite->check( $sin_ip, $formulario ) );
+	}
+
+	public function test_un_servidor_que_no_entrega_la_ip_no_deja_el_formulario_sin_limite() {
+		$formulario = $this->crear_formulario();
+
+		$_SERVER['REMOTE_ADDR'] = 'unix:';
+
+		for ( $i = 0; $i < 5; $i++ ) {
+			$this->assertSame( 200, $this->enviar( $formulario, array( 'nombre' => 'Ana', 'correo' => 'ana@example.org' ) )->get_status(), "Envío $i" );
+		}
+
+		$this->assertSame( 429, $this->enviar( $formulario, array( 'nombre' => 'Ana', 'correo' => 'ana@example.org' ) )->get_status() );
+
+		$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 	}
 
 	public function test_el_contador_del_limite_no_guarda_la_ip() {

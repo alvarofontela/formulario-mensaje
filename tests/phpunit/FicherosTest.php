@@ -334,6 +334,16 @@ class FicherosTest extends Caso_Formulario {
 		$this->assertStringContainsString( 'Require all denied', file_get_contents( $this->directorio->base() . '/.htaccess' ) );
 		$this->assertFileExists( $this->directorio->base() . '/index.html' );
 
+		// Los ficheros están en subcarpetas de nombre predecible: cada una lleva su índice vacío, para
+		// que un servidor que no aplique el `.htaccess` tampoco pueda listar sus nombres aleatorios.
+		foreach ( $guardados as $guardado ) {
+			$subcarpeta = dirname( $this->directorio->base() . '/' . $guardado->path );
+
+			$this->assertFileExists( $subcarpeta . '/index.html' );
+			$this->assertSame( '', file_get_contents( $subcarpeta . '/index.html' ) );
+			$this->assertFileDoesNotExist( $subcarpeta . '/.htaccess', 'La denegación solo va en la raíz: las subcarpetas la heredan.' );
+		}
+
 		// El correo lleva los dos adjuntos con su nombre original, y el texto dice qué se ha recibido.
 		$this->assertCount( 1, $this->correos );
 		$this->assertSame( array( 'Informe-anual.pdf', 'foto.png' ), array_column( $this->correos[0]->attachments, 'name' ) );

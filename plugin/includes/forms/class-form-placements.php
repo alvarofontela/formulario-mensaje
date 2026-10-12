@@ -48,9 +48,24 @@ final class Form_Placements {
 	private const ELEMENTOR_META   = '_elementor_data';
 
 	/**
+	 * Comentario con el que el editor de bloques abre el bloque del formulario.
+	 */
+	private const BLOCK_OPENING = '<!-- wp:' . self::BLOCK;
+
+	/**
 	 * Páginas que se revisan como mucho en cada búsqueda, por cada vía.
 	 */
 	private const LIMIT = 300;
+
+	/**
+	 * Páginas que se leen de la base de datos en cada tanda.
+	 */
+	private const BATCH = 25;
+
+	/**
+	 * Longitud máxima de los atributos de un bloque o de un shortcode: lo que pase de ahí no lo es.
+	 */
+	private const MAX_INNER = 2000;
 
 	/**
 	 * Constructor.
@@ -110,50 +125,98 @@ final class Form_Placements {
 	 * @return array<int, int[]> Identificadores de formulario, por identificador de entrada.
 	 */
 	private function forms_by_post(): array {
-		$wpdb  = $this->wpdb;
 		$found = array();
 
-		$rows = $wpdb->get_results(
-			$wpdb->prepare(
-				'SELECT ID, post_content FROM %i WHERE post_status = %s AND ( post_content LIKE %s OR post_content LIKE %s ) ORDER BY ID DESC LIMIT %d',
-				$wpdb->posts,
-				'publish',
-				'%' . $wpdb->esc_like( '<!-- wp:' . self::BLOCK ) . '%',
-				'%' . $wpdb->esc_like( '[' . Shortcode::TAG ) . '%',
-				self::LIMIT
-			),
-			ARRAY_A
-		);
-
-		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
-			$ids = array( ...$this->in_blocks( (string) $row['post_content'] ), ...$this->in_shortcodes( (string) $row['post_content'] ) );
+		foreach ( $this->posts_with_form() as $post_id => $content ) {
+			$ids = array( ...$this->in_blocks( $content ), ...$this->in_shortcodes( $content ) );
 
 			if ( array() !== $ids ) {
-				$found[ (int) $row['ID'] ] = $ids;
+				$found[ $post_id ] = $ids;
 			}
 		}
 
-		$rows = $wpdb->get_results(
-			$wpdb->prepare(
-				'SELECT post_id, meta_value FROM %i WHERE meta_key = %s AND meta_value LIKE %s ORDER BY post_id DESC LIMIT %d',
-				$wpdb->postmeta,
-				self::ELEMENTOR_META,
-				'%' . $wpdb->esc_like( '"widgetType":"' . self::ELEMENTOR_WIDGET . '"' ) . '%',
-				self::LIMIT
-			),
-			ARRAY_A
-		);
-
-		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
-			$ids = $this->in_elementor( json_decode( (string) $row['meta_value'], true ) );
+		foreach ( $this->elementor_pages_with_form() as $post_id => $data ) {
+			$ids = $this->in_elementor( json_decode( $data, true ) );
 
 			if ( array() !== $ids ) {
-				$post_id           = (int) $row['post_id'];
 				$found[ $post_id ] = array( ...( $found[ $post_id ] ?? array() ), ...$ids );
 			}
 		}
 
 		return $found;
+	}
+
+	/**
+	 * Contenido de las entradas publicadas que mencionan el bloque o el shortcode, de las más nuevas a
+	 * las más antiguas.
+	 *
+	 * Se leen por tandas, y no todas a la vez, para que la memoria no dependa de lo que pese el
+	 * contenido que hayan escrito los autores del sitio.
+	 *
+	 * @return \Generator<int, string> Contenido, por identificador de entrada.
+	 */
+	private function posts_with_form(): \Generator {
+		$wpdb = $this->wpdb;
+		$last = PHP_INT_MAX;
+
+		for ( $read = 0; $read < self::LIMIT; $read += self::BATCH ) {
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT ID, post_content FROM %i WHERE post_status = %s AND ID < %d AND ( post_content LIKE %s OR post_content LIKE %s ) ORDER BY ID DESC LIMIT %d',
+					$wpdb->posts,
+					'publish',
+					$last,
+					'%' . $wpdb->esc_like( self::BLOCK_OPENING ) . '%',
+					'%' . $wpdb->esc_like( '[' . Shortcode::TAG ) . '%',
+					min( self::BATCH, self::LIMIT - $read )
+				),
+				ARRAY_A
+			);
+
+			foreach ( is_array( $rows ) ? $rows : array() as $row ) {
+				$last = (int) $row['ID'];
+
+				yield $last => (string) $row['post_content'];
+			}
+
+			if ( ! is_array( $rows ) || count( $rows ) < self::BATCH ) {
+				return;
+			}
+		}
+	}
+
+	/**
+	 * Contenido de Elementor de las páginas que llevan el widget, por tandas como posts_with_form().
+	 *
+	 * @return \Generator<int, string> JSON de Elementor, por identificador de entrada.
+	 */
+	private function elementor_pages_with_form(): \Generator {
+		$wpdb = $this->wpdb;
+		$last = PHP_INT_MAX;
+
+		for ( $read = 0; $read < self::LIMIT; $read += self::BATCH ) {
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT meta_id, post_id, meta_value FROM %i WHERE meta_key = %s AND meta_id < %d AND meta_value LIKE %s ORDER BY meta_id DESC LIMIT %d',
+					$wpdb->postmeta,
+					self::ELEMENTOR_META,
+					$last,
+					'%' . $wpdb->esc_like( '"widgetType":"' . self::ELEMENTOR_WIDGET . '"' ) . '%',
+					min( self::BATCH, self::LIMIT - $read )
+				),
+				ARRAY_A
+			);
+
+			foreach ( is_array( $rows ) ? $rows : array() as $row ) {
+				$last = (int) $row['meta_id'];
+
+				yield (int) $row['post_id'] => (string) $row['meta_value'];
+			}
+
+			if ( ! is_array( $rows ) || count( $rows ) < self::BATCH ) {
+				return;
+			}
+		}
 	}
 
 	/**
@@ -166,14 +229,15 @@ final class Form_Placements {
 	 * @return int[]
 	 */
 	private function in_blocks( string $content ): array {
-		if ( 1 > preg_match_all( '#<!--\s+wp:' . preg_quote( self::BLOCK, '#' ) . '\s+(\{.*?\})\s+/?-->#s', $content, $matches ) ) {
-			return array();
-		}
-
 		$ids = array();
 
-		foreach ( $matches[1] as $json ) {
-			$attributes = json_decode( $json, true );
+		foreach ( $this->between( $content, self::BLOCK_OPENING, '-->' ) as $inner ) {
+			// Tras el nombre del bloque va un espacio: si no, es el de otro bloque que empieza igual.
+			if ( '' === $inner || ! ctype_space( $inner[0] ) ) {
+				continue;
+			}
+
+			$attributes = json_decode( trim( rtrim( trim( $inner ), '/' ) ), true );
 			$ids[]      = absint( is_array( $attributes ) ? ( $attributes['formId'] ?? 0 ) : 0 );
 		}
 
@@ -187,23 +251,58 @@ final class Form_Placements {
 	 * @return int[]
 	 */
 	private function in_shortcodes( string $content ): array {
-		if ( 1 > preg_match_all( '/' . get_shortcode_regex( array( Shortcode::TAG ) ) . '/s', $content, $matches, PREG_SET_ORDER ) ) {
-			return array();
-		}
-
 		$ids = array();
 
-		foreach ( $matches as $match ) {
-			// Con doble corchete, [[así]], el shortcode está escrito para enseñarlo, no para ejecutarlo.
-			if ( '[' === $match[1] && ']' === $match[6] ) {
+		foreach ( $this->between( $content, '[' . Shortcode::TAG, ']' ) as $start => $inner ) {
+			// Tras el nombre va un espacio, la barra de cierre o nada: si no, es otro shortcode.
+			if ( '' !== $inner && '/' !== $inner[0] && ! ctype_space( $inner[0] ) ) {
 				continue;
 			}
 
-			$attributes = shortcode_parse_atts( $match[3] );
+			$after = $start + strlen( '[' . Shortcode::TAG ) + strlen( $inner ) + 1;
+
+			// Con doble corchete, [[así]], el shortcode está escrito para enseñarlo, no para ejecutarlo.
+			if ( $start > 0 && '[' === $content[ $start - 1 ] && ']' === ( $content[ $after ] ?? '' ) ) {
+				continue;
+			}
+
+			$attributes = shortcode_parse_atts( trim( rtrim( trim( $inner ), '/' ) ) );
 			$ids[]      = absint( is_array( $attributes ) ? ( $attributes['id'] ?? 0 ) : 0 );
 		}
 
 		return array_values( array_filter( $ids ) );
+	}
+
+	/**
+	 * Trozos del contenido que van entre una apertura y el primer cierre que la sigue.
+	 *
+	 * Recorre el texto una sola vez, sin expresiones regulares: el contenido lo escriben los autores
+	 * del sitio, y una búsqueda que volviera a empezar desde cada apertura tardaría más cuanto más
+	 * aperturas sin cerrar hubiera, dentro de la petición de quien gestiona los formularios.
+	 *
+	 * @param string $content Contenido de la entrada.
+	 * @param string $opening Texto con el que empieza lo que se busca.
+	 * @param string $closing Texto con el que termina.
+	 * @return \Generator<int, string> Lo que hay entre los dos, por la posición de la apertura.
+	 */
+	private function between( string $content, string $opening, string $closing ): \Generator {
+		$start = strpos( $content, $opening );
+
+		while ( false !== $start ) {
+			$inner = $start + strlen( $opening );
+			$end   = strpos( $content, $closing, $inner );
+
+			// Sin cierre de aquí al final, tampoco lo tiene ninguna apertura posterior.
+			if ( false === $end ) {
+				return;
+			}
+
+			if ( $end - $inner <= self::MAX_INNER ) {
+				yield $start => substr( $content, $inner, $end - $inner );
+			}
+
+			$start = strpos( $content, $opening, $end + strlen( $closing ) );
+		}
 	}
 
 	/**

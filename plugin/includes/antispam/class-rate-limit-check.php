@@ -19,6 +19,11 @@ defined( 'ABSPATH' ) || exit;
  *
  * El hueco se reserva al comprobar, con un contador atómico, y se devuelve si el envío no se acepta:
  * así el límite no se puede saltar con envíos simultáneos, y corregir un error de validación no gasta.
+ *
+ * A cada cliente se le cuenta por su red, no por su dirección exacta (ver Ip_Matcher::network()): un
+ * cliente IPv6 dispone de un prefijo entero y estrenaría cupo con cada dirección. Si el servidor no
+ * dice de qué dirección llega la petición, todas las que lleguen así comparten un mismo cupo por
+ * formulario: no saber quién envía no puede equivaler a no tener límite.
  */
 final class Rate_Limit_Check implements Reserving_Check {
 
@@ -44,8 +49,12 @@ final class Rate_Limit_Check implements Reserving_Check {
 	 * Constructor.
 	 *
 	 * @param Rate_Limiter $limiter Contadores.
+	 * @param Ip_Matcher   $matcher Comparador de IP y rangos, para contar por red.
 	 */
-	public function __construct( private readonly Rate_Limiter $limiter ) {}
+	public function __construct(
+		private readonly Rate_Limiter $limiter,
+		private readonly Ip_Matcher $matcher
+	) {}
 
 	/**
 	 * Decide si un envío puede continuar y, si es así, reserva su hueco.
@@ -56,7 +65,7 @@ final class Rate_Limit_Check implements Reserving_Check {
 	public function check( Submission_Request $request, Form $form ): ?WP_Error {
 		$limit = $this->limit( $request, $form );
 
-		if ( '' === $request->client_ip || $limit['max'] <= 0 ) {
+		if ( $limit['max'] <= 0 ) {
 			return null;
 		}
 
@@ -83,7 +92,7 @@ final class Rate_Limit_Check implements Reserving_Check {
 	 * @param Form               $form    Formulario al que se envió.
 	 */
 	public function release( Submission_Request $request, Form $form ): void {
-		if ( '' !== $request->client_ip && $this->limit( $request, $form )['max'] > 0 ) {
+		if ( $this->limit( $request, $form )['max'] > 0 ) {
 			$this->limiter->release( $this->key( $request, $form ) );
 		}
 	}
@@ -121,7 +130,7 @@ final class Rate_Limit_Check implements Reserving_Check {
 	}
 
 	/**
-	 * Clave del contador de una IP en un formulario y una vía.
+	 * Clave del contador de un cliente en un formulario y una vía.
 	 *
 	 * La IP no se guarda: la clave es un resumen con la sal del sitio, del que no se puede recuperar.
 	 *
@@ -129,6 +138,11 @@ final class Rate_Limit_Check implements Reserving_Check {
 	 * @param Form               $form    Formulario.
 	 */
 	private function key( Submission_Request $request, Form $form ): string {
-		return substr( hash_hmac( 'sha256', $form->id . '|' . $request->channel->value . '|' . $request->client_ip, wp_salt( 'nonce' ) ), 0, 40 );
+		$network = $this->matcher->network( $request->client_ip );
+
+		// Sin dirección conocida, un cupo común: el texto no puede coincidir con el de ninguna red.
+		$client = '' !== $network ? $network : 'unknown';
+
+		return substr( hash_hmac( 'sha256', $form->id . '|' . $request->channel->value . '|' . $client, wp_salt( 'nonce' ) ), 0, 40 );
 	}
 }

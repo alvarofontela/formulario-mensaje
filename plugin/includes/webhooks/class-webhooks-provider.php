@@ -37,6 +37,13 @@ final class Webhooks_Provider implements Service_Provider {
 
 		$container->set( Webhook_Signer::class, static fn (): Webhook_Signer => new Webhook_Signer() );
 
+		$container->set( Host_Resolver::class, static fn (): Host_Resolver => new Dns_Host_Resolver() );
+
+		$container->set(
+			Destination_Guard::class,
+			static fn ( Container $c ): Destination_Guard => new Destination_Guard( $c->get( Host_Resolver::class ) )
+		);
+
 		$container->set(
 			Webhook_Sender::class,
 			static fn ( Container $c ): Webhook_Sender => new Webhook_Sender(
@@ -44,6 +51,7 @@ final class Webhooks_Provider implements Service_Provider {
 				$c->get( Webhook_Signer::class ),
 				$c->get( Secret_Cipher::class ),
 				$c->get( Clock::class ),
+				$c->get( Destination_Guard::class ),
 				FORMULARIO_MENSAJE_VERSION
 			)
 		);

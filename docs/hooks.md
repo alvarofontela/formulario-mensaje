@@ -145,6 +145,17 @@ Filtra los segundos mínimos entre dos avisos de entregas fallidas al administra
 
 ## Webhooks y cola
 
+Un webhook solo se envía a direcciones externas: el plugin resuelve el nombre del destino una vez, comprueba que no apunta a la red interna y fija la conexión a esa dirección. Para enviar a un servidor de la propia red (un n8n interno, por ejemplo) se permite su nombre con el filtro del núcleo `http_request_host_is_external`, que el plugin respeta:
+
+```php
+add_filter(
+	'http_request_host_is_external',
+	static fn ( bool $external, string $host ): bool => $external || 'n8n.interno.example' === $host,
+	10,
+	2
+);
+```
+
 ### `formulario_mensaje_webhook_payload` (filtro)
 
 Filtra los datos que un webhook envía a su destino, antes de convertirlos a JSON y de firmarlos.

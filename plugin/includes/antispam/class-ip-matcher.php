@@ -24,6 +24,34 @@ final class Ip_Matcher {
 	}
 
 	/**
+	 * Red por la que se cuenta a un cliente, para que sus direcciones no pasen por clientes distintos.
+	 *
+	 * Un cliente IPv6 dispone de un prefijo entero (lo habitual es un /64) y elige el resto de la
+	 * dirección: se le cuenta por ese prefijo. Una IPv4, también la escrita en formato IPv6
+	 * (`::ffff:203.0.113.7`), se cuenta por la dirección.
+	 *
+	 * @param string $ip Dirección IP.
+	 * @return string La dirección IPv4, o el prefijo IPv6 con su `/64`; cadena vacía si no es una IP.
+	 */
+	public function network( string $ip ): string {
+		if ( ! $this->is_ip( $ip ) ) {
+			return '';
+		}
+
+		$address = (string) inet_pton( $ip );
+
+		if ( 4 === strlen( $address ) ) {
+			return (string) inet_ntop( $address );
+		}
+
+		if ( str_starts_with( $address, str_repeat( "\0", 10 ) . "\xff\xff" ) ) {
+			return (string) inet_ntop( substr( $address, 12 ) );
+		}
+
+		return inet_ntop( substr( $address, 0, 8 ) . str_repeat( "\0", 8 ) ) . '/64';
+	}
+
+	/**
 	 * Normaliza una IP o un rango CIDR.
 	 *
 	 * @param string $range IP (`203.0.113.7`) o rango (`203.0.113.0/24`, `2001:db8::/32`).

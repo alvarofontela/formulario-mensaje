@@ -21,6 +21,12 @@ defined( 'ABSPATH' ) || exit;
  * El destino lo escribe quien gestiona formularios, así que la petición va siempre por la variante
  * segura de la HTTP API, que rechaza las direcciones internas (SSRF), y no sigue redirecciones: un
  * destino que redirige podría llevar los datos a otro sitio.
+ *
+ * Además, la conexión queda fijada a la dirección que se ha comprobado (ver Destination_Guard): el
+ * núcleo valida resolviendo el nombre una vez y la conexión lo resuelve otra, y entre las dos un
+ * DNS malintencionado podría cambiar la respuesta. Fijarla solo es posible con cURL; con otro
+ * transporte la petición se hace igual, pero no se devuelve nada del cuerpo de la respuesta, que es
+ * lo que convertiría una petición a ciegas en una lectura.
  */
 final class Webhook_Sender {
 
@@ -45,17 +51,19 @@ final class Webhook_Sender {
 	/**
 	 * Constructor.
 	 *
-	 * @param Webhook_Payload_Builder $payloads Datos de los webhooks.
-	 * @param Webhook_Signer          $signer   Firma de los webhooks.
-	 * @param Secret_Cipher           $cipher   Cifrado de secretos, para leer el de firma.
-	 * @param Clock                   $clock    Reloj.
-	 * @param string                  $version  Versión del plugin, para identificarse ante el destino.
+	 * @param Webhook_Payload_Builder $payloads     Datos de los webhooks.
+	 * @param Webhook_Signer          $signer       Firma de los webhooks.
+	 * @param Secret_Cipher           $cipher       Cifrado de secretos, para leer el de firma.
+	 * @param Clock                   $clock        Reloj.
+	 * @param Destination_Guard       $destinations Dirección a la que se conecta cada petición.
+	 * @param string                  $version      Versión del plugin, para identificarse ante el destino.
 	 */
 	public function __construct(
 		private readonly Webhook_Payload_Builder $payloads,
 		private readonly Webhook_Signer $signer,
 		private readonly Secret_Cipher $cipher,
 		private readonly Clock $clock,
+		private readonly Destination_Guard $destinations,
 		private readonly string $version
 	) {}
 
@@ -112,6 +120,40 @@ final class Webhook_Sender {
 		 */
 		$timeout = max( 1, min( 30, (int) apply_filters( 'formulario_mensaje_webhook_timeout', self::TIMEOUT ) ) );
 		$started = microtime( true );
+		$pin     = '';
+		$pinned  = false;
+
+		/*
+		 * Va el último de su filtro: si otro código ya ha respondido a la petición (una caché, un doble
+		 * de pruebas), no va a haber conexión que proteger. Si la va a haber, se decide aquí a qué
+		 * dirección, y una interna corta la petición con su error.
+		 */
+		$guard = function ( mixed $preempt ) use ( $url, &$pin ): mixed {
+			if ( false !== $preempt ) {
+				return $preempt;
+			}
+
+			$destination = $this->destinations->pin( $url );
+
+			if ( is_wp_error( $destination ) ) {
+				return $destination;
+			}
+
+			$pin = $destination;
+
+			return $preempt;
+		};
+
+		$connect = static function ( mixed $handle ) use ( &$pin, &$pinned ): void {
+			if ( '' !== $pin ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt -- La petición la hace la HTTP API; aquí solo se le fija la dirección ya comprobada, que no tiene otra vía.
+				$pinned = curl_setopt( $handle, CURLOPT_RESOLVE, array( $pin ) );
+			}
+		};
+
+		// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Hooks del núcleo.
+		add_filter( 'pre_http_request', $guard, PHP_INT_MAX );
+		add_action( 'http_api_curl', $connect, PHP_INT_MAX );
 
 		$response = wp_safe_remote_request(
 			$url,
@@ -126,14 +168,22 @@ final class Webhook_Sender {
 			)
 		);
 
+		remove_filter( 'pre_http_request', $guard, PHP_INT_MAX );
+		remove_action( 'http_api_curl', $connect, PHP_INT_MAX );
+		// phpcs:enable
+
 		if ( is_wp_error( $response ) ) {
 			// El mensaje describe el fallo de red o por qué la dirección no es segura; no lleva datos del envío.
 			return new WP_Error( 'formulario_mensaje_webhook_failed', mb_substr( sanitize_text_field( $response->get_error_message() ), 0, 200 ) );
 		}
 
+		// Había una dirección que fijar y la conexión no ha pasado por cURL: no se ha podido fijar, así que
+		// del destino solo se cuenta el código con el que respondió.
+		$body = '' !== $pin && ! $pinned ? '' : wp_remote_retrieve_body( $response );
+
 		return new Webhook_Response(
 			(int) wp_remote_retrieve_response_code( $response ),
-			mb_substr( wp_check_invalid_utf8( wp_remote_retrieve_body( $response ), true ), 0, self::BODY_EXCERPT ),
+			mb_substr( wp_check_invalid_utf8( $body, true ), 0, self::BODY_EXCERPT ),
 			(int) round( ( microtime( true ) - $started ) * 1000 )
 		);
 	}

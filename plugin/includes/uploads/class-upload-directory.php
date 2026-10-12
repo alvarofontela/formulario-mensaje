@@ -15,7 +15,9 @@ defined( 'ABSPATH' ) || exit;
  * Está dentro de la carpeta de subidas de WordPress, que es donde el servidor deja escribir, pero no
  * se sirve por URL: lleva un `.htaccess` que lo prohíbe, y los ficheros se guardan con un nombre
  * aleatorio y una extensión que ningún servidor ejecuta ni ningún navegador interpreta. Donde el
- * `.htaccess` no se aplica (nginx), la protección es que el nombre no se puede adivinar.
+ * `.htaccess` no se aplica (nginx), la protección es que el nombre no se puede adivinar: por eso
+ * cada carpeta, también las subcarpetas donde están los ficheros, lleva un índice vacío que impide
+ * que el servidor enseñe su contenido.
  */
 final class Upload_Directory {
 
@@ -28,6 +30,11 @@ final class Upload_Directory {
 	 * Extensión con la que se guardan todos los ficheros, sea cual sea su tipo.
 	 */
 	private const EXTENSION = '.dat';
+
+	/**
+	 * Fichero vacío que impide listar una carpeta donde el servidor no tiene índice propio.
+	 */
+	private const INDEX_FILE = 'index.html';
 
 	/**
 	 * Ruta completa del almacén, sin barra final.
@@ -66,6 +73,13 @@ final class Upload_Directory {
 		}
 
 		$this->protect( $base );
+
+		// Los ficheros no están en la raíz sino en su subcarpeta, y sus nombres posibles son pocos: sin un
+		// índice propio, un servidor que no aplique el `.htaccess` y liste directorios enseñaría los
+		// nombres aleatorios, que es lo único que protege el almacén en ese caso.
+		if ( $directory !== $base ) {
+			$this->write_if_missing( $directory . '/' . self::INDEX_FILE, '' );
+		}
 
 		return $directory;
 	}
@@ -123,15 +137,28 @@ final class Upload_Directory {
 	private function protect( string $base ): void {
 		$files = array(
 			// Apache 2.4 y, por si acaso, la sintaxis de 2.2.
-			'.htaccess'  => "<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n\tOrder deny,allow\n\tDeny from all\n</IfModule>\n",
-			'index.html' => '',
+			'.htaccess'      => "<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n\tOrder deny,allow\n\tDeny from all\n</IfModule>\n",
+			self::INDEX_FILE => '',
 		);
 
 		foreach ( $files as $name => $content ) {
-			if ( ! file_exists( $base . '/' . $name ) ) {
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Fichero fijo, escrito en la carpeta propia del plugin.
-				file_put_contents( $base . '/' . $name, $content );
-			}
+			$this->write_if_missing( $base . '/' . $name, $content );
+		}
+	}
+
+	/**
+	 * Escribe un fichero de protección si todavía no existe.
+	 *
+	 * La ruta nunca viene de una petición: es el almacén, o la subcarpeta de un nombre que genera
+	 * new_relative_path(), más un nombre de fichero fijo.
+	 *
+	 * @param string $path    Ruta completa del fichero.
+	 * @param string $content Contenido.
+	 */
+	private function write_if_missing( string $path, string $content ): void {
+		if ( ! file_exists( $path ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Fichero fijo, escrito en la carpeta propia del plugin.
+			file_put_contents( $path, $content );
 		}
 	}
 }

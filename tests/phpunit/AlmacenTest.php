@@ -397,6 +397,15 @@ class AlmacenTest extends Caso_Formulario {
 		}
 
 		$this->assertSame( 'Normal', $exportador->neutralize( 'Normal' ) );
+
+		// Una hoja de cálculo que separe por punto y coma parte la celda: lo que sigue al separador no
+		// puede empezar por un signo de fórmula. Vale también para la URL de la página y el navegador.
+		$this->assertSame( "a;'=1+1;b", $exportador->neutralize( 'a;=1+1;b' ) );
+		$this->assertSame( "http://example.org/?a;'=1+1;b", $exportador->neutralize( 'http://example.org/?a;=1+1;b' ) );
+		$this->assertSame( "'=1;'+2;'-3;'@4", $exportador->neutralize( '=1;+2;-3;@4' ) );
+		$this->assertSame( "a\t'=1|'=2", $exportador->neutralize( "a\t=1|=2" ) );
+		$this->assertSame( 'uno; dos; a=b', $exportador->neutralize( 'uno; dos; a=b' ), 'Un texto normal con punto y coma no se toca.' );
+		$this->assertSame( 'Añadir; más', $exportador->neutralize( 'Añadir; más' ) );
 	}
 
 	public function test_la_exportacion_filtra_por_fechas() {

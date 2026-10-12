@@ -235,7 +235,7 @@ final class Forms_Controller {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function create_item( WP_REST_Request $request ): WP_REST_Response|WP_Error {
-		$form = $this->forms->create( $request['title'], $request['definition'] );
+		$form = $this->forms->create( $request['title'], $request['definition'], current_user_can( Capabilities::VIEW_SUBMISSIONS ) );
 
 		return is_wp_error( $form ) ? $form : new WP_REST_Response( $this->detail( $form ), 201 );
 	}
@@ -247,7 +247,7 @@ final class Forms_Controller {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function update_item( WP_REST_Request $request ): WP_REST_Response|WP_Error {
-		$form = $this->forms->update( (int) $request['id'], $request['title'], $request['definition'] );
+		$form = $this->forms->update( (int) $request['id'], $request['title'], $request['definition'], current_user_can( Capabilities::VIEW_SUBMISSIONS ) );
 
 		return is_wp_error( $form ) ? $form : new WP_REST_Response( $this->detail( $form ) );
 	}
