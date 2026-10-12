@@ -4,7 +4,7 @@ Tags: contact form, form builder, forms, email, webhooks
 Requires at least: 7.0
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -141,6 +141,9 @@ The dashboard application and the block are written in React and compiled with `
 The script of the form in the front end (`assets/js`) and its styles (`assets/css`) are not compiled or minified.
 
 == Changelog ==
+
+= 1.0.1 =
+* Maintenance release to check updates from the WordPress dashboard. No functional changes.
 
 = 1.0.0 =
 * First stable version.

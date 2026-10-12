@@ -10,7 +10,7 @@ Nace de tres ideas:
 
 | | |
 | --- | --- |
-| Versión | 1.0.0 |
+| Versión | 1.0.1 |
 | WordPress | 7.0 o posterior |
 | PHP | 8.1 o posterior |
 | Licencia | GPL-2.0-or-later |
