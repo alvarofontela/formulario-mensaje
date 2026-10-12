@@ -286,6 +286,10 @@ CustomLog "$logs/apache-access.log" common
 AcceptFilter http none
 EnableSendfile Off
 EnableMMAP Off
+# Sin conexiones persistentes: un navegador o un cliente de pruebas que reutiliza una conexión justo cuando
+# el servidor la cierra por inactividad ve un corte, y con varios tests a la vez (rt matrix) pasa de vez en
+# cuando. En local, abrir una conexión por petición no cuesta nada.
+KeepAlive Off
 <IfModule mpm_winnt_module>
     ThreadsPerChild 32
     ThreadStackSize 8388608
@@ -604,11 +608,71 @@ switch ($Command) {
         In-Root { & npx.cmd playwright test @Rest }
         exit $LASTEXITCODE
     }
+    'matrix' {
+        # Matriz de combinaciones (tests/matriz): primero los tests que corren en paralelo (los de la web y,
+        # con menos navegadores a la vez, los de la administración) y después, de uno en uno, los que cambian
+        # ajustes de todo el sitio. Los argumentos se pasan a las dos tandas.
+        Start-All
+        In-Root { & npx.cmd playwright test -c playwright.matriz.config.ts --project=paralelo --project=admin --pass-with-no-tests @Rest }
+        $parallel = $LASTEXITCODE
+        # La segunda tanda usa su propia carpeta de resultados y no reescribe el informe: si no, borraría las trazas de la primera.
+        In-Root { & npx.cmd playwright test -c playwright.matriz.config.ts --project=global --no-deps --pass-with-no-tests --reporter=list --output=.runtime/tmp/playwright/matriz-results-global @Rest }
+        exit [Math]::Max($parallel, $LASTEXITCODE)
+    }
     'playwright' { In-Root { & npx.cmd playwright @Rest }; exit $LASTEXITCODE }
     'build' {
         # Compila src/ (constructor en React y bloque) a plugin/build con @wordpress/scripts.
         In-Root { & npm.cmd run build @Rest }
         exit $LASTEXITCODE
+    }
+    'package' {
+        # Zip instalable del plugin en dist/, listo para «Plugins > Añadir nuevo > Subir plugin». Lo genera
+        # scripts/package.py, con Python, para que sea igual que uno hecho en Linux: rutas con «/», permisos
+        # Unix (644 y 755) y nombres en UTF-8. Empaqueta plugin/ tal como está: antes hay que haber pasado
+        # `rt build` e `rt i18n` si se ha tocado src/ o algún texto. Añade src/ y la configuración de la
+        # compilación: WordPress.org exige que el código legible acompañe a lo que va compilado en build/.
+        In-Root { & python (Join-Path $PSScriptRoot 'package.py') $Cfg.Slug $Dir.Plugin (Join-Path $Root 'dist') (Join-Path $Root 'src') (Join-Path $Root 'webpack.config.js') }
+        exit $LASTEXITCODE
+    }
+    'check' {
+        # Plugin Check, la herramienta con la que WordPress.org revisa lo que se le envía. Se pasa dos veces:
+        # al plugin instalado, con las comprobaciones que necesitan ejecutarlo, y al contenido del zip de
+        # `rt package`, que es lo que se sube (lleva además src/). Falla si alguna de las dos encuentra algo:
+        # el comando de Plugin Check termina siempre con código 0, así que se mira su salida.
+        Start-All
+        $checker = Join-Path $Dir.Www 'wp-content\plugins\plugin-check'
+        if (-not (Test-Path $checker)) { Wp plugin install plugin-check }
+        & $Exe.Php $Exe.WpCli plugin is-active plugin-check
+        $wasActive = $LASTEXITCODE -eq 0
+        if (-not $wasActive) { Wp plugin activate plugin-check }
+
+        In-Root { & python (Join-Path $PSScriptRoot 'package.py') $Cfg.Slug $Dir.Plugin (Join-Path $Root 'dist') (Join-Path $Root 'src') (Join-Path $Root 'webpack.config.js') | Out-Host }
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        $unpacked = Join-Path $Dir.Tmp 'check'
+        if (Test-Path $unpacked) { Remove-Item $unpacked -Recurse -Force }
+        $zip = Get-ChildItem (Join-Path $Root 'dist') -Filter "$($Cfg.Slug)-*.zip" | Sort-Object LastWriteTime | Select-Object -Last 1
+        Expand-Archive $zip.FullName $unpacked
+
+        $options = '--include-experimental', '--include-low-severity-errors', '--include-low-severity-warnings'
+        $targets = [ordered]@{
+            'Plugin instalado'          = @($Cfg.Slug, "--require=$checker\cli.php")
+            "Contenido de $($zip.Name)" = @((Join-Path $unpacked $Cfg.Slug))
+        }
+        $failed = $false
+        foreach ($target in $targets.GetEnumerator()) {
+            Write-Host "== $($target.Key)"
+            $output = & $Exe.Php $Exe.WpCli plugin check @($target.Value) @options @Rest 2>&1
+            $output | Out-Host
+            if ($LASTEXITCODE -ne 0 -or ($output -match '^FILE: ')) { $failed = $true }
+        }
+
+        Remove-Item $unpacked -Recurse -Force
+        if (-not $wasActive) { Wp plugin deactivate plugin-check }
+        # Plugin Check no puede saber si un usuario de WordPress.org existe: el marcador hay que cambiarlo a mano.
+        if ((Get-Content (Join-Path $Dir.Plugin 'readme.txt') -Raw) -match '(?m)^Contributors:\s*tu-usuario\s*$') {
+            Write-Warning 'readme.txt: «Contributors» lleva el marcador tu-usuario. Pon tu usuario de WordPress.org antes de enviar el plugin.'
+        }
+        exit ($failed ? 1 : 0)
     }
     'shot' {
         # Captura de pantalla con el Chromium de .runtime; las opciones están en scripts/shot.mjs.
@@ -617,17 +681,34 @@ switch ($Command) {
         exit $LASTEXITCODE
     }
     'i18n' {
-        # Regenera la plantilla de traducción y, a partir de scripts/i18n/<locale>.json, los .po, .mo y .json
-        # de plugin/languages. Falla si algún texto de la interfaz se ha quedado sin traducir.
+        # Las traducciones se escriben en los .po de plugin/languages, uno por idioma. Este comando regenera la
+        # plantilla .pot desde el código, la fusiona en cada .po (los textos nuevos quedan al final, sin
+        # traducir) y compila los .mo, .l10n.php y .json. Falla si a algún idioma le falta un texto.
         $languages = Join-Path $Dir.Plugin 'languages'
+        $pot = Join-Path $languages "$($Cfg.Slug).pot"
+        $fresh = Join-Path $Dir.Tmp "$($Cfg.Slug).pot"
         New-Item -ItemType Directory -Force $languages | Out-Null
-        Run $Exe.Php $Exe.WpCli i18n make-pot $Dir.Plugin "$languages\$($Cfg.Slug).pot" "--slug=$($Cfg.Slug)" "--domain=$($Cfg.Slug)" --skip-audit
-        In-Root { & node scripts/i18n-build.mjs $Cfg.Slug }
+        # El plugin no está en WordPress.org: sin esto, la plantilla remite los errores a un foro que no existe.
+        Run $Exe.Php $Exe.WpCli i18n make-pot $Dir.Plugin $fresh "--slug=$($Cfg.Slug)" "--domain=$($Cfg.Slug)" --skip-audit '--headers={"Report-Msgid-Bugs-To":""}'
+        # make-pot pone la fecha del momento y update-po la copia a cada .po. La plantilla solo se sustituye
+        # si ha cambiado algo más que la fecha: así una pasada sin textos nuevos no modifica ningún fichero.
+        $texts = { param($file) @(Get-Content $file) -notmatch '^"POT-Creation-Date:' }
+        if (-not (Test-Path $pot) -or (Compare-Object (& $texts $pot) (& $texts $fresh) -SyncWindow 0)) {
+            Move-Item -Force $fresh $pot
+        } else {
+            Remove-Item $fresh
+        }
+        Run $Exe.Php $Exe.WpCli i18n update-po $pot $languages
+        In-Root { & node scripts/i18n-check.mjs }
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        Get-ChildItem $languages -Include *.json, *.l10n.php -File -Recurse | Remove-Item
+        Get-ChildItem $languages -Include *.json, *.l10n.php, *.mo -File -Recurse | Remove-Item
         Run $Exe.Php $Exe.WpCli i18n make-mo $languages
         # WordPress carga antes el .l10n.php que el .mo: es un include de PHP, mucho más rápido.
         Run $Exe.Php $Exe.WpCli i18n make-php $languages
+        # En Windows, WP-CLI escribe el primer salto de línea de ese fichero como CRLF: se deja como saldría en Linux.
+        Get-ChildItem $languages -Filter *.l10n.php | ForEach-Object {
+            [IO.File]::WriteAllText($_.FullName, ([IO.File]::ReadAllText($_.FullName) -replace "`r`n", "`n"))
+        }
         Run $Exe.Php $Exe.WpCli i18n make-json $languages --no-purge
         exit 0
     }
@@ -715,8 +796,11 @@ Entorno local de WordPress en .runtime/   ->   $BaseUrl
   rt phpunit [args]        Tests de integración (usa --coverage-text o similar para cobertura)
   rt lint [fix] [args]     PHPCS sobre plugin/: estándares de WordPress y compatibilidad con PHP 8.1+
   rt e2e [args]            Tests de Playwright      rt playwright <args>   Resto de comandos de Playwright
+  rt matrix [args]         Matriz de combinaciones (tests/matriz): varios navegadores a la vez
   rt build                 Compila src/ (React y bloque) a plugin/build
-  rt i18n                  Regenera el .pot y las traducciones de plugin/languages desde scripts/i18n/*.json
+  rt package               Crea en dist/ el zip instalable del plugin
+  rt check [args]          Plugin Check de WordPress.org sobre el plugin instalado y sobre el zip
+  rt i18n                  Regenera el .pot, lo fusiona en los .po de plugin/languages y compila .mo, .l10n.php y .json
   rt shot <ruta> <png> [opciones]   Captura de pantalla (opciones en scripts/shot.mjs)
   rt mail [n|clear] [--json]   Correos capturados por Mailpit
   rt logs [wp|php|apache|access|mariadb|mailpit|xdebug|clear] [líneas]

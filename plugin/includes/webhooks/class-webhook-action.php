@@ -11,6 +11,7 @@ use Formulario_Mensaje\Actions\Action_Type;
 use Formulario_Mensaje\Forms\Form;
 use Formulario_Mensaje\Secrets\Secret_Cipher;
 use Formulario_Mensaje\Submissions\Submission;
+use Formulario_Mensaje\Support\Plain_Text;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -159,7 +160,7 @@ final class Webhook_Action implements Action_Type {
 			return new WP_Error(
 				'formulario_mensaje_webhook_rejected',
 				/* translators: %d: HTTP status code. */
-				sprintf( __( 'The destination answered with HTTP status %d.', 'formulario-mensaje' ), $response->status_code )
+				sprintf( __( 'The destination responded with HTTP status %d.', 'formulario-mensaje' ), $response->status_code )
 			);
 		}
 
@@ -186,7 +187,7 @@ final class Webhook_Action implements Action_Type {
 
 			$headers[ $lower ] = array(
 				'name'  => $name,
-				'value' => is_scalar( $item['value'] ?? null ) ? mb_substr( sanitize_text_field( (string) $item['value'] ), 0, 1000 ) : '',
+				'value' => is_scalar( $item['value'] ?? null ) ? mb_substr( Plain_Text::line( (string) $item['value'] ), 0, 1000 ) : '',
 			);
 
 			if ( count( $headers ) >= self::MAX_HEADERS ) {
@@ -215,7 +216,7 @@ final class Webhook_Action implements Action_Type {
 
 			$payload[ $key ] = array(
 				'key'   => $key,
-				'value' => is_scalar( $item['value'] ?? null ) ? mb_substr( sanitize_textarea_field( (string) $item['value'] ), 0, 2000 ) : '',
+				'value' => is_scalar( $item['value'] ?? null ) ? mb_substr( Plain_Text::block( (string) $item['value'] ), 0, 2000 ) : '',
 			);
 
 			if ( count( $payload ) >= self::MAX_PAYLOAD_ITEMS ) {

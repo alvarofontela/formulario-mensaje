@@ -10,8 +10,6 @@ namespace Formulario_Mensaje\Elementor;
 use Elementor\Controls_Manager;
 use Elementor\Group_Control_Typography;
 use Elementor\Widget_Base;
-use Formulario_Mensaje\Forms\Form;
-use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Frontend\Form_Embed;
 use Formulario_Mensaje\Frontend\Frontend_Assets;
 use Formulario_Mensaje\Plugin;
@@ -110,11 +108,8 @@ final class Form_Widget extends Widget_Base {
 	 * Contenido: qué formulario se muestra.
 	 */
 	private function register_content_controls(): void {
-		$options = array( '0' => __( 'Select a form', 'formulario-mensaje' ) );
-
-		foreach ( Plugin::service( Form_Repository::class )->all( Form::STATUS_PUBLISHED ) as $form ) {
-			$options[ (string) $form->id ] = $form->title;
-		}
+		// Elementor inserta el texto de cada opción como HTML: llegan ya escapados.
+		$options = Plugin::service( Form_Choices::class )->options();
 
 		$this->start_controls_section(
 			'section_form',
@@ -131,7 +126,7 @@ final class Form_Widget extends Widget_Base {
 				'type'        => Controls_Manager::SELECT,
 				'options'     => $options,
 				'default'     => '0',
-				'description' => __( 'Forms are created in the Forms menu of WordPress.', 'formulario-mensaje' ),
+				'description' => __( 'Forms are created in the WordPress Forms menu.', 'formulario-mensaje' ),
 			)
 		);
 

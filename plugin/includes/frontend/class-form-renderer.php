@@ -88,7 +88,7 @@ final class Form_Renderer {
 					'style' => $css,
 				)
 			),
-			$show_form ? $this->form( $form, new Render_Context( $form->id, $instance ), $interactive ) : '',
+			$show_form ? $this->form( $form, new Render_Context( $form->id, $instance, $form->definition->condition_sources() ), $interactive ) : '',
 			'' === $confirmation ? ' hidden' : '',
 			$confirmation
 		);

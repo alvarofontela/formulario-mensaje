@@ -22,7 +22,7 @@ final class Schema {
 	/**
 	 * Versión del esquema que crea este código.
 	 */
-	public const VERSION = 3;
+	public const VERSION = 4;
 
 	/**
 	 * Opción que guarda la versión del esquema instalado.
@@ -76,7 +76,8 @@ final class Schema {
 	 * Crea las tablas o las lleva a la versión actual.
 	 */
 	public function install(): void {
-		$wpdb = $this->wpdb;
+		$wpdb     = $this->wpdb;
+		$previous = (int) get_option( self::VERSION_OPTION, 0 );
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
@@ -89,6 +90,7 @@ final class Schema {
 		/*
 		 * `search_text` reúne la referencia y los valores para poder buscar sin leer el JSON de
 		 * `entries`. `failed_actions` cuenta las entregas fallidas del envío para filtrar sin unir tablas.
+		 * `read_at` es cuándo se leyó en la bandeja de mensajes; nulo mientras nadie lo ha abierto.
 		 */
 		dbDelta(
 			"CREATE TABLE {$submissions} (
@@ -102,10 +104,12 @@ final class Schema {
 				entries longtext NOT NULL,
 				search_text longtext NOT NULL,
 				failed_actions smallint(5) unsigned NOT NULL DEFAULT 0,
+				read_at datetime DEFAULT NULL,
 				PRIMARY KEY  (id),
 				KEY form_created (form_id,created_at),
 				KEY created_at (created_at),
-				KEY failed_actions (failed_actions)
+				KEY failed_actions (failed_actions),
+				KEY read_at (read_at)
 			) {$collate};"
 		);
 
@@ -167,6 +171,16 @@ final class Schema {
 				KEY expires_at (expires_at)
 			) {$collate};"
 		);
+
+		/*
+		 * Hasta la versión 4 los envíos no tenían estado de lectura. Los que ya estaban se dan por
+		 * leídos: quien actualiza no debe encontrarse de golpe con todo su histórico como pendiente.
+		 * Se puede repetir sin daño: solo toca los que siguen sin fecha.
+		 */
+		if ( $previous > 0 && $previous < 4 ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Tabla propia, sin caché de objetos que mantener; el nombre va por el marcador %i.
+			$wpdb->query( $wpdb->prepare( 'UPDATE %i SET read_at = created_at WHERE read_at IS NULL', $submissions ) );
+		}
 
 		update_option( self::VERSION_OPTION, self::VERSION );
 	}

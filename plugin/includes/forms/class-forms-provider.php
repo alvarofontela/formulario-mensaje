@@ -15,6 +15,7 @@ use Formulario_Mensaje\Rules\Condition_Sanitizer;
 use Formulario_Mensaje\Service_Provider;
 use Formulario_Mensaje\Submissions\Redirect_Policy;
 use Formulario_Mensaje\Support\Inline_Html;
+use wpdb;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -74,11 +75,21 @@ final class Forms_Provider implements Service_Provider {
 			)
 		);
 
+		$container->set( Form_Placements::class, static fn ( Container $c ): Form_Placements => new Form_Placements( $c->get( wpdb::class ) ) );
+
 		add_action(
 			'init',
 			static function () use ( $container ): void {
 				$container->get( Form_Post_Type::class )->register();
 			}
 		);
+
+		// Al guardar o borrar cualquier contenido puede cambiar dónde está puesto un formulario: se olvida lo averiguado.
+		$forget = static function () use ( $container ): void {
+			$container->get( Form_Placements::class )->forget();
+		};
+
+		add_action( 'save_post', $forget, 10, 0 );
+		add_action( 'deleted_post', $forget, 10, 0 );
 	}
 }

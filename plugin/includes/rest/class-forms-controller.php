@@ -8,6 +8,7 @@
 namespace Formulario_Mensaje\Rest;
 
 use Formulario_Mensaje\Forms\Form;
+use Formulario_Mensaje\Forms\Form_Placements;
 use Formulario_Mensaje\Forms\Form_Service;
 use Formulario_Mensaje\Frontend\Form_Renderer;
 use Formulario_Mensaje\Frontend\Frontend_Assets;
@@ -37,12 +38,14 @@ final class Forms_Controller {
 	 * @param Form_Renderer      $renderer    HTML del formulario.
 	 * @param Frontend_Assets    $assets      Estilos del formulario.
 	 * @param Submission_Service $submissions Servicio de envíos guardados.
+	 * @param Form_Placements    $placements  Páginas en las que está cada formulario.
 	 */
 	public function __construct(
 		private readonly Form_Service $forms,
 		private readonly Form_Renderer $renderer,
 		private readonly Frontend_Assets $assets,
-		private readonly Submission_Service $submissions
+		private readonly Submission_Service $submissions,
+		private readonly Form_Placements $placements
 	) {}
 
 	/**
@@ -122,7 +125,8 @@ final class Forms_Controller {
 					'methods'             => WP_REST_Server::EDITABLE,
 					'callback'            => array( $this, 'update_item' ),
 					'permission_callback' => array( $this, 'can_manage' ),
-					'args'                => $id_arg + $item_args,
+					// Sin valores por defecto: lo que no viene en la petición se queda como está.
+					'args'                => $id_arg + array_map( static fn ( array $arg ): array => array_diff_key( $arg, array( 'default' => true ) ), $item_args ),
 				),
 				array(
 					'methods'             => WP_REST_Server::DELETABLE,
@@ -191,13 +195,14 @@ final class Forms_Controller {
 		$is_manager = current_user_can( Capabilities::MANAGE_FORMS );
 
 		// Quien solo edita contenidos ve los publicados, y de ellos solo lo necesario para elegirlos.
-		$status = $is_manager ? (string) $request['status'] : Form::STATUS_PUBLISHED;
-		$counts = $this->submission_counts();
+		$status     = $is_manager ? (string) $request['status'] : Form::STATUS_PUBLISHED;
+		$activity   = $this->activity();
+		$placements = $is_manager ? $this->placements->all() : array();
 
 		return new WP_REST_Response(
 			array_map(
 				fn ( Form $form ): array => $is_manager
-					? $this->summary( $form, $counts )
+					? $this->summary( $form, $activity, $placements )
 					: array(
 						'id'    => $form->id,
 						'title' => $form->title,
@@ -310,7 +315,7 @@ final class Forms_Controller {
 
 		$form = $this->forms->get( (int) $request['id'] );
 
-		return new WP_REST_Response( null === $form ? array() : $this->summary( $form, $this->submission_counts() ) );
+		return new WP_REST_Response( null === $form ? array() : $this->summary( $form, $this->activity(), $this->placements->all() ) );
 	}
 
 	/**
@@ -334,11 +339,19 @@ final class Forms_Controller {
 	/**
 	 * Datos de un formulario para los listados.
 	 *
-	 * @param Form                 $form   Formulario.
-	 * @param array<int, int>|null $counts Envíos guardados por formulario, o null si el usuario no puede verlos.
+	 * @param Form                                                                    $form       Formulario.
+	 * @param array<int, array{total: int, recent: int, unread: int, last: int}>|null $activity   Actividad de cada formulario, o null si el usuario no puede ver los envíos.
+	 * @param array<int, array<int, array{id: int, title: string, url: string}>>      $placements Páginas en las que está cada formulario.
 	 * @return array<string, mixed>
 	 */
-	private function summary( Form $form, ?array $counts ): array {
+	private function summary( Form $form, ?array $activity, array $placements ): array {
+		$own = $activity[ $form->id ] ?? array(
+			'total'  => 0,
+			'recent' => 0,
+			'unread' => 0,
+			'last'   => 0,
+		);
+
 		return array(
 			'id'          => $form->id,
 			'title'       => $form->title,
@@ -346,16 +359,33 @@ final class Forms_Controller {
 			'modified'    => '' === $form->modified ? '' : mysql_to_rfc3339( $form->modified ),
 			'field_count' => count( $form->definition->fields ),
 			'shortcode'   => sprintf( '[%s id="%d"]', Shortcode::TAG, $form->id ),
-		) + ( null === $counts ? array() : array( 'submission_count' => $counts[ $form->id ] ?? 0 ) );
+			// Páginas publicadas donde se ha encontrado: solo título y dirección, que son públicos.
+			'placements'  => array_map(
+				static fn ( array $page ): array => array(
+					'title' => $page['title'],
+					'url'   => $page['url'],
+				),
+				$placements[ $form->id ] ?? array()
+			),
+		) + (
+			null === $activity
+				? array()
+				: array(
+					'submission_count' => $own['total'],
+					'recent_count'     => $own['recent'],
+					'unread_count'     => $own['unread'],
+					'last_submission'  => $own['last'] > 0 ? gmdate( 'Y-m-d\TH:i:s\Z', $own['last'] ) : '',
+				)
+		);
 	}
 
 	/**
-	 * Número de envíos guardados de cada formulario, solo para quien puede ver los envíos.
+	 * Actividad de cada formulario (envíos guardados, recientes y sin leer), solo para quien puede ver los envíos.
 	 *
-	 * @return array<int, int>|null Null si el usuario no puede verlos.
+	 * @return array<int, array{total: int, recent: int, unread: int, last: int}>|null Null si el usuario no puede verlos.
 	 */
-	private function submission_counts(): ?array {
-		return current_user_can( Capabilities::VIEW_SUBMISSIONS ) ? $this->submissions->counts_by_form() : null;
+	private function activity(): ?array {
+		return current_user_can( Capabilities::VIEW_SUBMISSIONS ) ? $this->submissions->activity_by_form() : null;
 	}
 
 	/**
@@ -365,6 +395,6 @@ final class Forms_Controller {
 	 * @return array<string, mixed>
 	 */
 	private function detail( Form $form ): array {
-		return $this->summary( $form, $this->submission_counts() ) + array( 'definition' => $form->definition->to_array() );
+		return $this->summary( $form, $this->activity(), $this->placements->all() ) + array( 'definition' => $form->definition->to_array() );
 	}
 }

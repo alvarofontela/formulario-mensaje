@@ -1,11 +1,15 @@
 import {
 	Button,
 	CheckboxControl,
+	Dashicon,
+	DropdownMenu,
+	MenuGroup,
+	MenuItem,
 	Modal,
 	Notice,
 	Spinner,
 } from '@wordpress/components';
-import { dateI18n, getSettings as getDateSettings } from '@wordpress/date';
+import { humanTimeDiff } from '@wordpress/date';
 import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { addQueryArgs } from '@wordpress/url';
@@ -19,16 +23,122 @@ import {
 	restoreForm,
 	trashForm,
 } from './api';
-import { can, templates, urls } from './config';
+import { can, initialUnread, templates, urls } from './config';
+import ConfirmModal from './confirm-modal';
 import { useLatest, useReload } from './hooks';
+import PageHeader from './page-header';
+import SectionNav from './section-nav';
 
 const STATUSES = [
 	{ name: 'publish', title: __( 'Published', 'formulario-mensaje' ) },
 	{ name: 'trash', title: __( 'Trash', 'formulario-mensaje' ) },
 ];
 
+// Páginas que se nombran antes de resumir el resto en un «y N más».
+const MAX_PAGES = 3;
+
 /**
- * Listado de formularios, con su papelera.
+ * Dónde está puesto un formulario, en una frase.
+ *
+ * @param {Object} props
+ * @param {Array}  props.placements Páginas publicadas en las que se ha encontrado.
+ */
+function Placement( { placements } ) {
+	if ( placements.length === 0 ) {
+		return (
+			<p className="fm-form-row__where is-missing">
+				<Dashicon icon="warning" size={ 16 } />
+				{ __(
+					'It has not been found on any published page',
+					'formulario-mensaje'
+				) }
+			</p>
+		);
+	}
+
+	const extra = placements.length - MAX_PAGES;
+
+	return (
+		<p className="fm-form-row__where">
+			<Dashicon icon="yes" size={ 16 } />
+			<span>
+				{ __( 'Receiving messages on:', 'formulario-mensaje' ) }{ ' ' }
+				{ placements.slice( 0, MAX_PAGES ).map( ( page, index ) => (
+					<span key={ page.url }>
+						{ index > 0 && ', ' }
+						<a href={ page.url }>
+							{ page.title ||
+								__( '(no title)', 'formulario-mensaje' ) }
+						</a>
+					</span>
+				) ) }
+				{ extra > 0 &&
+					' ' +
+						sprintf(
+							/* translators: %d: number of pages not listed. */
+							_n(
+								'and %d more',
+								'and %d more',
+								extra,
+								'formulario-mensaje'
+							),
+							extra
+						) }
+			</span>
+		</p>
+	);
+}
+
+/**
+ * Actividad de un formulario: cuántos mensajes ha recibido este mes y cuándo llegó el último.
+ *
+ * @param {Object} props
+ * @param {Object} props.form Formulario del listado.
+ */
+function Activity( { form } ) {
+	if ( ! form.submission_count ) {
+		return (
+			<p className="fm-form-row__activity">
+				<span>{ __( 'No messages yet', 'formulario-mensaje' ) }</span>
+			</p>
+		);
+	}
+
+	return (
+		<p className="fm-form-row__activity">
+			<strong>
+				{ form.recent_count > 0
+					? sprintf(
+							/* translators: %d: number of messages received this month. */
+							_n(
+								'%d message this month',
+								'%d messages this month',
+								form.recent_count,
+								'formulario-mensaje'
+							),
+							form.recent_count
+						)
+					: __( 'None this month', 'formulario-mensaje' ) }
+			</strong>
+			<span>
+				{ form.unread_count > 0 &&
+					sprintf(
+						/* translators: %d: number of unread messages. */
+						__( '%d unread', 'formulario-mensaje' ),
+						form.unread_count
+					) + ' · ' }
+				{ sprintf(
+					/* translators: %s: how long ago, like "5 minutes ago". */
+					__( 'last one %s', 'formulario-mensaje' ),
+					humanTimeDiff( form.last_submission )
+				) }
+			</span>
+		</p>
+	);
+}
+
+/**
+ * Listado de formularios, con su papelera: de cada uno, dónde está puesto y qué actividad tiene.
  *
  * @param {Object}   props
  * @param {Function} props.onOpen Abre el constructor con un formulario (`new` para uno nuevo).
@@ -39,7 +149,6 @@ export default function FormsList( { onOpen } ) {
 	const [ notice, setNotice ] = useState( null );
 	const [ pendingDelete, setPendingDelete ] = useState( null );
 	const [ deleteSubmissions, setDeleteSubmissions ] = useState( false );
-	const [ copied, setCopied ] = useState( 0 );
 	const [ picking, setPicking ] = useState( false );
 	const importInput = useRef( null );
 
@@ -74,12 +183,16 @@ export default function FormsList( { onOpen } ) {
 			);
 	};
 
-	const copyShortcode = ( form ) => {
-		window.navigator.clipboard?.writeText( form.shortcode ).then( () => {
-			setCopied( form.id );
-			setTimeout( () => setCopied( 0 ), 2000 );
-		} );
-	};
+	const copyShortcode = ( form ) =>
+		window.navigator.clipboard?.writeText( form.shortcode ).then( () =>
+			setNotice( {
+				status: 'success',
+				message: __(
+					'Code copied. Paste it wherever you want the form to appear.',
+					'formulario-mensaje'
+				),
+			} )
+		);
 
 	// El documento se descarga desde el navegador: la respuesta ya llega sin secretos.
 	const download = ( form ) => {
@@ -147,42 +260,36 @@ export default function FormsList( { onOpen } ) {
 			);
 	};
 
-	const dateFormat = getDateSettings().formats.datetimeAbbreviated;
-
 	return (
-		<div className="fm-admin">
-			<div className="fm-admin__header">
-				<h1 className="fm-admin__title">
-					{ __( 'Forms', 'formulario-mensaje' ) }
-				</h1>
-				<div className="fm-admin__header-actions">
-					<input
-						ref={ importInput }
-						type="file"
-						accept="application/json,.json"
-						hidden
-						aria-label={ __(
-							'File of a form to import',
-							'formulario-mensaje'
-						) }
-						onChange={ importFile }
-					/>
-					<Button
-						__next40pxDefaultSize
-						variant="secondary"
-						onClick={ () => importInput.current?.click() }
-					>
-						{ __( 'Import', 'formulario-mensaje' ) }
-					</Button>
-					<Button
-						__next40pxDefaultSize
-						variant="primary"
-						onClick={ () => setPicking( true ) }
-					>
-						{ __( 'Add form', 'formulario-mensaje' ) }
-					</Button>
-				</div>
-			</div>
+		<div className="fm-admin fm-forms-page">
+			<PageHeader title={ __( 'Forms', 'formulario-mensaje' ) }>
+				<input
+					ref={ importInput }
+					type="file"
+					accept="application/json,.json"
+					hidden
+					aria-label={ __(
+						'File of a form to import',
+						'formulario-mensaje'
+					) }
+					onChange={ importFile }
+				/>
+				<Button
+					__next40pxDefaultSize
+					className="fm-page__wide-only"
+					variant="tertiary"
+					onClick={ () => importInput.current?.click() }
+				>
+					{ __( 'Import', 'formulario-mensaje' ) }
+				</Button>
+				<Button
+					__next40pxDefaultSize
+					variant="primary"
+					onClick={ () => setPicking( true ) }
+				>
+					{ __( 'Add form', 'formulario-mensaje' ) }
+				</Button>
+			</PageHeader>
 
 			{ notice && (
 				<Notice
@@ -193,101 +300,78 @@ export default function FormsList( { onOpen } ) {
 				</Notice>
 			) }
 
-			<ul className="subsubsub fm-admin__statuses">
-				{ STATUSES.map( ( item, index ) => (
-					<li key={ item.name }>
+			<div className="fm-page__body">
+				<div
+					className="fm-chips"
+					role="group"
+					aria-label={ __(
+						'Which forms to show',
+						'formulario-mensaje'
+					) }
+				>
+					{ STATUSES.map( ( item ) => (
 						<button
+							key={ item.name }
 							type="button"
-							className={ `fm-admin__status${ status === item.name ? ' is-current' : '' }` }
-							aria-current={
-								status === item.name ? 'page' : undefined
-							}
+							className="fm-chips__item"
+							aria-pressed={ status === item.name }
 							onClick={ () => setStatus( item.name ) }
 						>
 							{ item.title }
 						</button>
-						{ index < STATUSES.length - 1 && (
-							<span aria-hidden="true"> | </span>
-						) }
-					</li>
-				) ) }
-			</ul>
-
-			{ forms === null && (
-				<div className="fm-admin__loading">
-					<Spinner />
+					) ) }
 				</div>
-			) }
 
-			{ forms !== null && forms.length === 0 && (
-				<div className="fm-admin__empty">
-					{ status === 'trash' ? (
-						<p>
-							{ __(
-								'The trash is empty.',
-								'formulario-mensaje'
-							) }
-						</p>
-					) : (
-						<>
-							<h2>
-								{ __(
-									'Create your first form',
-									'formulario-mensaje'
-								) }
-							</h2>
+				{ forms === null && (
+					<div className="fm-admin__loading">
+						<Spinner />
+					</div>
+				) }
+
+				{ forms !== null && forms.length === 0 && (
+					<div className="fm-admin__empty">
+						{ status === 'trash' ? (
 							<p>
 								{ __(
-									'Start from a template or from a blank form. You can change everything afterwards.',
+									'The trash is empty.',
 									'formulario-mensaje'
 								) }
 							</p>
-							<Button
-								__next40pxDefaultSize
-								variant="primary"
-								onClick={ () => setPicking( true ) }
-							>
-								{ __( 'Add form', 'formulario-mensaje' ) }
-							</Button>
-						</>
-					) }
-				</div>
-			) }
-
-			{ forms !== null && forms.length > 0 && (
-				<table className="wp-list-table widefat fixed striped fm-admin__table">
-					<thead>
-						<tr>
-							<th scope="col" className="column-primary">
-								{ __( 'Name', 'formulario-mensaje' ) }
-							</th>
-							<th scope="col">
-								{ __( 'Shortcode', 'formulario-mensaje' ) }
-							</th>
-							<th scope="col">
-								{ __( 'Fields', 'formulario-mensaje' ) }
-							</th>
-							{ can.viewSubmissions && (
-								<th scope="col">
+						) : (
+							<>
+								<h2>
 									{ __(
-										'Submissions',
+										'Create your first form',
 										'formulario-mensaje'
 									) }
-								</th>
-							) }
-							<th scope="col">
-								{ __( 'Last modified', 'formulario-mensaje' ) }
-							</th>
-						</tr>
-					</thead>
-					<tbody>
+								</h2>
+								<p>
+									{ __(
+										'Start from a template or from a blank form. You can change everything afterwards.',
+										'formulario-mensaje'
+									) }
+								</p>
+								<Button
+									__next40pxDefaultSize
+									variant="primary"
+									onClick={ () => setPicking( true ) }
+								>
+									{ __( 'Add form', 'formulario-mensaje' ) }
+								</Button>
+							</>
+						) }
+					</div>
+				) }
+
+				{ forms !== null && forms.length > 0 && (
+					<ul className="fm-form-rows">
 						{ forms.map( ( form ) => (
-							<tr key={ form.id }>
-								<td className="column-primary">
-									{ status === 'trash' ? (
-										<strong>{ form.title }</strong>
-									) : (
-										<strong>
+							<li key={ form.id } className="fm-form-row">
+								<div className="fm-form-row__main">
+									<h2 className="fm-form-row__title">
+										{ status === 'trash' ? (
+											form.title
+										) : (
 											<button
 												type="button"
 												className="fm-admin__row-title"
@@ -297,222 +381,276 @@ export default function FormsList( { onOpen } ) {
 											>
 												{ form.title }
 											</button>
-										</strong>
-									) }
-									<div className="fm-admin__row-actions">
-										{ status === 'trash' ? (
-											<>
-												<Button
-													variant="link"
-													aria-label={ sprintf(
-														/* translators: %s: name of a form. */
-														__(
-															'Restore “%s”',
-															'formulario-mensaje'
-														),
-														form.title
-													) }
-													onClick={ () =>
-														run(
-															() =>
-																restoreForm(
-																	form.id
-																),
-															__(
-																'Form restored.',
-																'formulario-mensaje'
-															)
-														)
-													}
-												>
-													{ __(
-														'Restore',
-														'formulario-mensaje'
-													) }
-												</Button>
-												<Button
-													variant="link"
-													isDestructive
-													aria-label={ sprintf(
-														/* translators: %s: name of a form. */
-														__(
-															'Delete “%s” permanently',
-															'formulario-mensaje'
-														),
-														form.title
-													) }
-													onClick={ () =>
-														setPendingDelete( form )
-													}
-												>
-													{ __(
-														'Delete permanently',
-														'formulario-mensaje'
-													) }
-												</Button>
-											</>
-										) : (
-											<>
-												<Button
-													variant="link"
-													aria-label={ sprintf(
-														/* translators: %s: name of a form. */
-														__(
-															'Edit “%s”',
-															'formulario-mensaje'
-														),
-														form.title
-													) }
-													onClick={ () =>
-														onOpen( form.id )
-													}
-												>
-													{ __(
-														'Edit',
-														'formulario-mensaje'
-													) }
-												</Button>
-												<Button
-													variant="link"
-													aria-label={ sprintf(
-														/* translators: %s: name of a form. */
-														__(
-															'Duplicate “%s”',
-															'formulario-mensaje'
-														),
-														form.title
-													) }
-													onClick={ () =>
-														run(
-															() =>
-																duplicateForm(
-																	form.id
-																),
-															__(
-																'Form duplicated.',
-																'formulario-mensaje'
-															)
-														)
-													}
-												>
-													{ __(
-														'Duplicate',
-														'formulario-mensaje'
-													) }
-												</Button>
-												<Button
-													variant="link"
-													aria-label={ sprintf(
-														/* translators: %s: name of a form. */
-														__(
-															'Export “%s”',
-															'formulario-mensaje'
-														),
-														form.title
-													) }
-													onClick={ () =>
-														download( form )
-													}
-												>
-													{ __(
-														'Export',
-														'formulario-mensaje'
-													) }
-												</Button>
-												<Button
-													variant="link"
-													isDestructive
-													aria-label={ sprintf(
-														/* translators: %s: name of a form. */
-														__(
-															'Move “%s” to the trash',
-															'formulario-mensaje'
-														),
-														form.title
-													) }
-													onClick={ () =>
-														run(
-															() =>
-																trashForm(
-																	form.id
-																),
-															__(
-																'Form moved to the trash.',
-																'formulario-mensaje'
-															)
-														)
-													}
-												>
-													{ __(
-														'Trash',
-														'formulario-mensaje'
-													) }
-												</Button>
-											</>
 										) }
-									</div>
-								</td>
-								<td>
-									<code className="fm-admin__shortcode">
-										{ form.shortcode }
-									</code>
+									</h2>
 									{ status !== 'trash' && (
+										<Placement
+											placements={ form.placements || [] }
+										/>
+									) }
+								</div>
+
+								{ can.viewSubmissions && (
+									<Activity form={ form } />
+								) }
+
+								{ status === 'trash' ? (
+									<div className="fm-form-row__actions">
 										<Button
-											variant="link"
+											__next40pxDefaultSize
+											variant="secondary"
+											aria-label={ sprintf(
+												/* translators: %s: name of a form. */
+												__(
+													'Restore “%s”',
+													'formulario-mensaje'
+												),
+												form.title
+											) }
 											onClick={ () =>
-												copyShortcode( form )
-											}
-										>
-											{ copied === form.id
-												? __(
-														'Copied',
+												run(
+													() =>
+														restoreForm( form.id ),
+													__(
+														'Form restored.',
 														'formulario-mensaje'
 													)
-												: __(
-														'Copy',
-														'formulario-mensaje'
-													) }
+												)
+											}
+										>
+											{ __(
+												'Restore',
+												'formulario-mensaje'
+											) }
 										</Button>
-									) }
-								</td>
-								<td>
-									{ sprintf(
-										/* translators: %d: number of fields in a form. */
-										_n(
-											'%d field',
-											'%d fields',
-											form.field_count,
-											'formulario-mensaje'
-										),
-										form.field_count
-									) }
-								</td>
-								{ can.viewSubmissions && (
-									<td>
-										{ form.submission_count > 0 ? (
-											<a
+										<Button
+											__next40pxDefaultSize
+											variant="tertiary"
+											isDestructive
+											aria-label={ sprintf(
+												/* translators: %s: name of a form. */
+												__(
+													'Delete “%s” permanently',
+													'formulario-mensaje'
+												),
+												form.title
+											) }
+											onClick={ () =>
+												setPendingDelete( form )
+											}
+										>
+											{ __(
+												'Delete permanently',
+												'formulario-mensaje'
+											) }
+										</Button>
+									</div>
+								) : (
+									<div className="fm-form-row__actions">
+										{ ( form.placements || [] ).length ===
+											0 && (
+											<Button
+												__next40pxDefaultSize
+												variant="primary"
 												href={ addQueryArgs(
-													urls.submissions,
-													{ form: form.id }
+													urls.forms,
+													{
+														form: form.id,
+														step: 'publish',
+													}
 												) }
 											>
-												{ form.submission_count }
-											</a>
-										) : (
-											0
+												{ __(
+													'Put it on a page',
+													'formulario-mensaje'
+												) }
+											</Button>
 										) }
-									</td>
+										{ ( form.placements || [] ).length >
+											0 &&
+											can.viewSubmissions && (
+												<Button
+													__next40pxDefaultSize
+													variant="secondary"
+													href={ addQueryArgs(
+														urls.submissions,
+														{ form: form.id }
+													) }
+												>
+													{ __(
+														'See messages',
+														'formulario-mensaje'
+													) }
+												</Button>
+											) }
+										<Button
+											__next40pxDefaultSize
+											variant="tertiary"
+											aria-label={ sprintf(
+												/* translators: %s: name of a form. */
+												__(
+													'Edit “%s”',
+													'formulario-mensaje'
+												),
+												form.title
+											) }
+											onClick={ () => onOpen( form.id ) }
+										>
+											{ __(
+												'Edit',
+												'formulario-mensaje'
+											) }
+										</Button>
+										<DropdownMenu
+											icon="ellipsis"
+											label={ sprintf(
+												/* translators: %s: name of a form. */
+												__(
+													'More actions for “%s”',
+													'formulario-mensaje'
+												),
+												form.title
+											) }
+											toggleProps={ {
+												__next40pxDefaultSize: true,
+											} }
+										>
+											{ ( { onClose } ) => (
+												<>
+													<MenuGroup>
+														<MenuItem
+															onClick={ () => {
+																onClose();
+																run(
+																	() =>
+																		duplicateForm(
+																			form.id
+																		),
+																	__(
+																		'Form duplicated.',
+																		'formulario-mensaje'
+																	)
+																);
+															} }
+														>
+															{ __(
+																'Duplicate',
+																'formulario-mensaje'
+															) }
+														</MenuItem>
+														<MenuItem
+															onClick={ () => {
+																onClose();
+																download(
+																	form
+																);
+															} }
+														>
+															{ __(
+																'Export',
+																'formulario-mensaje'
+															) }
+														</MenuItem>
+														<MenuItem
+															info={
+																form.shortcode
+															}
+															onClick={ () => {
+																onClose();
+																copyShortcode(
+																	form
+																);
+															} }
+														>
+															{ __(
+																'Copy the code to paste',
+																'formulario-mensaje'
+															) }
+														</MenuItem>
+														{ can.viewSubmissions &&
+															form.submission_count >
+																0 && (
+																<MenuItem
+																	href={ addQueryArgs(
+																		urls.submissions,
+																		{
+																			form: form.id,
+																		}
+																	) }
+																>
+																	{ __(
+																		'See messages',
+																		'formulario-mensaje'
+																	) }
+																</MenuItem>
+															) }
+													</MenuGroup>
+													<MenuGroup>
+														<MenuItem
+															isDestructive
+															onClick={ () => {
+																onClose();
+																run(
+																	() =>
+																		trashForm(
+																			form.id
+																		),
+																	__(
+																		'Form moved to the trash.',
+																		'formulario-mensaje'
+																	)
+																);
+															} }
+														>
+															{ __(
+																'Move to the trash',
+																'formulario-mensaje'
+															) }
+														</MenuItem>
+													</MenuGroup>
+												</>
+											) }
+										</DropdownMenu>
+									</div>
 								) }
-								<td>
-									{ form.modified
-										? dateI18n( dateFormat, form.modified )
-										: '' }
-								</td>
-							</tr>
+							</li>
 						) ) }
-					</tbody>
-				</table>
-			) }
+					</ul>
+				) }
+
+				{ status === 'publish' &&
+					forms !== null &&
+					forms.length > 0 && (
+						<div className="fm-starters">
+							<h2>
+								{ __(
+									'Start a new one',
+									'formulario-mensaje'
+								) }
+							</h2>
+							<p>
+								{ __(
+									'Pick a template and change it as you like, or start from a blank form.',
+									'formulario-mensaje'
+								) }
+							</p>
+							<div className="fm-chips">
+								{ templates.map( ( template ) => (
+									<button
+										key={ template.id }
+										type="button"
+										className="fm-chips__item"
+										onClick={ () =>
+											onOpen( `new:${ template.id }` )
+										}
+									>
+										{ template.label }
+									</button>
+								) ) }
+							</div>
+						</div>
+					) }
+			</div>
 
 			{ picking && (
 				<Modal
@@ -540,13 +678,24 @@ export default function FormsList( { onOpen } ) {
 			) }
 
 			{ pendingDelete && (
-				<Modal
+				<ConfirmModal
 					title={ __(
 						'Delete form permanently?',
 						'formulario-mensaje'
 					) }
-					onRequestClose={ () => setPendingDelete( null ) }
-					size="small"
+					confirm={ __( 'Delete permanently', 'formulario-mensaje' ) }
+					onCancel={ () => setPendingDelete( null ) }
+					onConfirm={ () => {
+						const id = pendingDelete.id;
+						const withSubmissions = deleteSubmissions;
+
+						setPendingDelete( null );
+						setDeleteSubmissions( false );
+						run(
+							() => deleteForm( id, withSubmissions ),
+							__( 'Form deleted.', 'formulario-mensaje' )
+						);
+					} }
 				>
 					<p>
 						{ sprintf(
@@ -563,52 +712,27 @@ export default function FormsList( { onOpen } ) {
 							<CheckboxControl
 								__nextHasNoMarginBottom
 								label={ sprintf(
-									/* translators: %d: number of stored submissions of the form. */
+									/* translators: %d: number of stored messages of the form. */
 									_n(
-										'Delete also its %d stored submission',
-										'Delete also its %d stored submissions',
+										'Also delete its %d stored message',
+										'Also delete its %d stored messages',
 										pendingDelete.submission_count,
 										'formulario-mensaje'
 									),
 									pendingDelete.submission_count
 								) }
 								help={ __(
-									'If you keep them, they stay in the Submissions screen without a form.',
+									'If you keep them, they stay on the Messages screen without a form.',
 									'formulario-mensaje'
 								) }
 								checked={ deleteSubmissions }
 								onChange={ setDeleteSubmissions }
 							/>
 						) }
-					<div className="fm-admin__modal-actions">
-						<Button
-							__next40pxDefaultSize
-							variant="tertiary"
-							onClick={ () => setPendingDelete( null ) }
-						>
-							{ __( 'Cancel', 'formulario-mensaje' ) }
-						</Button>
-						<Button
-							__next40pxDefaultSize
-							variant="primary"
-							isDestructive
-							onClick={ () => {
-								const id = pendingDelete.id;
-								const withSubmissions = deleteSubmissions;
-
-								setPendingDelete( null );
-								setDeleteSubmissions( false );
-								run(
-									() => deleteForm( id, withSubmissions ),
-									__( 'Form deleted.', 'formulario-mensaje' )
-								);
-							} }
-						>
-							{ __( 'Delete permanently', 'formulario-mensaje' ) }
-						</Button>
-					</div>
-				</Modal>
+				</ConfirmModal>
 			) }
+
+			<SectionNav current="forms" unread={ initialUnread } />
 		</div>
 	);
 }

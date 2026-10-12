@@ -1,0 +1,108 @@
+// Resumen de estado de la pantalla de ajustes: filas separadas por líneas, sin tarjetas.
+// Lo importa admin.scss.
+
+$status-text: #1e1e1e;
+$status-muted: #6c6c6c;
+$status-line: #e0e0e0;
+
+.fm-status {
+	margin: 0 0 32px;
+	padding: 0;
+	border-top: 1px solid $status-line;
+	list-style: none;
+
+	&__row {
+		display: grid;
+		grid-template-columns: 28px minmax(0, 1fr) auto;
+		align-items: start;
+		gap: 4px 12px;
+		margin: 0;
+		padding: 16px 0;
+		border-bottom: 1px solid $status-line;
+	}
+
+	&__icon {
+		display: grid;
+		place-items: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		background: #e6f5e8;
+		color: #007017;
+
+		.dashicon {
+			width: 18px;
+			height: 18px;
+			font-size: 18px;
+		}
+	}
+
+	&__row.is-warn &__icon {
+		background: #fdf0d5;
+		color: #8a5200;
+	}
+
+	&__row.is-idle &__icon {
+		background: #f6f7f7;
+		color: $status-muted;
+	}
+
+	&__text {
+		min-width: 0;
+
+		h2 {
+			margin: 0;
+			padding: 0;
+			color: $status-text;
+			font-size: 14px;
+			font-weight: 600;
+			line-height: 1.4;
+		}
+
+		p {
+			max-width: 64ch;
+			margin: 2px 0 0;
+			color: $status-muted;
+			overflow-wrap: anywhere;
+		}
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+	}
+
+	// Lo que sigue al resumen: los ajustes técnicos, con su aviso de para quién son.
+	&__advanced {
+		margin: 0;
+		padding: 0;
+		color: $status-text;
+		font-size: 14px;
+		font-weight: 600;
+		line-height: 1.4;
+		// Al saltar desde el resumen, las pestañas no quedan pegadas a la barra de WordPress.
+		scroll-margin-top: calc(var(--wp-admin--admin-bar--height, 32px) + 16px);
+	}
+
+	&__note {
+		margin: 2px 0 12px;
+		color: $status-muted;
+	}
+
+	// En pantallas estrechas los botones pasan debajo del texto, con altura para el dedo.
+	@media (max-width: 782px) {
+		&__row {
+			grid-template-columns: 28px minmax(0, 1fr);
+		}
+
+		&__actions {
+			grid-column: 2;
+			margin-top: 8px;
+
+			.components-button {
+				min-height: 44px;
+			}
+		}
+	}
+}

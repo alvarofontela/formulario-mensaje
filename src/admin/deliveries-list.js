@@ -14,8 +14,9 @@ const PER_PAGE = 20;
  *
  * @param {Object}   props
  * @param {Function} props.onOpenSubmission Abre el detalle del envío de una entrega.
+ * @param {Function} props.onChange         Avisa de que una entrega se ha reintentado o descartado.
  */
-export default function DeliveriesList( { onOpenSubmission } ) {
+export default function DeliveriesList( { onOpenSubmission, onChange } ) {
 	const [ page, setPage ] = useState( 1 );
 	const [ result, setResult ] = useState( null );
 	const [ busy, setBusy ] = useState( 0 );
@@ -65,6 +66,7 @@ export default function DeliveriesList( { onOpenSubmission } ) {
 			.finally( () => {
 				setBusy( 0 );
 				reload();
+				onChange?.();
 			} );
 	};
 
@@ -127,6 +129,12 @@ export default function DeliveriesList( { onOpenSubmission } ) {
 							<tr key={ delivery.id }>
 								<td>
 									<strong>{ delivery.action_label }</strong>
+									{ delivery.action_name && (
+										<span className="fm-admin__muted">
+											{ ' ' }
+											{ delivery.action_name }
+										</span>
+									) }
 									<div className="fm-admin__row-actions">
 										{ delivery.submission_id > 0 ? (
 											<Button
@@ -138,14 +146,14 @@ export default function DeliveriesList( { onOpenSubmission } ) {
 												}
 											>
 												{ __(
-													'View submission',
+													'View message',
 													'formulario-mensaje'
 												) }
 											</Button>
 										) : (
 											<span className="fm-admin__muted">
 												{ __(
-													'Submission not stored',
+													'Message not stored',
 													'formulario-mensaje'
 												) }
 											</span>

@@ -18,6 +18,7 @@ final class Turnstile_Provider implements Captcha_Provider {
 
 	public const ID = 'turnstile';
 
+	// phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- No es un recurso servido desde fuera: es la dirección de la API de Turnstile a la que el servidor envía el testigo para verificarlo (wp_safe_remote_post), y solo si el administrador ha configurado este servicio.
 	private const VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
 	/**

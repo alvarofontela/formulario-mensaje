@@ -47,7 +47,22 @@ final class Failure_Counter {
 	 */
 	public function refresh( int $submission_id = 0 ): void {
 		if ( $submission_id > 0 ) {
-			$this->submissions->set_failed_actions( $submission_id, $this->deliveries->count_failed( $submission_id ) );
+			$failed = $this->deliveries->count_failed( $submission_id );
+
+			$this->submissions->set_failed_actions( $submission_id, $failed );
+
+			if ( 0 === $failed ) {
+				/**
+				 * Se dispara cuando, tras un cambio en sus entregas, un envío guardado no tiene ninguna
+				 * fallida: porque el reintento ha salido bien, porque se ha descartado o porque la cola
+				 * ha terminado con ellas. Lo que se guardaba solo para poder reintentar ya no hace falta.
+				 *
+				 * @since 0.12.0
+				 *
+				 * @param int $submission_id Identificador del envío guardado.
+				 */
+				do_action( 'formulario_mensaje_submission_settled', $submission_id );
+			}
 		}
 
 		// Se carga con el resto de opciones: es un número y se lee en cada pantalla de administración.

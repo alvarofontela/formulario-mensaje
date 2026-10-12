@@ -47,7 +47,9 @@ test('dos notificaciones con condición avisan a un destinatario u otro según l
   const formId = await api.createForm('Departamentos e2e', definition);
 
   await page.goto(`${formsScreen}&form=${formId}`);
-  await page.getByRole('tab', { name: 'Notificaciones' }).click();
+  // Las notificaciones son el apartado que está abierto al entrar en el paso «Al recibirlo».
+  await page.getByRole('tab', { name: 'Al recibirlo' }).click();
+  await expect(page.getByRole('button', { name: /^Notificaciones por correo/ })).toHaveAttribute('aria-expanded', 'true');
 
   // La única notificación se muestra abierta: se le pone nombre y condición.
   await page.getByLabel('Nombre', { exact: true }).fill('Aviso a ventas');
@@ -86,7 +88,7 @@ test('dos notificaciones con condición avisan a un destinatario u otro según l
 
   // Las condiciones se conservan al volver a abrir el formulario.
   await page.reload();
-  await page.getByRole('tab', { name: 'Notificaciones' }).click();
+  await page.getByRole('tab', { name: 'Al recibirlo' }).click();
   await page.locator('.fm-fields__toggle', { hasText: 'Aviso a soporte' }).click();
   await expect(page.getByLabel('Valor', { exact: true })).toHaveValue('soporte');
 });
@@ -122,7 +124,7 @@ test('una notificación se prueba desde el constructor con datos de ejemplo y si
   const formId = await api.createForm('Prueba e2e');
 
   await page.goto(`${formsScreen}&form=${formId}`);
-  await page.getByRole('tab', { name: 'Notificaciones' }).click();
+  await page.getByRole('tab', { name: 'Al recibirlo' }).click();
 
   await expect(page.getByLabel('Enviar una prueba a')).toHaveValue(env.admin.email);
   await page.getByRole('button', { name: 'Enviar prueba' }).click();

@@ -19,6 +19,7 @@ use Formulario_Mensaje\Forms\Form_Templates;
 use Formulario_Mensaje\Lifecycle\Capabilities;
 use Formulario_Mensaje\Rest\Rest_Provider;
 use Formulario_Mensaje\Rules\Operator;
+use Formulario_Mensaje\Storage\Submission_Service;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -38,12 +39,14 @@ final class Admin_Data {
 	 * @param Action_Type_Registry $action_types       Tipos de acción.
 	 * @param Form_Templates       $templates          Plantillas de partida.
 	 * @param Form_Style           $style              Estilo de los formularios.
+	 * @param Submission_Service   $submissions        Servicio de envíos guardados.
 	 */
 	public function __construct(
 		private readonly Field_Type_Registry $field_types,
 		private readonly Action_Type_Registry $action_types,
 		private readonly Form_Templates $templates,
-		private readonly Form_Style $style
+		private readonly Form_Style $style,
+		private readonly Submission_Service $submissions
 	) {}
 
 	/**
@@ -104,6 +107,8 @@ final class Admin_Data {
 				Operator::cases()
 			),
 			'userEmail'     => wp_get_current_user()->user_email,
+			// Mensajes sin leer, para el aviso de la navegación; solo un número, y solo para quien puede verlos.
+			'unread'        => current_user_can( Capabilities::VIEW_SUBMISSIONS ) ? $this->submissions->counts()['unread'] : 0,
 			'can'           => array(
 				'manageForms'     => current_user_can( Capabilities::MANAGE_FORMS ),
 				'viewSubmissions' => current_user_can( Capabilities::VIEW_SUBMISSIONS ),
@@ -113,6 +118,8 @@ final class Admin_Data {
 				'forms'       => admin_url( 'admin.php?page=' . Admin_Menu::FORMS_PAGE ),
 				'submissions' => admin_url( 'admin.php?page=' . Admin_Menu::SUBMISSIONS_PAGE ),
 				'settings'    => admin_url( 'admin.php?page=' . Admin_Menu::SETTINGS_PAGE ),
+				// Listado de páginas, para ir a colocar un formulario; solo para quien puede editarlas.
+				'pages'       => current_user_can( 'edit_pages' ) ? admin_url( 'edit.php?post_type=page' ) : '',
 				// La descarga lleva su nonce: solo sirve a quien tiene la sesión y la capability de ver envíos.
 				// Se compone con add_query_arg() y no con wp_nonce_url(), que devuelve la dirección escapada
 				// para HTML: aquí va a JavaScript como dato.

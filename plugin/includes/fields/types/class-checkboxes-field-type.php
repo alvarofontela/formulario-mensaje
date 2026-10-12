@@ -98,7 +98,7 @@ final class Checkboxes_Field_Type extends Abstract_Choice_Field_Type {
 		// Como mucho hay tantos valores como opciones; lo que sobre es ruido.
 		foreach ( array_slice( $raw, 0, count( $this->options( $field ) ) ) as $item ) {
 			if ( is_scalar( $item ) && '' !== (string) $item ) {
-				$values[] = sanitize_text_field( (string) $item );
+				$values[] = $this->clean_choice( $field, (string) $item );
 			}
 		}
 

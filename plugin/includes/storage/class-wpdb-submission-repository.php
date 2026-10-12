@@ -33,7 +33,8 @@ final class Wpdb_Submission_Repository implements Submission_Repository {
 		AND ( %d = 0 OR failed_actions > 0 )
 		AND ( %s = \'\' OR search_text LIKE %s )
 		AND ( %s = \'\' OR created_at >= %s )
-		AND ( %s = \'\' OR created_at <= %s )';
+		AND ( %s = \'\' OR created_at <= %s )
+		AND ( %d = 0 OR read_at IS NULL )';
 
 	/**
 	 * Constructor.
@@ -202,6 +203,87 @@ final class Wpdb_Submission_Repository implements Submission_Repository {
 	}
 
 	/**
+	 * Marca envíos como leídos o como no leídos.
+	 *
+	 * @param int[] $ids     Identificadores de los envíos.
+	 * @param int   $read_at Marca de tiempo Unix de la lectura, o 0 para dejarlos sin leer.
+	 * @return int Envíos cuyo estado ha cambiado.
+	 */
+	public function mark_read( array $ids, int $read_at ): int {
+		$wpdb = $this->wpdb;
+
+		// Un valor nulo en update() escribe NULL en la columna: así vuelve a quedar sin leer.
+		$value   = $read_at > 0 ? gmdate( 'Y-m-d H:i:s', $read_at ) : null;
+		$changed = 0;
+
+		// Uno a uno, como al borrar: los lotes son pequeños y no hay que componer una lista dentro del SQL.
+		foreach ( array_unique( array_map( 'absint', $ids ) ) as $id ) {
+			$changed += (int) $wpdb->update( $this->schema->submissions_table(), array( 'read_at' => $value ), array( 'id' => $id ), array( '%s' ), array( '%d' ) );
+		}
+
+		return $changed;
+	}
+
+	/**
+	 * Marca como leídos todos los envíos que no lo estaban.
+	 *
+	 * @param int $read_at Marca de tiempo Unix de la lectura.
+	 * @return int Envíos marcados.
+	 */
+	public function mark_all_read( int $read_at ): int {
+		$wpdb = $this->wpdb;
+
+		return (int) $wpdb->query(
+			$wpdb->prepare( 'UPDATE %i SET read_at = %s WHERE read_at IS NULL', $this->schema->submissions_table(), gmdate( 'Y-m-d H:i:s', $read_at ) )
+		);
+	}
+
+	/**
+	 * Cuenta los envíos que nadie ha leído todavía.
+	 *
+	 * Consulta aparte de los filtros de los listados: se pide en cada pantalla de administración, para
+	 * el aviso del menú, y así escrita la resuelve el índice de `read_at`.
+	 */
+	public function count_unread(): int {
+		$wpdb = $this->wpdb;
+
+		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE read_at IS NULL', $this->schema->submissions_table() ) );
+	}
+
+	/**
+	 * Actividad de cada formulario: cuántos envíos guarda, cuántos son recientes, cuántos están sin
+	 * leer y cuándo llegó el último.
+	 *
+	 * @param string $since_gmt Fecha en GMT (formato MySQL) desde la que un envío cuenta como reciente.
+	 * @return array<int, array{total: int, recent: int, unread: int, last: int}> Por identificador de formulario; `last` es una marca de tiempo Unix.
+	 */
+	public function activity_by_form( string $since_gmt ): array {
+		$wpdb = $this->wpdb;
+
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT form_id, COUNT(*) AS total, SUM( created_at >= %s ) AS recent, SUM( read_at IS NULL ) AS unread, MAX( created_at ) AS last_at FROM %i GROUP BY form_id',
+				$since_gmt,
+				$this->schema->submissions_table()
+			),
+			ARRAY_A
+		);
+
+		$activity = array();
+
+		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
+			$activity[ (int) $row['form_id'] ] = array(
+				'total'  => (int) $row['total'],
+				'recent' => (int) $row['recent'],
+				'unread' => (int) $row['unread'],
+				'last'   => (int) strtotime( $row['last_at'] . ' UTC' ),
+			);
+		}
+
+		return $activity;
+	}
+
+	/**
 	 * Parámetros de la consulta que corresponden, en orden, a los marcadores de la tabla y de FILTERS.
 	 *
 	 * @param Submission_Query $query Filtros.
@@ -223,6 +305,7 @@ final class Wpdb_Submission_Repository implements Submission_Repository {
 			$query->from_gmt,
 			$query->to_gmt,
 			$query->to_gmt,
+			$query->only_unread ? 1 : 0,
 		);
 	}
 
@@ -252,7 +335,8 @@ final class Wpdb_Submission_Repository implements Submission_Repository {
 			(string) $row['ip'],
 			(string) $row['user_agent'],
 			$entries,
-			(int) $row['failed_actions']
+			(int) $row['failed_actions'],
+			empty( $row['read_at'] ) ? 0 : (int) strtotime( $row['read_at'] . ' UTC' )
 		);
 	}
 

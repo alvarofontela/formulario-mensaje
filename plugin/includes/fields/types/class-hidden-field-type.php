@@ -13,6 +13,7 @@ use Formulario_Mensaje\Fields\Field_Markup;
 use Formulario_Mensaje\Fields\Input_Field_Type;
 use Formulario_Mensaje\Fields\Render_Context;
 use Formulario_Mensaje\Forms\Field;
+use Formulario_Mensaje\Support\Plain_Text;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -127,7 +128,27 @@ final class Hidden_Field_Type implements Input_Field_Type {
 		$source = $this->source( $field );
 
 		if ( Context_Resolver::SOURCE_FIXED === $source ) {
-			return '';
+			/*
+			 * Un valor fijo lo pone el servidor y no hace falta en la página, salvo que la condición de otro
+			 * campo dependa de él: sin verlo, el navegador ocultaría un campo que el servidor va a exigir.
+			 * Lo que llegue en la petición sigue sin contar (ver sanitize_value()).
+			 */
+			if ( ! $context->is_condition_source( $field ) ) {
+				return '';
+			}
+
+			return sprintf(
+				'<input%s>',
+				$this->markup->attributes(
+					array(
+						'type'          => 'hidden',
+						'id'            => $context->control_id( $field ),
+						'name'          => $context->control_name( $field ),
+						'data-fm-field' => $field->id,
+						'value'         => $field->text( 'value' ),
+					)
+				)
+			);
 		}
 
 		$param = $field->text( 'param' );
@@ -168,7 +189,7 @@ final class Hidden_Field_Type implements Input_Field_Type {
 			return '';
 		}
 
-		$value = mb_substr( sanitize_text_field( (string) $raw ), 0, self::MAX_LENGTH );
+		$value = mb_substr( Plain_Text::line( (string) $raw ), 0, self::MAX_LENGTH );
 
 		// Las direcciones se limitan a http y https: el valor puede acabar como enlace en un correo.
 		if ( in_array( $source, array( Context_Resolver::SOURCE_PAGE_URL, Context_Resolver::SOURCE_REFERRER ), true ) ) {

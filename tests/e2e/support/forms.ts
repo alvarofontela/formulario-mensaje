@@ -63,13 +63,35 @@ export class AdminApi {
   }
 
   private async send<T>(method: 'get' | 'post' | 'put' | 'delete', path: string, data?: unknown): Promise<T> {
-    const response = await this.context[method](`/wp-json${path}`, { headers: { 'X-WP-Nonce': this.nonce }, data });
+    const request = () => this.context[method](`/wp-json${path}`, { headers: { 'X-WP-Nonce': this.nonce }, data });
+
+    // Una lectura se repite una vez si la conexión se corta: pasa al reutilizar una conexión que el servidor
+    // acaba de cerrar por inactividad. Lo que escribe no se repite, para no hacerlo dos veces.
+    const response = await request().catch((error: Error) => {
+      if (method === 'get' && /ECONNRESET|socket hang up/.test(error.message)) {
+        return request();
+      }
+
+      throw error;
+    });
 
     if (!response.ok()) {
       throw new Error(`${method.toUpperCase()} ${path} -> ${response.status()} ${await response.text()}`);
     }
 
     return response.json();
+  }
+
+  /** Llamada cualquiera a la REST API como administrador; `path` va tras `/wp-json`. Lanza si la respuesta no es correcta. */
+  call<T>(method: 'get' | 'post' | 'put' | 'delete', path: string, data?: unknown): Promise<T> {
+    return this.send<T>(method, path, data);
+  }
+
+  /** Como `call`, pero devuelve el código y el cuerpo en vez de lanzar: para comprobar rechazos. */
+  async attempt(method: 'get' | 'post' | 'put' | 'delete', path: string, data?: unknown): Promise<{ status: number; body: any }> {
+    const response = await this.context[method](`/wp-json${path}`, { headers: { 'X-WP-Nonce': this.nonce }, data });
+
+    return { status: response.status(), body: await response.json().catch(() => null) };
   }
 
   /** Crea un formulario y devuelve su identificador. */

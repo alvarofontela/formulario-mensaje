@@ -78,6 +78,37 @@ interface Submission_Repository {
 	public function set_failed_actions( int $id, int $failed ): void;
 
 	/**
+	 * Marca envíos como leídos o como no leídos.
+	 *
+	 * @param int[] $ids     Identificadores de los envíos.
+	 * @param int   $read_at Marca de tiempo Unix de la lectura, o 0 para dejarlos sin leer.
+	 * @return int Envíos cuyo estado ha cambiado.
+	 */
+	public function mark_read( array $ids, int $read_at ): int;
+
+	/**
+	 * Marca como leídos todos los envíos que no lo estaban.
+	 *
+	 * @param int $read_at Marca de tiempo Unix de la lectura.
+	 * @return int Envíos marcados.
+	 */
+	public function mark_all_read( int $read_at ): int;
+
+	/**
+	 * Cuenta los envíos que nadie ha leído todavía.
+	 */
+	public function count_unread(): int;
+
+	/**
+	 * Actividad de cada formulario: cuántos envíos guarda, cuántos son recientes, cuántos están sin
+	 * leer y cuándo llegó el último.
+	 *
+	 * @param string $since_gmt Fecha en GMT (formato MySQL) desde la que un envío cuenta como reciente.
+	 * @return array<int, array{total: int, recent: int, unread: int, last: int}> Por identificador de formulario; `last` es una marca de tiempo Unix.
+	 */
+	public function activity_by_form( string $since_gmt ): array;
+
+	/**
 	 * Recalcula, a partir del registro de entregas, las entregas fallidas pendientes de los envíos
 	 * que tenían alguna. Hace falta cuando el registro se purga.
 	 */

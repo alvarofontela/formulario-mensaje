@@ -10,6 +10,7 @@ namespace Formulario_Mensaje\Lifecycle;
 use Formulario_Mensaje\Alerts\Failure_Alert;
 use Formulario_Mensaje\Captcha\Captcha_Config_Repository;
 use Formulario_Mensaje\Database\Schema;
+use Formulario_Mensaje\Forms\Form_Placements;
 use Formulario_Mensaje\Forms\Form_Post_Type;
 use Formulario_Mensaje\Mail\Option_Mail_Settings_Repository;
 use Formulario_Mensaje\Queue\Queue_Schedule;
@@ -54,13 +55,42 @@ final class Uninstaller {
 
 	/**
 	 * Desinstala el plugin.
+	 *
+	 * En una red, el plugin se activa sitio a sitio y cada sitio tiene sus tablas, sus opciones y sus
+	 * ficheros, pero WordPress solo ejecuta la desinstalación una vez: se recorren todos.
 	 */
 	public function uninstall(): void {
+		if ( ! is_multisite() ) {
+			$this->uninstall_site();
+
+			return;
+		}
+
+		$site_ids = get_sites(
+			array(
+				'fields' => 'ids',
+				'number' => 0,
+			)
+		);
+
+		foreach ( $site_ids as $site_id ) {
+			switch_to_blog( (int) $site_id );
+			$this->uninstall_site();
+			restore_current_blog();
+		}
+	}
+
+	/**
+	 * Desinstala el plugin del sitio actual. Sus datos solo se borran si ese sitio lo tiene pedido en sus ajustes.
+	 */
+	private function uninstall_site(): void {
 		$this->capabilities->remove_from_all_roles();
 		$this->maintenance->clear();
 		$this->queue->clear();
 		delete_option( Secret_Vault::OPTION );
 		delete_option( Failure_Alert::OPTION );
+		// Lo averiguado sobre dónde está cada formulario: sin el plugin no significa nada.
+		delete_transient( Form_Placements::CACHE_KEY );
 
 		$settings = get_option( Option_Settings_Repository::OPTION, array() );
 

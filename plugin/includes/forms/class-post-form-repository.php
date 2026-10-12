@@ -109,7 +109,34 @@ final class Post_Form_Repository implements Form_Repository {
 	 * @param int $id Identificador del formulario.
 	 */
 	public function trash( int $id ): bool {
-		return null !== $this->find( $id ) && false !== wp_trash_post( $id );
+		$form = $this->find( $id );
+
+		if ( null === $form ) {
+			return false;
+		}
+
+		if ( ! $form->is_published() ) {
+			return true;
+		}
+
+		/*
+		 * No se usa wp_trash_post(): un formulario se queda en la papelera hasta que alguien lo borra, porque
+		 * borrarlo deja sin dueño a sus envíos, y con la función de WordPress no sería así. Con su papelera
+		 * desactivada (EMPTY_TRASH_DAYS a 0) lo borraría en el acto, y con ella activada lo borraría por su
+		 * cuenta pasados unos días: wp_scheduled_delete() busca la marca de tiempo que esa función deja.
+		 * Aquí solo se guarda el estado anterior, que es lo que necesita wp_untrash_post() para restaurarlo.
+		 */
+		update_post_meta( $id, '_wp_trash_meta_status', Form::STATUS_PUBLISHED );
+
+		$updated = wp_update_post(
+			array(
+				'ID'          => $id,
+				'post_status' => Form::STATUS_TRASHED,
+			),
+			true
+		);
+
+		return ! is_wp_error( $updated );
 	}
 
 	/**

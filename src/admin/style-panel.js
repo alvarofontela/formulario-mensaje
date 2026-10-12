@@ -44,10 +44,7 @@ function ColorControl( { id, label, value, onChange } ) {
 						variant="link"
 						onClick={ () => onChange( undefined ) }
 					>
-						{ __(
-							'Use the one of the theme',
-							'formulario-mensaje'
-						) }
+						{ __( 'Use the theme color', 'formulario-mensaje' ) }
 					</Button>
 				</>
 			) : (

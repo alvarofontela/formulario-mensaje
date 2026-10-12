@@ -74,7 +74,7 @@ final class Mail_Tester {
 			__( 'Test email from %s', 'formulario-mensaje' ),
 			wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES )
 		);
-		$text = __( 'If you are reading this, the emails of Formulario Mensaje are being delivered with the current settings.', 'formulario-mensaje' );
+		$text = __( 'If you are reading this, Formulario Mensaje emails are being delivered with the current settings.', 'formulario-mensaje' );
 
 		return $this->transport->send(
 			new Email_Message( array( $to ), $subject, $text, '', $this->template->render( '<p style="margin:0;">' . esc_html( $text ) . '</p>', $subject ) )
@@ -97,25 +97,23 @@ final class Mail_Tester {
 			return $rejection;
 		}
 
-		foreach ( $form->definition->actions as $action ) {
-			if ( $action['id'] !== $action_id || Email_Action::TYPE !== $action['type'] ) {
-				continue;
-			}
+		$action = $form->definition->get_action( $action_id, Email_Action::TYPE );
 
-			$settings = $action['settings'];
-
-			// La prueba sustituye a los destinatarios reales y se distingue por el asunto.
-			$settings['to']      = array( $to );
-			$settings['subject'] = sprintf(
-				/* translators: %s: subject of the notification. */
-				__( '[Test] %s', 'formulario-mensaje' ),
-				is_string( $settings['subject'] ?? null ) ? $settings['subject'] : ''
-			);
-
-			return $this->action->execute( $settings, $this->samples->create( $form ), $form );
+		if ( null === $action ) {
+			return new WP_Error( 'formulario_mensaje_action_not_found', __( 'The form has no notification with that identifier.', 'formulario-mensaje' ), array( 'status' => 404 ) );
 		}
 
-		return new WP_Error( 'formulario_mensaje_action_not_found', __( 'The form has no notification with that identifier.', 'formulario-mensaje' ), array( 'status' => 404 ) );
+		$settings = $action['settings'];
+
+		// La prueba sustituye a los destinatarios reales y se distingue por el asunto.
+		$settings['to']      = array( $to );
+		$settings['subject'] = sprintf(
+			/* translators: %s: subject of the notification. */
+			__( '[Test] %s', 'formulario-mensaje' ),
+			is_string( $settings['subject'] ?? null ) ? $settings['subject'] : ''
+		);
+
+		return $this->action->execute( $settings, $this->samples->create( $form ), $form );
 	}
 
 	/**

@@ -20,7 +20,7 @@ test('el diseñador cambia colores y medidas del formulario y la web los aplica'
   const formId = await api.createForm('Estilo e2e');
 
   await page.goto(`${formsScreen}&form=${formId}`);
-  await page.getByRole('tab', { name: 'Estilo' }).click();
+  await page.getByRole('tab', { name: 'Aspecto' }).click();
 
   await page.getByLabel('Color de las etiquetas').fill('#aa0000');
   await page.getByLabel('Fondo del botón').fill('#0055aa');

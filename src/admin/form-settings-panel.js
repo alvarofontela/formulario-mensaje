@@ -50,11 +50,11 @@ export default function FormSettingsPanel( { settings, fields, onChange } ) {
 			<ToggleControl
 				__nextHasNoMarginBottom
 				label={ __(
-					'Protect with the captcha of the settings',
+					'Protect with the captcha from the settings',
 					'formulario-mensaje'
 				) }
 				help={ __(
-					'Only has effect if a captcha service is configured in the settings of the plugin. With captcha, the form cannot be sent without JavaScript.',
+					'Only takes effect if a captcha service is configured in the plugin settings. With a captcha, the form cannot be sent without JavaScript.',
 					'formulario-mensaje'
 				) }
 				checked={ settings.captcha_enabled !== false }
@@ -130,7 +130,7 @@ export default function FormSettingsPanel( { settings, fields, onChange } ) {
 						help={
 							<>
 								{ __(
-									'Any address of this site is valid. Other domains must be in the list of allowed domains.',
+									'Any address on this site is valid. Other domains must be in the list of allowed domains.',
 									'formulario-mensaje'
 								) }{ ' ' }
 								{ can.manageSettings && (

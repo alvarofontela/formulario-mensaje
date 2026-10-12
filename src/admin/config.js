@@ -25,6 +25,8 @@ export const urls = config.urls || {};
 export const siteHost = config.siteHost || '';
 export const operators = config.operators || [];
 export const userEmail = config.userEmail || '';
+// Mensajes sin leer al cargar la pantalla, para la navegación; la bandeja lo mantiene al día.
+export const initialUnread = Number( config.unread ) || 0;
 export const restBase = `/${ config.restNamespace || 'formulario-mensaje/v1' }`;
 
 /**

@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Propuesta B · Bandeja</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Propuesta B: una bandeja de correspondencia. Se entra por los mensajes, se habla sin jerga y el constructor guía paso a paso. */
+:root {
+	--g: #0f6e56; --g-ink: #0a5341; --g-wash: #e3f1eb;
+	--tx: #17201c; --sub: #55625c; --line: #dce3de; --soft: #f1f5f2; --ground: #e9eeea;
+	--warn: #8a5200; --warn-wash: #fdf0d5; --bad: #b3261e; --bad-wash: #fbe9e6;
+	--bar: 60px; --wpbar: 32px;
+}
+body { font-size: 14px; color: var(--tx); }
+::selection { background: #bfe3d4; }
+:focus-visible { outline: 2px solid var(--g); outline-offset: 2px; border-radius: 6px; }
+.wp-content { background: var(--ground); }
+
+.b {
+	display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+	min-height: 40px; padding: 0 16px; border: 1px solid var(--line); border-radius: 8px;
+	background: #fff; color: var(--tx); font-weight: 600; text-decoration: none; white-space: nowrap;
+	transition: background .15s ease-out, border-color .15s ease-out;
+}
+.b:hover { border-color: var(--g); color: var(--g-ink); }
+.b.pri { background: var(--g); border-color: var(--g); color: #fff; }
+.b.pri:hover { background: var(--g-ink); color: #fff; }
+.b.txt { border-color: transparent; background: none; color: var(--g-ink); padding-inline: 10px; }
+.b.txt:hover { background: var(--g-wash); }
+.ib {
+	display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
+	border: 0; border-radius: 8px; background: none; color: var(--sub); text-decoration: none;
+}
+.ib:hover { background: var(--soft); color: var(--tx); }
+.in { width: 100%; min-height: 42px; padding: 8px 12px; border: 1px solid #a9b4ad; border-radius: 8px; background: #fff; }
+.in:focus { outline: 2px solid var(--g); outline-offset: -1px; border-color: var(--g); }
+.tg { position: relative; flex: none; width: 44px; height: 26px; border-radius: 13px; background: #a9b4ad; transition: background .15s ease-out; }
+.tg::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .25); transition: transform .18s cubic-bezier(.2, .8, .2, 1); }
+.tg.is-on { background: var(--g); }
+.tg.is-on::after { transform: translateX(18px); }
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 600; background: var(--g-wash); color: var(--g-ink); white-space: nowrap; }
+.pill.warn { background: var(--warn-wash); color: var(--warn); }
+.pill.bad { background: var(--bad-wash); color: var(--bad); }
+.seg { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--soft); }
+.seg button { min-height: 34px; padding: 0 14px; border: 0; border-radius: 7px; background: none; font-weight: 600; color: var(--sub); display: inline-flex; align-items: center; gap: 6px; }
+.seg button[aria-pressed="true"] { background: #fff; color: var(--tx); box-shadow: 0 1px 2px rgba(23, 32, 28, .14); }
+
+/* Cabecera propia del plugin */
+.top {
+	position: sticky; top: var(--wpbar); z-index: 30; display: flex; align-items: center; gap: 20px;
+	height: var(--bar); padding: 0 24px; background: #fff; border-bottom: 1px solid var(--line);
+}
+.top-name { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; white-space: nowrap; }
+.top-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; background: var(--g); color: #fff; }
+.nav { display: flex; gap: 4px; height: 100%; }
+.nav a { display: flex; align-items: center; gap: 8px; padding: 0 14px; color: var(--sub); font-weight: 600; text-decoration: none; border-bottom: 3px solid transparent; border-top: 3px solid transparent; }
+.nav a .ic { display: none; }
+.nav a:hover { color: var(--tx); }
+.nav a[aria-current="page"] { color: var(--tx); border-bottom-color: var(--g); }
+.top .b { margin-left: auto; }
+
+/* Bandeja de mensajes */
+.inbox { display: grid; grid-template-columns: 380px minmax(0, 1fr); height: calc(100vh - var(--wpbar) - var(--bar)); background: #fff; }
+.in-list { display: grid; grid-template-rows: auto minmax(0, 1fr); border-right: 1px solid var(--line); min-height: 0; }
+.in-tools { padding: 14px 16px 10px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
+.search { position: relative; }
+.search .ic { position: absolute; left: 12px; top: 11px; color: var(--sub); }
+.search .in { padding-left: 40px; background: var(--soft); border-color: transparent; }
+.chips { display: flex; gap: 6px; overflow-x: auto; }
+.chips button { flex: none; min-height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 99px; background: #fff; font-weight: 600; color: var(--sub); }
+.chips button[aria-pressed="true"] { background: var(--tx); border-color: var(--tx); color: #fff; }
+.in-items { overflow-y: auto; }
+.day { position: sticky; top: 0; z-index: 1; padding: 6px 16px; background: var(--soft); color: var(--sub); font-size: 12px; font-weight: 600; }
+.msg { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 2px 8px; width: 100%; padding: 12px 16px 12px 12px; border: 0; border-bottom: 1px solid var(--line); background: #fff; text-align: left; }
+.msg:hover { background: var(--soft); }
+.msg[aria-current="true"] { background: var(--g-wash); }
+.msg .dot { width: 8px; height: 8px; margin-top: 7px; border-radius: 50%; }
+.msg.is-unread .dot { background: var(--g); }
+.msg .who { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg.is-unread .who { font-weight: 700; }
+.msg .when { color: var(--sub); font-size: 12px; padding-top: 3px; }
+.msg .from { grid-column: 2 / -1; display: flex; align-items: center; gap: 6px; color: var(--g-ink); font-size: 12px; font-weight: 600; }
+.msg .from .is-bad { color: var(--bad); display: inline-flex; }
+.msg .txt { grid-column: 2 / -1; color: var(--sub); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.reader { overflow-y: auto; }
+.rd-bar { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 12px 24px; background: #fff; border-bottom: 1px solid var(--line); }
+.rd-bar .push { margin-left: auto; display: flex; }
+.rd-back { display: none; }
+.rd { max-width: 760px; padding: 28px 32px 56px; }
+.rd h2 { font-size: 24px; line-height: 1.2; font-weight: 700; text-wrap: balance; }
+.rd-contact { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 8px; }
+.rd-contact a { display: inline-flex; align-items: center; gap: 6px; color: var(--g-ink); font-weight: 600; text-underline-offset: 3px; }
+.rd-meta { margin-top: 6px; color: var(--sub); }
+.rd-text { margin: 24px 0 0; font-size: 17px; line-height: 1.6; max-width: 64ch; }
+.rd-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+.rd-facts dt { color: var(--sub); font-size: 12px; font-weight: 600; }
+.rd-facts dd { font-size: 15px; overflow-wrap: anywhere; }
+.rd-file { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-weight: 600; text-decoration: none; }
+.rd h3 { margin: 36px 0 12px; font-size: 15px; font-weight: 700; }
+.trail li { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; padding-bottom: 18px; }
+.trail li:not(:last-child)::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--line); }
+.trail .st { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--g-wash); color: var(--g-ink); }
+.trail .is-fail .st { background: var(--bad-wash); color: var(--bad); }
+.trail strong { display: block; font-weight: 600; }
+.trail small { color: var(--sub); font-size: 13px; }
+.trail .why { margin-top: 8px; padding: 12px 14px; border-radius: 8px; background: var(--bad-wash); }
+.trail .why p { margin-bottom: 10px; }
+.rd-ref { margin-top: 8px; color: var(--sub); font-size: 12px; }
+
+/* Formularios */
+.wrap { max-width: 1040px; margin: 0 auto; padding: 28px 24px 64px; }
+.wrap > h1 { font-size: 26px; font-weight: 700; line-height: 1.2; }
+.wrap > .lead { color: var(--sub); margin-top: 4px; font-size: 15px; }
+.sheet { margin-top: 20px; background: #fff; border-radius: 12px; border: 1px solid var(--line); }
+.fr { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 6px 24px; padding: 18px 20px; }
+.fr + .fr { border-top: 1px solid var(--line); }
+.fr h2 { font-size: 17px; font-weight: 700; }
+.fr h2 a { text-decoration: none; }
+.fr h2 a:hover { color: var(--g-ink); }
+.fr .where { display: flex; align-items: flex-start; gap: 6px; margin-top: 3px; color: var(--sub); }
+.fr .where .ic { color: var(--g); margin-top: 3px; }
+.fr .where.is-warn, .fr .where.is-warn .ic { color: var(--warn); }
+.fr .count { text-align: right; }
+.fr .count b { display: block; font-size: 15px; }
+.fr .count span { color: var(--sub); font-size: 13px; }
+.fr .acts { display: flex; gap: 6px; align-items: center; }
+.start { margin-top: 32px; }
+.start h2 { font-size: 17px; font-weight: 700; }
+.start p { color: var(--sub); margin-top: 2px; }
+.start .chips { margin-top: 12px; flex-wrap: wrap; }
+.start .chips button { min-height: 40px; padding: 0 16px; color: var(--tx); }
+.start .chips button:hover { border-color: var(--g); color: var(--g-ink); }
+
+/* Constructor guiado */
+.bd-top { display: flex; align-items: center; gap: 12px; padding: 14px 24px 0; background: #fff; }
+.bd-name { flex: 1 1 auto; min-width: 0; font-size: 20px; font-weight: 700; border: 1px solid transparent; border-radius: 8px; padding: 4px 8px; background: none; }
+.bd-name:hover { border-color: var(--line); }
+.bd-saved { display: inline-flex; align-items: center; gap: 6px; color: var(--sub); font-size: 13px; white-space: nowrap; }
+.bd-saved .ic { color: var(--g); }
+.steps { position: sticky; top: var(--wpbar); z-index: 20; display: flex; align-items: center; gap: 2px; padding: 4px 16px 0; background: #fff; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.steps a { flex: none; display: inline-flex; align-items: center; min-height: 46px; padding: 0 12px; color: var(--sub); font-weight: 600; text-decoration: none; border-bottom: 3px solid transparent; }
+.steps a[aria-current="step"] { color: var(--tx); border-bottom-color: var(--g); }
+.steps .ic { flex: none; color: #a9b4ad; }
+.bd { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 44%); align-items: start; }
+.bd-main { padding: 24px 24px 96px; max-width: 720px; width: 100%; margin: 0 auto; }
+.bd-main h2 { font-size: 20px; font-weight: 700; }
+.bd-main .lead { color: var(--sub); margin: 2px 0 18px; }
+.q { background: #fff; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; }
+.q-h { display: grid; grid-template-columns: 24px 24px minmax(0, 1fr) auto 24px; align-items: center; gap: 8px; width: 100%; min-height: 56px; padding: 6px 12px 6px 8px; border: 0; background: none; text-align: left; border-radius: 10px; }
+.q-h .ic { color: var(--sub); }
+.q-h b { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.q-h small { color: var(--sub); font-size: 13px; }
+.q-h em { font-style: normal; color: var(--sub); font-size: 13px; }
+.q.is-open { border-color: var(--g); box-shadow: 0 6px 20px rgba(23, 32, 28, .08); }
+.q-body { display: grid; gap: 16px; padding: 4px 16px 16px 16px; }
+.q-body label > span, .fld > span { display: block; margin-bottom: 6px; font-weight: 600; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tags span { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 6px 0 12px; border-radius: 8px; background: var(--soft); }
+.tags span .ic { color: var(--sub); }
+.sw { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; }
+.sw strong { display: block; font-weight: 600; }
+.sw small { color: var(--sub); font-size: 13px; }
+.q-foot { display: flex; flex-wrap: wrap; gap: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.add { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; border: 1.5px dashed #a9b4ad; border-radius: 10px; background: none; color: var(--g-ink); font-weight: 700; }
+.add:hover { border-color: var(--g); background: var(--g-wash); }
+.then { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 8px; }
+.then .more { margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+.then textarea.in { min-height: 76px; resize: vertical; }
+.pub { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; padding: 16px; background: #fff; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; }
+.pub::before { content: ""; width: 20px; height: 20px; margin-top: 2px; border: 2px solid #a9b4ad; border-radius: 50%; }
+.pub.is-on { border-color: var(--g); }
+.pub.is-on::before { border: 6px solid var(--g); }
+.pub strong { display: block; font-size: 15px; font-weight: 700; }
+.pub p { color: var(--sub); margin-top: 2px; }
+.pub .do { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.code { font: 13px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace; padding: 10px 12px; border-radius: 8px; background: var(--soft); overflow-wrap: anywhere; }
+.swatches { display: flex; gap: 10px; }
+.swatches span { width: 36px; height: 36px; border-radius: 50%; outline: 1px solid var(--line); outline-offset: 2px; }
+.swatches span.is-on { outline: 2px solid var(--tx); }
+.bd-next { position: sticky; bottom: 0; display: flex; justify-content: space-between; gap: 12px; margin-top: 24px; padding: 12px 0; background: linear-gradient(to top, var(--ground) 70%, transparent); }
+.pv { position: sticky; top: calc(var(--wpbar) + 51px); height: calc(100vh - var(--wpbar) - 51px); display: grid; grid-template-rows: auto minmax(0, 1fr); border-left: 1px solid var(--line); background: #dfe6e1; }
+.pv-h { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 10px 16px; color: var(--sub); font-weight: 600; }
+.pv-close { display: none; }
+.pv-scroll { overflow-y: auto; padding: 4px 16px 24px; }
+.pv-frame { max-width: 560px; margin: 0 auto; padding: 24px; background: #fff; border-radius: 10px; box-shadow: 0 2px 4px rgba(23, 32, 28, .06), 0 14px 34px rgba(23, 32, 28, .1); }
+.pv.is-phone .pv-frame { max-width: 340px; padding: 18px; }
+.bd-peek { display: none; }
+.bd-peek .short { display: none; }
+
+/* Ajustes */
+.ck { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 4px 14px; align-items: start; padding: 18px 20px; }
+.ck + .ck { border-top: 1px solid var(--line); }
+.ck .st { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--g-wash); color: var(--g-ink); }
+.ck.is-warn .st { background: var(--warn-wash); color: var(--warn); }
+.ck.is-idle .st { background: var(--soft); color: var(--sub); }
+.ck h2 { font-size: 16px; font-weight: 700; }
+.ck p { color: var(--sub); max-width: 60ch; }
+.ck .acts { display: flex; gap: 6px; }
+.adv a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 8px 20px; text-decoration: none; }
+.adv a + a { border-top: 1px solid var(--line); }
+.adv a:hover { background: var(--soft); }
+.adv strong { display: block; font-weight: 600; }
+.adv small { color: var(--sub); font-size: 13px; }
+.adv .ic { color: var(--sub); }
+
+.tabbar { display: none; }
+
+/* ── Tableta ── */
+@media (max-width: 1080px) {
+	.top { gap: 10px; padding-inline: 16px; }
+	.nav a { padding-inline: 10px; }
+	.inbox { grid-template-columns: 300px minmax(0, 1fr); }
+	.rd { padding: 24px 24px 48px; }
+	.fr { grid-template-columns: minmax(0, 1fr) auto; }
+	.fr .count { grid-column: 1; grid-row: 2; text-align: left; display: flex; flex-wrap: wrap; gap: 0 10px; align-items: baseline; }
+	.fr .count b { white-space: nowrap; }
+	.fr .acts { grid-row: 1 / span 2; grid-column: 2; }
+	.bd { grid-template-columns: minmax(0, 1fr) 320px; }
+	.bd-main { padding-inline: 20px; }
+}
+
+/* ── Móvil: navegación abajo, una columna y la vista previa a un toque ── */
+@media (max-width: 782px) {
+	:root { --wpbar: 46px; --bar: 56px; }
+	body { font-size: 15px; }
+	.b, .in { min-height: 46px; }
+	.ib { width: 46px; height: 46px; }
+	.top { padding: 0 8px 0 16px; gap: 8px; }
+	.top-name { font-size: 18px; }
+	.top .nav { display: none; }
+	.top .b span { display: none; }
+	.top .b { padding: 0; width: 46px; }
+	.tabbar {
+		position: fixed; inset: auto 0 0 0; z-index: 45; display: grid; grid-template-columns: repeat(3, 1fr);
+		padding-bottom: env(safe-area-inset-bottom); background: #fff; border-top: 1px solid var(--line);
+	}
+	.tabbar a { position: relative; display: grid; justify-items: center; gap: 2px; padding: 8px 4px 7px; min-height: 58px; color: var(--sub); font-size: 12px; font-weight: 600; text-decoration: none; }
+	.tabbar a[aria-current="page"] { color: var(--g-ink); }
+	.tabbar .n { position: absolute; top: 5px; left: calc(50% + 8px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--g); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+	body[data-at="constructor"] .tabbar, body[data-at="constructor"] .top { display: none; }
+
+	.inbox { grid-template-columns: minmax(0, 1fr); height: auto; }
+	.in-list { border-right: 0; padding-bottom: 70px; }
+	.in-tools { position: sticky; top: calc(var(--wpbar) + var(--bar)); z-index: 3; background: #fff; }
+	.in-items { overflow: visible; }
+	.day { top: calc(var(--wpbar) + var(--bar) + 109px); }
+	.msg { padding-block: 14px; }
+	.reader { display: none; overflow: visible; }
+	.inbox.is-reading .in-list { display: none; }
+	.inbox.is-reading .reader { display: block; padding-bottom: 70px; }
+	.rd-bar { top: calc(var(--wpbar) + var(--bar)); padding: 8px; gap: 4px; }
+	.rd-back { display: inline-flex; }
+	.rd-bar .b.sec-act span { display: none; }
+	.rd-bar .b.sec-act { width: 46px; padding: 0; }
+	.rd { padding: 20px 16px 32px; }
+	.rd h2 { font-size: 22px; }
+	.rd-facts { grid-template-columns: minmax(0, 1fr); }
+
+	.wrap { padding: 20px 12px 96px; }
+	.wrap > h1, .wrap > .lead, .start { padding-inline: 4px; }
+	.fr { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+	.fr .acts { grid-row: auto; grid-column: 1; margin-top: 8px; }
+	.fr .acts .b { flex: 1; }
+	.fr .acts .ib { flex: none; }
+	.ck { grid-template-columns: 32px minmax(0, 1fr); padding: 16px; }
+	.ck .acts { grid-column: 2; margin-top: 8px; flex-wrap: wrap; }
+
+	.bd-top { padding: 8px 8px 0 4px; gap: 4px; }
+	.bd-name { font-size: 18px; }
+	.bd-saved span { display: none; }
+	.steps { padding-inline: 2px; font-size: 14px; }
+	.steps a { padding: 0 9px; }
+	.steps .ic { display: none; }
+	.bd { grid-template-columns: minmax(0, 1fr); }
+	.bd-main { padding: 20px 12px 120px; }
+	.q-h { min-height: 60px; }
+	.pv { display: none; position: fixed; inset: var(--wpbar) 0 0 0; z-index: 50; height: auto; border-left: 0; }
+	.bd.is-peeking .pv { display: grid; }
+	.pv-close { display: inline-flex; }
+	.pv .seg { display: none; }
+	.bd-next { position: fixed; inset: auto 0 0 0; z-index: 40; margin: 0; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--line); }
+	.bd-next .b { flex: 1; }
+	.bd-peek { display: inline-flex; flex: 0 0 auto !important; }
+	.bd-peek .long { display: none; }
+	.bd-peek .short { display: inline; }
+	.bd-prev { display: none; }
+}
+</style>
+</head>
+<body>
+<main class="wp-content">
+	<header class="top">
+		<span class="top-name"><span class="top-mark"><i data-i="inbox" data-s="18"></i></span>Formulario Mensaje</span>
+		<nav class="nav" aria-label="Secciones">
+			<a href="#mensajes" data-nav="mensajes">Mensajes <span class="pill">2 sin leer</span></a>
+			<a href="#formularios" data-nav="formularios">Formularios</a>
+			<a href="#ajustes" data-nav="ajustes">Ajustes</a>
+		</nav>
+		<a class="b pri" href="#constructor"><i data-i="plus" data-s="18"></i><span>Nuevo formulario</span></a>
+	</header>
+
+	<!-- Mensajes -->
+	<section data-screen="mensajes" class="inbox" id="b-inbox">
+		<div class="in-list">
+			<div class="in-tools">
+				<label class="search"><span class="sr">Buscar en los mensajes</span><i data-i="search" data-s="18"></i><input class="in" type="search" placeholder="Buscar por nombre o por lo que escribieron"></label>
+				<div class="chips" role="group" aria-label="Filtros">
+					<button type="button" aria-pressed="true">Todos</button><button type="button" aria-pressed="false">Sin leer · 2</button><button type="button" aria-pressed="false">Con problemas · 1</button><button type="button" aria-pressed="false">Por formulario</button>
+				</div>
+			</div>
+			<div class="in-items" id="b-items"></div>
+		</div>
+		<article class="reader" id="b-reader" aria-label="Mensaje"></article>
+	</section>
+
+	<!-- Formularios -->
+	<section data-screen="formularios" hidden>
+		<div class="wrap">
+			<h1>Tus formularios</h1>
+			<p class="lead">Cinco formularios; cuatro están recibiendo mensajes.</p>
+			<div class="sheet" id="b-forms"></div>
+			<div class="start">
+				<h2>Empezar uno nuevo</h2>
+				<p>Elige una plantilla y cámbiala a tu gusto, o empieza con la hoja en blanco.</p>
+				<div class="chips"><button type="button">Contacto</button><button type="button">Pedir cita</button><button type="button">Pedir presupuesto</button><button type="button">Enviar currículum</button><button type="button">Encuesta</button><button type="button">En blanco</button></div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Constructor -->
+	<section data-screen="constructor" hidden>
+		<div class="bd-top">
+			<a class="ib" href="#formularios" aria-label="Volver a tus formularios"><i data-i="chevL"></i></a>
+			<input class="bd-name" value="Pedir cita" aria-label="Nombre del formulario">
+			<span class="bd-saved"><i data-i="check" data-s="18"></i><span>Guardado hace un momento</span></span>
+		</div>
+		<nav class="steps" aria-label="Pasos para crear el formulario">
+			<a href="#constructor:preguntas" data-step="preguntas">Preguntas</a><i data-i="chevR" data-s="16"></i>
+			<a href="#constructor:recibir" data-step="recibir">Al recibirlo</a><i data-i="chevR" data-s="16"></i>
+			<a href="#constructor:aspecto" data-step="aspecto">Aspecto</a><i data-i="chevR" data-s="16"></i>
+			<a href="#constructor:publicar" data-step="publicar">Publicar</a>
+		</nav>
+		<div class="bd" id="b-bd">
+			<div class="bd-main">
+				<div data-pane="preguntas">
+					<h2>¿Qué quieres preguntar?</h2>
+					<p class="lead">Arrastra para cambiar el orden. Toca una pregunta para cambiarla.</p>
+					<div id="b-questions"></div>
+					<button class="add" type="button"><i data-i="plus"></i>Añadir una pregunta</button>
+				</div>
+				<div data-pane="recibir" hidden>
+					<h2>¿Qué hacemos cuando alguien lo envía?</h2>
+					<p class="lead">Puedes combinar varias cosas.</p>
+					<div class="then"><div class="sw"><div><strong>Guardarlo en Mensajes</strong><small>Lo tendrás aquí aunque el correo falle.</small></div><span class="tg is-on" role="switch" aria-checked="true" tabindex="0"></span></div></div>
+					<div class="then">
+						<div class="sw"><div><strong>Avisarme por correo</strong><small>Te llega un correo cada vez que alguien escribe.</small></div><span class="tg is-on" role="switch" aria-checked="true" tabindex="0"></span></div>
+						<div class="more">
+							<div class="fld"><span>¿A quién avisamos?</span><div class="tags"><span>recepcion@clinicaribera.example <i data-i="x" data-s="16"></i></span><button class="b txt" type="button"><i data-i="plus" data-s="18"></i>Añadir otra dirección</button></div></div>
+							<button class="b txt" type="button" style="justify-self:start"><i data-i="pencil" data-s="18"></i>Cambiar el texto del aviso</button>
+						</div>
+					</div>
+					<div class="then"><div class="sw"><div><strong>Enviar una confirmación a quien escribe</strong><small>Recibe un correo con una copia de lo que ha enviado.</small></div><span class="tg" role="switch" aria-checked="false" tabindex="0"></span></div></div>
+					<div class="then">
+						<strong style="font-weight:600">Después de enviar, la persona ve</strong>
+						<div class="more" style="border-top:0;padding-top:0">
+							<div class="seg" role="group" aria-label="Qué ve" style="justify-self:start"><button type="button" aria-pressed="true">Un mensaje</button><button type="button" aria-pressed="false">Otra página</button></div>
+							<textarea class="in" aria-label="Mensaje de agradecimiento">Gracias. Te llamaremos hoy mismo para confirmar la cita.</textarea>
+						</div>
+					</div>
+					<div class="then"><div class="sw"><div><strong>Conectar con otra aplicación</strong><small>1 conexión activa: Agenda de citas. Lo configura quien mantiene la web.</small></div><i data-i="chevR"></i></div></div>
+				</div>
+				<div data-pane="aspecto" hidden>
+					<h2>¿Cómo quieres que se vea?</h2>
+					<p class="lead">Los cambios se ven al momento en la vista de la derecha.</p>
+					<div class="then" style="display:grid;gap:20px">
+						<div class="fld"><span>Color del botón</span><div class="swatches"><span class="is-on" style="background:#111"></span><span style="background:#0f6e56"></span><span style="background:#1f4fd8"></span><span style="background:#a3271f"></span><span style="background:#6b3fa0"></span></div></div>
+						<div class="fld"><span>Forma de las casillas</span><div class="seg" role="group"><button type="button" aria-pressed="true">Rectas</button><button type="button" aria-pressed="false">Redondeadas</button><button type="button" aria-pressed="false">Muy redondeadas</button></div></div>
+						<div class="fld"><span>Separación entre preguntas</span><div class="seg" role="group"><button type="button" aria-pressed="false">Compacta</button><button type="button" aria-pressed="true">Normal</button><button type="button" aria-pressed="false">Amplia</button></div></div>
+					</div>
+				</div>
+				<div data-pane="publicar" hidden>
+					<h2>¿Dónde lo ponemos?</h2>
+					<p class="lead">Ahora mismo está en dos páginas: Inicio y Pide tu cita.</p>
+					<div class="pub is-on"><div><strong>En una página, con el editor de WordPress</strong><p>Abre la página, pulsa el botón + y busca «Formulario». Después elige «Pedir cita».</p><div class="do"><button class="b pri" type="button">Elegir la página<i data-i="arrowR" data-s="18"></i></button></div></div></div>
+					<div class="pub"><div><strong>En una página hecha con Elementor</strong><p>Busca el elemento «Formulario» en el panel de Elementor y arrástralo.</p></div></div>
+					<div class="pub"><div><strong>Con un código para pegar</strong><p>Para cualquier otro sitio de la web. Pégalo donde quieras que aparezca.</p><div class="do"><span class="code">[formulario_mensaje id="12"]</span><button class="b" type="button"><i data-i="copy" data-s="18"></i>Copiar</button></div></div></div>
+				</div>
+				<div class="bd-next">
+					<button class="b bd-peek" type="button" id="b-peek"><i data-i="eye" data-s="18"></i><span class="long">Ver cómo queda</span><span class="short">Ver</span></button>
+					<a class="b bd-prev" href="#formularios">Salir</a>
+					<a class="b pri" id="b-next" href="#constructor:recibir">Siguiente: Al recibirlo<i data-i="arrowR" data-s="18"></i></a>
+				</div>
+			</div>
+			<aside class="pv" id="b-pv" aria-label="Vista previa">
+				<div class="pv-h"><span>Así lo verán en tu web</span>
+					<div class="seg" role="group" aria-label="Tamaño"><button type="button" aria-pressed="true" data-size="desk"><i data-i="desktop" data-s="18"></i>Ordenador</button><button type="button" aria-pressed="false" data-size="phone"><i data-i="mobile" data-s="18"></i>Móvil</button></div>
+					<button class="ib pv-close" type="button" id="b-unpeek" aria-label="Cerrar la vista previa"><i data-i="x"></i></button>
+				</div>
+				<div class="pv-scroll"><div class="pv-frame" id="b-preview"></div></div>
+			</aside>
+		</div>
+	</section>
+
+	<!-- Ajustes -->
+	<section data-screen="ajustes" hidden>
+		<div class="wrap">
+			<h1>Ajustes</h1>
+			<p class="lead">Tres cosas están en orden y una necesita que la mires.</p>
+			<div class="sheet">
+				<div class="ck is-warn"><span class="st"><i data-i="alert" data-s="18"></i></span><div><h2>Un mensaje no llegó a la Agenda de citas</h2><p>Lo estamos reintentando solos. El mensaje está guardado y el aviso por correo sí llegó.</p></div><div class="acts"><a class="b" href="#mensajes">Ver el mensaje</a></div></div>
+				<div class="ck"><span class="st"><i data-i="check" data-s="18"></i></span><div><h2>Los correos salen bien</h2><p>Se envían como «Clínica Dental Ribera» desde web@clinicaribera.example. Última prueba: hoy a las 9:10.</p></div><div class="acts"><button class="b" type="button">Enviar una prueba</button><button class="b txt" type="button">Cambiar</button></div></div>
+				<div class="ck"><span class="st"><i data-i="shield" data-s="18"></i></span><div><h2>La protección contra el spam está activa</h2><p>Funciona sola en todos los formularios. No tienes que configurar nada.</p></div><div class="acts"><button class="b txt" type="button">Ver opciones</button></div></div>
+				<div class="ck is-idle"><span class="st"><i data-i="clock" data-s="18"></i></span><div><h2>Captcha: no hace falta por ahora</h2><p>Actívalo solo si empieza a llegarte spam. Pide a quien escribe que demuestre que no es un robot.</p></div><div class="acts"><button class="b txt" type="button">Activar</button></div></div>
+			</div>
+			<div class="start">
+				<h2>Para quien mantiene la web</h2>
+				<p>Ajustes técnicos. Si no sabes qué son, no hace falta que los toques.</p>
+				<div class="sheet adv" style="margin-top:12px">
+					<a href="#ajustes"><span><strong>Servidor de correo</strong><small>El de la web. También admite una cuenta SMTP o Resend.</small></span><i data-i="chevR"></i></a>
+					<a href="#ajustes"><span><strong>Dirección de los visitantes</strong><small>Para webs detrás de Cloudflare o de un proxy.</small></span><i data-i="chevR"></i></a>
+					<a href="#ajustes"><span><strong>Páginas a las que se puede redirigir</strong><small>Solo las de esta web.</small></span><i data-i="chevR"></i></a>
+					<a href="#ajustes"><span><strong>Servicio de captcha</strong><small>Turnstile, hCaptcha o reCAPTCHA.</small></span><i data-i="chevR"></i></a>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<nav class="tabbar" aria-label="Secciones">
+		<a href="#mensajes" data-nav="mensajes"><i data-i="inbox" data-s="24"></i>Mensajes<span class="n">2</span></a>
+		<a href="#formularios" data-nav="formularios"><i data-i="form" data-s="24"></i>Formularios</a>
+		<a href="#ajustes" data-nav="ajustes"><i data-i="sliders" data-s="24"></i>Ajustes</a>
+	</nav>
+</main>
+
+<script src="shared.js"></script>
+<script>
+wpChrome( [ [ 'Mensajes', 'mensajes', 2 ], [ 'Formularios', 'formularios' ], [ 'Ajustes', 'ajustes' ] ] );
+
+/* Mensajes */
+const inbox = document.getElementById( 'b-inbox' );
+const items = document.getElementById( 'b-items' );
+const reader = document.getElementById( 'b-reader' );
+let lastDay = '';
+
+items.innerHTML = DATA.messages.map( ( m, index ) => {
+	const head = m.day !== lastDay ? `<div class="day">${ m.day }</div>` : '';
+
+	lastDay = m.day;
+
+	return `${ head }<button class="msg${ m.unread ? ' is-unread' : '' }" type="button" data-msg="${ index }">
+		<span class="dot"></span><span class="who">${ m.name }</span><span class="when">${ m.time }</span>
+		<span class="from">${ m.form }${ m.file ? icon( 'clip', 14 ) : '' }${ m.copies ? `<span class="is-bad">${ icon( 'alert', 14 ) }</span>` : '' }</span>
+		<span class="txt">${ m.excerpt }</span></button>`;
+} ).join( '' );
+
+function read( index ) {
+	const m = DATA.messages[ index ];
+	const answers = m.answers || [ [ 'Mensaje', m.excerpt ] ];
+	const text = answers[ answers.length - 1 ][ 1 ];
+	const facts = answers.slice( 0, -1 ).filter( ( [ q ] ) => ! [ 'Nombre y apellidos', 'Teléfono', 'Correo electrónico' ].includes( q ) );
+	const copies = m.copies || [ { label: 'Guardado en Mensajes', state: 'ok', when: m.time }, { label: 'Aviso por correo', to: 'recepcion@clinicaribera.example', state: 'ok', when: m.time } ];
+
+	items.querySelectorAll( '.msg' ).forEach( ( el ) => el.setAttribute( 'aria-current', String( Number( el.dataset.msg ) === index ) ) );
+	reader.innerHTML = `
+		<div class="rd-bar">
+			<button class="ib rd-back" type="button" data-back aria-label="Volver a los mensajes"><i data-i="chevL"></i></button>
+			<button class="b pri" type="button"><i data-i="mail" data-s="18"></i>Responder</button>
+			${ m.phone ? '<button class="b sec-act" type="button"><i data-i="phone" data-s="18"></i><span>Llamar</span></button>' : '' }
+			<div class="push"><button class="ib" type="button" aria-label="Marcar como no leído"><i data-i="mail"></i></button><button class="ib" type="button" aria-label="Eliminar"><i data-i="trash"></i></button></div>
+		</div>
+		<div class="rd">
+			<h2>${ m.name }</h2>
+			<div class="rd-contact"><a href="#mensajes">${ icon( 'mail', 16 ) }${ m.email }</a>${ m.phone ? `<a href="#mensajes">${ icon( 'phone', 16 ) }${ m.phone }</a>` : '' }</div>
+			<p class="rd-meta">Escribió por el formulario ${ m.form } · ${ m.day.toLowerCase() } a las ${ m.time }</p>
+			<p class="rd-text">${ text }</p>
+			${ m.file ? `<a class="rd-file" href="#mensajes">${ icon( 'clip', 18 ) }${ m.file }</a>` : '' }
+			${ facts.length ? `<dl class="rd-facts">${ facts.map( ( [ q, a ] ) => `<div><dt>${ q }</dt><dd>${ a }</dd></div>` ).join( '' ) }</dl>` : '' }
+			<h3>Qué pasó con este mensaje</h3>
+			<ol class="trail">${ copies.map( ( c ) => `<li class="is-${ c.state }"><span class="st">${ icon( c.state === 'ok' ? 'check' : 'alert', 16 ) }</span><div><strong>${ c.state === 'ok' ? c.label.replace( 'WordPress', 'Mensajes' ) : `No llegó a: ${ c.label }` }</strong><small>${ c.to ? `${ c.to } · ` : '' }${ c.when }</small>${ c.detail ? '<div class="why"><p>El otro servicio dio un error. Lo volveremos a intentar solos a las 11:12; quedan tres intentos.</p><button class="b" type="button">' + icon( 'retry', 18 ) + 'Intentarlo ahora</button></div>' : '' }</div></li>` ).join( '' ) }</ol>
+			<p class="rd-ref">Referencia ${ m.ref }</p>
+		</div>`;
+	hydrateIcons( reader );
+}
+
+inbox.addEventListener( 'click', ( event ) => {
+	const item = event.target.closest( '[data-msg]' );
+
+	if ( item ) {
+		read( Number( item.dataset.msg ) );
+		inbox.classList.add( 'is-reading' );
+		window.scrollTo( 0, 0 );
+	} else if ( event.target.closest( '[data-back]' ) ) {
+		inbox.classList.remove( 'is-reading' );
+	}
+} );
+read( 0 );
+
+/* Formularios */
+document.getElementById( 'b-forms' ).innerHTML = DATA.forms.map( ( f ) => {
+	const where = f.pages.length
+		? `<p class="where">${ icon( 'check', 16 ) }Recibiendo mensajes en ${ f.pages.length > 1 ? 'las páginas' : 'la página' } ${ f.pages.join( ' y ' ) }</p>`
+		: `<p class="where is-warn">${ icon( 'alert', 16 ) }Todavía no está en ninguna página</p>`;
+	const count = f.month ? `<b>${ f.month } mensajes este mes</b><span>${ f.unread ? `${ f.unread } sin leer · ` : '' }último ${ f.last }</span>` : '<span>Sin mensajes todavía</span>';
+	const main = f.pages.length ? '<a class="b" href="#mensajes">Ver mensajes</a>' : '<a class="b pri" href="#constructor:publicar">Ponerlo en una página</a>';
+
+	return `<div class="fr"><div><h2><a href="#constructor">${ f.name }</a></h2>${ where }</div><div class="count">${ count }</div>
+		<div class="acts">${ main }<a class="b txt" href="#constructor">Editar</a><button class="ib" type="button" aria-label="Más acciones de ${ f.name }">${ icon( 'more' ) }</button></div></div>`;
+} ).join( '' );
+
+/* Constructor */
+const bd = document.getElementById( 'b-bd' );
+const pv = document.getElementById( 'b-pv' );
+const order = [ [ 'preguntas', 'Preguntas' ], [ 'recibir', 'Al recibirlo' ], [ 'aspecto', 'Aspecto' ], [ 'publicar', 'Publicar' ] ];
+
+document.getElementById( 'b-preview' ).innerHTML = formPreview();
+document.getElementById( 'b-questions' ).innerHTML = DATA.fields.map( ( f ) => {
+	const open = f.id === 'motivo';
+	const label = f.label.replace( /<[^>]+>/g, '' );
+	const body = open ? `<div class="q-body">
+		<label><span>Pregunta</span><input class="in" value="${ label }"></label>
+		<div class="fld"><span>Respuestas para elegir</span><div class="tags">${ f.options.map( ( o ) => `<span>${ o } ${ icon( 'x', 16 ) }</span>` ).join( '' ) }<button class="b txt" type="button">${ icon( 'plus', 18 ) }Añadir</button></div></div>
+		<div class="sw"><div><strong>Es obligatoria</strong><small>No se puede enviar sin contestarla.</small></div><span class="tg is-on" role="switch" aria-checked="true" tabindex="0"></span></div>
+		<div class="sw"><div><strong>Ocupa media fila</strong><small>Queda al lado de la pregunta siguiente.</small></div><span class="tg" role="switch" aria-checked="false" tabindex="0"></span></div>
+		<div class="q-foot"><button class="b txt" type="button">${ icon( 'branch', 18 ) }Mostrarla solo si…</button><button class="b txt" type="button">${ icon( 'copy', 18 ) }Duplicar</button><button class="b txt" type="button" style="color:var(--bad)">${ icon( 'trash', 18 ) }Quitar</button></div></div>` : '';
+
+	return `<div class="q${ open ? ' is-open' : '' }"><button class="q-h" type="button" aria-expanded="${ open }">${ icon( 'grip', 18 ) }${ icon( f.ico ) }<span><b>${ label }</b><small>${ f.plain }</small></span><em>${ f.req ? 'Obligatoria' : '' }</em>${ icon( open ? 'chevU' : 'chevD', 18 ) }</button>${ body }</div>`;
+} ).join( '' );
+
+document.getElementById( 'b-peek' ).addEventListener( 'click', () => bd.classList.add( 'is-peeking' ) );
+document.getElementById( 'b-unpeek' ).addEventListener( 'click', () => bd.classList.remove( 'is-peeking' ) );
+pv.querySelectorAll( '[data-size]' ).forEach( ( button ) => button.addEventListener( 'click', () => {
+	pv.classList.toggle( 'is-phone', button.dataset.size === 'phone' );
+	pv.querySelectorAll( '[data-size]' ).forEach( ( b ) => b.setAttribute( 'aria-pressed', String( b === button ) ) );
+} ) );
+
+function showStep( name ) {
+	const at = Math.max( 0, order.findIndex( ( [ id ] ) => id === name ) );
+	const next = order[ at + 1 ];
+	const link = document.getElementById( 'b-next' );
+
+	document.querySelectorAll( '.bd-main [data-pane]' ).forEach( ( pane ) => { pane.hidden = pane.dataset.pane !== order[ at ][ 0 ]; } );
+	document.querySelectorAll( '.steps [data-step]' ).forEach( ( step ) => {
+		if ( step.dataset.step === order[ at ][ 0 ] ) {
+			step.setAttribute( 'aria-current', 'step' );
+		} else {
+			step.removeAttribute( 'aria-current' );
+		}
+	} );
+	link.href = next ? `#constructor:${ next[ 0 ] }` : '#formularios';
+	link.innerHTML = next ? `Siguiente: ${ next[ 1 ] }${ icon( 'arrowR', 18 ) }` : `${ icon( 'check', 18 ) }Terminar`;
+}
+
+hydrateIcons();
+router( 'mensajes', ( screen, extra ) => {
+	if ( screen === 'constructor' ) {
+		showStep( extra );
+	}
+	if ( screen === 'mensajes' ) {
+		inbox.classList.toggle( 'is-reading', extra === 'leer' );
+	}
+} );
+</script>
+</body>
+</html>

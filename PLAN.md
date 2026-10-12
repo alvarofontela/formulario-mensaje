@@ -6,7 +6,7 @@ Fichero de contexto con las decisiones de producto y técnicas tomadas con el us
 
 ## Qué es
 
-Un constructor de formularios para WordPress, ligero y auditable, para webs propias y de clientes. Motivos para hacerlo propio, por orden de peso en las decisiones:
+Un constructor de formularios para WordPress, ligero y auditable, para webs propias y de clientes. Desde el 2026-10-12 se prepara además para publicarse en el directorio de WordPress.org. Motivos para hacerlo propio, por orden de peso en las decisiones:
 
 1. Ligereza y rendimiento: nada de CSS ni JS en páginas sin formulario, sin dependencias pesadas, sin avisos ni upsells.
 2. Seguridad y antispam bajo control.
@@ -40,7 +40,7 @@ Las abstracciones se crean donde el plan ya prevé variación (las de la tabla),
 | Cómo se insertan | Bloque de Gutenberg, shortcode y widget de Elementor (versión gratuita); los tres eligen un formulario ya creado |
 | Estilo | Diseñador visual por formulario (colores, bordes, espaciados, anchos de columna) |
 | Estilo en el bloque y en Elementor | Ambos añaden sus controles nativos (colores, tipografía, espaciado, bordes), que sobrescriben el estilo del formulario solo en esa página |
-| Idiomas | La interfaz del plugin es traducible (incluye `es_ES`); en webs multilingües, un formulario por idioma. Sin integración con WPML ni Polylang |
+| Idiomas | La interfaz del plugin es traducible con los ficheros estándar de WordPress (`.po` y `.mo`). El idioma de origen es el inglés de EE. UU. y la primera traducción, `es_ES`, que también ven las demás variantes del español. En webs multilingües, un formulario por idioma. Sin integración con WPML ni Polylang |
 | Permisos | Capabilities propias y separadas: gestionar formularios, ver envíos, cambiar ajustes. Por defecto las tiene el administrador |
 | Acceso al formulario | Sin restricciones: un formulario publicado acepta envíos siempre y de cualquiera. Sin fechas de apertura, cupo ni restricción a usuarios conectados |
 | Borrado de un formulario | Va a la papelera y deja de aceptar envíos; sus envíos se conservan. Al vaciar la papelera se pregunta si borrar también envíos y ficheros |
@@ -188,7 +188,7 @@ Corrígelos si no encajan:
 
 ## Puntos abiertos
 
-1. **Actualizaciones** en las webs instaladas: el usuario lo mantiene aplazado (preguntado dos veces el 2026-10-08). Opciones vistas: servidor de actualizaciones propio, releases de un GitHub privado o ningún actualizador en el plugin. Mientras tanto, el plugin solo cuida las migraciones de datos entre versiones.
+1. **Actualizaciones** en las webs instaladas: estuvo aplazado (preguntado dos veces el 2026-10-08, con un servidor propio o releases de un GitHub privado como opciones). El 2026-10-12 el usuario decidió preparar el plugin para el directorio de WordPress.org, que las resuelve cuando esté aprobado; el plugin no lleva ni debe llevar actualizador propio (el directorio lo prohíbe).
 2. **Versión mínima de Elementor 3**: se fija en la fase 7, según la API que use el widget.
 
 ## Fases
@@ -297,6 +297,92 @@ Excepciones a la regla 8 que conviene conocer: el saneado por esquema y el panel
 
 No verificado contra servicios reales: Resend se ha probado con un doble de la HTTP API (petición, cabecera de autorización, errores) y el SMTP contra Mailpit, que no cifra ni pide credenciales. Quedan sin probar STARTTLS, SSL y la autenticación contra un servidor real.
 
+### Preparación para el directorio de WordPress.org (2026-10-12, versión 0.14.0)
+
+El usuario pidió pasar Plugin Check y dejar el plugin listo para el directorio oficial, lo que cambia la decisión inicial de distribuirlo solo por zip. De paso resuelve el punto abierto de las actualizaciones: las webs instaladas se actualizarán desde el directorio.
+
+Plugin Check (2.1.0, con las comprobaciones en ejecución y las experimentales) encontró cinco cosas:
+
+- **Faltaba `readme.txt`.** Escrito en inglés, con los servicios externos documentados (Turnstile, hCaptcha, reCAPTCHA v3 y Resend: qué datos reciben, cuándo y sus condiciones), preguntas frecuentes y cómo compilar las fuentes.
+- **Dos consultas llegaban a `get_results()` en una variable.** Estaban preparadas, pero por quien llamaba; ahora cada una se ejecuta donde se prepara.
+- **Dos falsos positivos**, anotados con su motivo: la dirección de verificación de Turnstile, que la regla toma por un recurso servido desde fuera, y `load_plugin_textdomain()`, que se desaconseja en plugins del directorio pero aquí hace falta para que funcionen las traducciones que trae el plugin mientras no haya paquete de idioma en translate.wordpress.org.
+
+Y lo que Plugin Check no mira pero la revisión manual sí:
+
+- **Fuentes de lo compilado** (directriz 4): `rt package` añade `src/` y `webpack.config.js` al zip. Compilar desde lo que lleva el zip da ficheros idénticos a los de `build/`.
+- **Rutas**: la carpeta de traducciones ya no se calcula con `WP_PLUGIN_DIR`.
+- Repasado sin hallazgos: prefijos de funciones, opciones, hooks, tablas y scripts; ni telemetría ni conexiones que el administrador no haya configurado; sin enlaces de crédito ni avisos fuera de las pantallas del plugin; sin librerías duplicadas del núcleo (el SMTP usa el PHPMailer de WordPress); lo que se escribe en disco va a la carpeta de subidas. El slug `formulario-mensaje` estaba libre ese día.
+
+`rt check` deja la comprobación repetible y `tests/phpunit/DirectorioTest.php` vigila que el readme coincida con la cabecera y documente cada servicio externo del código.
+
+Pendiente, fuera del repositorio: el usuario de WordPress.org en `Contributors` (hay un marcador), el icono, la cabecera y las capturas para el SVN, y el propio envío. La revisión la hacen personas: Plugin Check limpio no garantiza que no pidan cambios.
+
+### Traducciones en ficheros .po (2026-10-12, versión 0.14.0)
+
+Las traducciones pasan al flujo estándar de WordPress. Decidido con el usuario ese día:
+
+- **Los `.po` son la fuente.** Antes se escribían en `scripts/i18n/es_ES.json` y el `.po` era un fichero generado que no se podía tocar; ahora se edita el `.po`, a mano o con Poedit, y `rt i18n` hace lo demás: regenera la plantilla, la fusiona en cada `.po` (`wp i18n update-po`) y compila `.mo`, `.l10n.php` y `.json`. El JSON y su generador se han eliminado; la traducción de `es_ES` es la misma, texto a texto.
+- **El inglés de EE. UU. es el idioma de origen**, no una traducción: son los textos del código y un sitio en inglés no carga ningún fichero. Se revisaron las 717 cadenas y se corrigieron 47: dos grafías británicas y frases calcadas del español («the one of the site»). También una referencia a una pestaña del constructor que ya no existe, en los dos idiomas.
+- **El español de España sirve de reserva** a las variantes sin traducción propia (`es_MX`, `es_AR`…), que sin esto verían el plugin en inglés (`Locale_Fallback`, filtro `formulario_mensaje_locale_fallbacks`). Una traducción propia de la variante, la traiga el plugin o esté instalada en el sitio, tiene prioridad.
+- Añadir un idioma es añadir su `.po`; no hay que tocar código.
+
+Comprobado en el entorno con el sitio en `es_MX` (con su paquete de idioma de WordPress instalado para la prueba) y en `en_US`: el panel y los textos del servidor salen en español de España y en inglés. Sin verificar: la edición de los `.po` con Poedit o Loco Translate (el formato es el que escribe WP-CLI, pero no se ha abierto con esas herramientas).
+
+### Rediseño del panel (2026-10-09, versión 0.13.0)
+
+El panel se rehízo pensando en quien lo usa en el día a día: sobre todo clientes, no técnicos, que crean sus formularios y leen lo que les escriben, también desde el móvil (`PRODUCT.md`). Se compararon tres propuestas maquetadas (`design/propuestas-backend/`) y se eligió una cuarta, la D: la estructura de la «Bandeja» con el aspecto del propio WordPress.
+
+- **Se entra por los mensajes.** El menú es Mensajes, Formularios y Ajustes, y su aviso cuenta los mensajes sin leer (antes, las entregas fallidas, que siguen viéndose en la bandeja y avisando por correo). La pantalla de envíos es ahora una bandeja: la lista a la izquierda y el mensaje abierto al lado, con «Responder» (abre el programa de correo del usuario; el plugin no envía nada) y «Llamar».
+- **Leído y sin leer.** Columna `read_at` en los envíos (esquema 4). Un mensaje se marca al abrirlo y se puede volver a dejar pendiente. Al actualizar, los que ya había se dan por leídos.
+- **Dónde está cada formulario.** `Form_Placements` busca el bloque, el shortcode y el widget de Elementor en el contenido publicado. Solo ve entradas y páginas: un formulario puesto en una plantilla del tema o en un widget no aparece, y por eso la interfaz dice «no se ha encontrado», no «no está».
+- **Constructor en cuatro pasos**: Preguntas, Al recibirlo (guardado, notificaciones, lo que ve quien envía y webhooks, en apartados plegables con su resumen), Aspecto y Publicar (las tres formas de ponerlo en una página, sin la palabra «shortcode»). No obligan a ningún orden y el paso va en la URL.
+- **Ajustes con un resumen de estado** encima de las pestañas de siempre, que quedan presentadas como «para quien mantiene la web».
+- **Tableta y móvil.** Mismos puntos de corte que wp-admin. En el móvil, las secciones van en una barra inferior, la bandeja enseña la lista o el mensaje, la vista previa del constructor se abre con un botón y los controles miden 44 px.
+
+Decisiones tomadas al implementarlo, distintas de la maqueta o no previstas en ella:
+
+- El guardado del constructor sigue siendo con botón, como en el resto de WordPress, y no automático.
+- Los tipos de campo conservan sus nombres («Texto», «Desplegable»): la maqueta los rebautizaba («Respuesta corta», «Elegir de una lista»), pero eso obligaba a cambiar también lo que ve quien extiende el plugin.
+- La selección múltiple de mensajes (marcar como leídos, borrar) solo está en pantallas anchas; en el móvil se borra desde el mensaje abierto.
+- Las entregas fallidas de formularios que no guardan sus envíos no tienen mensaje al que colgarse: siguen en su tabla, tras el botón «Entregas fallidas» de la bandeja, que solo aparece si hay alguna.
+- «Quién escribe» es el primer dato de un campo de texto, su correo el primero de tipo correo y su teléfono el primero de tipo teléfono. Es una convención de presentación: un formulario sin campo de texto encabeza el mensaje con el correo o con la referencia.
+
+Sin verificar: el comportamiento en un móvil o una tableta reales (se ha probado con Chromium a 390 y 820 px, sin gestos táctiles) y la detección de páginas con una instalación real de Elementor (se prueba con su meta, no editando una página en su editor).
+
+### Revisión de todo el código (2026-10-09, versión 0.12.0)
+
+Una revisión de todo `plugin/`, no solo de los últimos cambios, dejó diez hallazgos. Todos corregidos, cada uno con su test:
+
+- **Ficheros que solo se adjuntan.** Se borraban al terminar el envío aunque la notificación que debía llevarlos hubiera fallado, y el reintento salía sin adjunto. Ahora esperan a que el envío no tenga entregas fallidas (acción nueva `formulario_mensaje_submission_settled`).
+- **Direcciones y porcentajes.** El saneado de WordPress quita todo «%» seguido de dos cifras hexadecimales: una dirección con `%20` se guardaba rota, y «un 50%de descuento» perdía el «%de». `Plain_Text` los conserva, y la página de procedencia se lee con él.
+- **Papelera de formularios.** Se usaba `wp_trash_post()`, así que WordPress borraba el formulario por su cuenta a los 30 días (o en el acto, con su papelera desactivada) y dejaba sus envíos sin dueño. La papelera es ahora del plugin: un formulario sale de ella solo cuando alguien lo borra.
+- **Opciones guardadas con el saneado anterior.** Las que tuvieran un «<» quedaron como `&lt;` y dejaban de coincidir con lo que envía el navegador; se siguen aceptando.
+- **Actualizaciones parciales por REST.** Cambiar solo el nombre de un formulario vaciaba sus campos, y cambiar un ajuste devolvía los demás a su valor de fábrica. Lo que no viene en la petición se queda como está.
+- **Campo oculto de valor fijo en una condición.** El servidor lo veía y el navegador no: un campo obligatorio podía quedar oculto y el formulario, imposible de enviar. Los números con espacios («1 000») se comparan ahora igual en los dos lados.
+- **Contadores del límite de envíos.** Nunca se borraban; ahora los caducados se limpian en el mantenimiento diario.
+- **Widget de Elementor.** El nombre del formulario llegaba sin escapar a un desplegable que Elementor pinta como HTML.
+- **Desinstalación en una red.** Solo limpiaba el sitio principal; ahora recorre todos. El multisitio sigue sin estar soportado ni probado: esto no se ha podido verificar en una red real.
+- **Limpieza.** Una sola forma de buscar una acción en un formulario (`Form_Definition::get_action()`), y los listados leen cada formulario una vez por petición.
+
+### Matriz de combinaciones (2026-10-09, tras las 11 fases)
+
+A petición del usuario se añadió una segunda suite de navegador, `rt matrix` (`tests/matriz/`), que prueba combinaciones de opciones en muchos formularios a la vez: todos los tipos de campo con y sin JavaScript, validación, valores difíciles, cada operador de la lógica condicional sobre cada tipo de campo, pasos con condiciones y ficheros, grupos de tipos de fichero y destinos de los ficheros, notificaciones y webhooks combinados, lo que pasa tras el envío, estilo en sus dos niveles, antispam, las plantillas y el constructor de punta a punta, y los ajustes de todo el sitio (captcha, envío sin JavaScript, SMTP, Elementor). Son 63 tests, de los que 59 corren en paralelo.
+
+Lo que encontró y se corrigió:
+
+- **Un «<» que no es HTML se estropeaba.** «Me encanta <3» o «a<b» se guardaban como `&lt;` (lo hace `sanitize_text_field()`), y como el plugin escapa al mostrar, se veían así, literales, en correos, administración y webhooks. Pasaba también con las etiquetas, las opciones y los asuntos que escribe quien configura el formulario («Edad <18»). Ahora el texto sin formato pasa por `Plain_Text`, que quita las etiquetas HTML igual que antes y conserva esos signos.
+- **Los saltos de línea de un área de texto se guardaban como `\r\n`**, que es como los envía el navegador, y así llegaban a los webhooks y a la exportación. Ahora se guardan como `\n`.
+- **El campo oculto «título de la página» daba un valor con JavaScript y otro sin él** (el título del documento, con el nombre del sitio, frente al título de la página). Ahora da siempre el de la página; el del documento solo se usa si el servidor no lo sabe.
+- **El registro de entregas no decía de qué acción era cada una**: con dos notificaciones o dos webhooks en un formulario, una entrega fallida solo mostraba «Notificación por correo». Ahora muestra además el nombre que se le dio a la acción.
+- **Un formulario que ni guarda los envíos ni tiene ninguna acción activa** acepta el envío, da las gracias y no hace nada con los datos. El comportamiento se mantiene (es lo que se ha configurado), pero el constructor lo avisa ahora de forma visible.
+
+Lo que se observó y se deja como está, para decidir:
+
+- Las etiquetas HTML que escribe un visitante se eliminan al recibir el envío (`<script>…</script>`, con su contenido; de `<b>texto</b>` queda «texto»). Es el saneado de WordPress y evita sorpresas, pero quien pegue un fragmento de código en un mensaje lo verá recortado.
+- El token antispam no es de un solo uso: vale mientras no caduca, y lo que limita su reutilización es el límite de envíos por IP.
+- Un fichero `.docx`, `.xlsx` u `.odt` es por dentro un zip, y WordPress no puede distinguirlo de cualquier otro zip con ese nombre: se acepta por la extensión. No se ejecuta ni se sirve en línea.
+- El formato de fecha de los correos es el de los ajustes de WordPress.
+
 ### Fase 11: lo que se decidió al hacerla
 
 - **Comandos de WP-CLI** bajo `wp formulario-mensaje`: `form list`, `form export`, `form import`, `submission export` y `queue process`. Cada grupo es una clase que recibe sus servicios por el constructor y se registra en `cli_init`, que solo se dispara bajo WP-CLI: en una petición web no se carga nada de esto. Los mensajes son traducibles; la ayuda (`wp help …`) sale de los docblocks y va en inglés, como el resto de la interfaz.
@@ -336,7 +422,7 @@ Límites conocidos:
 
 - Donde el servidor no aplica `.htaccess` (nginx), el almacén no está prohibido por configuración: la protección es que el nombre del fichero no se puede adivinar ni sale en ninguna página, y que su extensión no se ejecuta. Conviene añadir en nginx una regla `deny` para la carpeta.
 - Sin la extensión `fileinfo` de PHP, WordPress solo puede comprobar el contenido de las imágenes; del resto se fía de la extensión. Aun así los ficheros ni se ejecutan ni se sirven en línea.
-- Reintentar desde la administración una notificación fallida vuelve a adjuntar los ficheros solo si se conservan, y no lleva enlace firmado.
+- Si una notificación falla, los ficheros que solo existían para adjuntarla se quedan con el envío hasta que la entrega se reintenta con éxito o se descarta; entonces se borran. El reintento no lleva enlace firmado.
 - El límite de subida de PHP (`upload_max_filesize`) es por fichero y puede ser menor que el del campo: en ese caso el visitante recibe un mensaje con el límite del servidor.
 
 Cambio a raíz de la revisión de seguridad del commit de esta fase: el nombre del fichero en disco salía del mismo identificador que viaja en los enlaces de descarga, así que quien tuviera un enlace, aunque estuviese caducado, sabía dónde estaba el fichero; en un servidor que no aplique el `.htaccess` habría podido descargarlo sin pasar por la caducidad ni por los permisos. Ahora son dos valores aleatorios independientes, y la ruta en disco no sale nunca del servidor. Corregido en un commit aparte, justo después.
@@ -354,7 +440,7 @@ Probado con subidas reales en Playwright (envío normal, por pasos y sin JavaScr
 
 Cambio sobre la fase 8, a raíz de la revisión de seguridad de su commit: la visibilidad se calculaba por pasadas hasta estabilizarse, con un tope que no era el mismo en servidor y navegador; con campos que dependían unos de otros en círculo podían no coincidir, y un campo obligatorio a la vista quedar sin validar. Ahora **un campo solo puede depender de los que van antes que él** (el saneado descarta las demás reglas y el constructor solo ofrece los anteriores) y la visibilidad se resuelve en un único recorrido, en el orden del formulario, igual en los dos lados. Un campo posterior, o uno oculto, cuenta como vacío.
 
-Limitación conocida: un campo oculto de valor fijo no se imprime en la página, así que una condición que dependa de él se cumple o no según el servidor, pero el navegador lo ve vacío mientras se rellena.
+Un campo oculto de valor fijo no se imprime en la página salvo que la condición de otro campo dependa de él: entonces el navegador necesita su valor para mostrar ese campo igual que lo exigirá el servidor (corregido tras la revisión de código; antes no se imprimía nunca y el formulario podía quedar imposible de enviar).
 
 ### Fase 8: lo que se decidió al hacerla
 

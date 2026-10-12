@@ -89,8 +89,11 @@ final class Wpdb_File_Repository implements File_Repository {
 	public function for_reference( int $form_id, string $reference ): array {
 		$wpdb = $this->wpdb;
 
-		return $this->rows(
-			$wpdb->prepare( 'SELECT * FROM %i WHERE form_id = %d AND reference = %s ORDER BY id ASC', $this->schema->files_table(), $form_id, $reference )
+		return $this->to_files(
+			$wpdb->get_results(
+				$wpdb->prepare( 'SELECT * FROM %i WHERE form_id = %d AND reference = %s ORDER BY id ASC', $this->schema->files_table(), $form_id, $reference ),
+				ARRAY_A
+			)
 		);
 	}
 
@@ -108,7 +111,12 @@ final class Wpdb_File_Repository implements File_Repository {
 		foreach ( array_unique( array_filter( array_map( 'absint', $submission_ids ) ) ) as $submission_id ) {
 			$files = array_merge(
 				$files,
-				$this->rows( $wpdb->prepare( 'SELECT * FROM %i WHERE submission_id = %d ORDER BY id ASC', $this->schema->files_table(), $submission_id ) )
+				$this->to_files(
+					$wpdb->get_results(
+						$wpdb->prepare( 'SELECT * FROM %i WHERE submission_id = %d ORDER BY id ASC', $this->schema->files_table(), $submission_id ),
+						ARRAY_A
+					)
+				)
 			);
 		}
 
@@ -148,8 +156,11 @@ final class Wpdb_File_Repository implements File_Repository {
 	public function orphans_before( string $before_gmt, int $limit ): array {
 		$wpdb = $this->wpdb;
 
-		return $this->rows(
-			$wpdb->prepare( 'SELECT * FROM %i WHERE submission_id = 0 AND created_at < %s ORDER BY id ASC LIMIT %d', $this->schema->files_table(), $before_gmt, max( 1, $limit ) )
+		return $this->to_files(
+			$wpdb->get_results(
+				$wpdb->prepare( 'SELECT * FROM %i WHERE submission_id = 0 AND created_at < %s ORDER BY id ASC LIMIT %d', $this->schema->files_table(), $before_gmt, max( 1, $limit ) ),
+				ARRAY_A
+			)
 		);
 	}
 
@@ -167,21 +178,12 @@ final class Wpdb_File_Repository implements File_Repository {
 	}
 
 	/**
-	 * Ejecuta una consulta ya preparada y convierte sus filas.
+	 * Convierte las filas de una consulta en ficheros.
 	 *
-	 * @param string|null $prepared Consulta preparada con prepare().
+	 * @param mixed $rows Lo que devuelve get_results(): las filas, o null si la consulta ha fallado.
 	 * @return Stored_File[]
 	 */
-	private function rows( ?string $prepared ): array {
-		$wpdb = $this->wpdb;
-
-		if ( null === $prepared ) {
-			return array();
-		}
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- La prepara quien llama, con prepare().
-		$rows = $wpdb->get_results( $prepared, ARRAY_A );
-
+	private function to_files( mixed $rows ): array {
 		return array_map( array( $this, 'to_file' ), is_array( $rows ) ? $rows : array() );
 	}
 

@@ -83,7 +83,7 @@ final class File_Field_Type implements Upload_Field_Type {
 				'key'     => 'file_types',
 				'type'    => 'checklist',
 				'label'   => __( 'Allowed file types', 'formulario-mensaje' ),
-				'help'    => __( 'If none is selected, images and PDF are accepted.', 'formulario-mensaje' ),
+				'help'    => __( 'If none are selected, images and PDFs are accepted.', 'formulario-mensaje' ),
 				'default' => array( File_Types::GROUP_IMAGES, File_Types::GROUP_PDF ),
 				'choices' => $groups,
 			),
@@ -115,7 +115,7 @@ final class File_Field_Type implements Upload_Field_Type {
 				'key'     => 'keep',
 				'type'    => 'toggle',
 				'label'   => __( 'Keep the files with the stored submission', 'formulario-mensaje' ),
-				'help'    => __( 'They are downloaded from the Submissions screen and are deleted with the submission. If the form does not store its submissions, the files are not kept either.', 'formulario-mensaje' ),
+				'help'    => __( 'They are downloaded from the Messages screen and are deleted with the submission. If the form does not store its submissions, the files are not kept either.', 'formulario-mensaje' ),
 				'default' => true,
 			),
 			array(
@@ -237,7 +237,7 @@ final class File_Field_Type implements Upload_Field_Type {
 			if ( UPLOAD_ERR_INI_SIZE === $file->error || UPLOAD_ERR_FORM_SIZE === $file->error ) {
 				return sprintf(
 					/* translators: %s: maximum file size, for example "2 MB". */
-					__( 'The file is too large. This site accepts files of up to %s.', 'formulario-mensaje' ),
+					__( 'The file is too large. This site accepts files up to %s.', 'formulario-mensaje' ),
 					(string) size_format( wp_max_upload_size() )
 				);
 			}

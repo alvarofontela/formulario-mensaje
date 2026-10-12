@@ -12,6 +12,7 @@ use Formulario_Mensaje\Forms\Field;
 use Formulario_Mensaje\Forms\Form;
 use Formulario_Mensaje\Submissions\Submission;
 use Formulario_Mensaje\Submissions\Tag_Replacer;
+use Formulario_Mensaje\Support\Plain_Text;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -118,8 +119,8 @@ final class Email_Action implements Action_Type {
 
 		return array(
 			'to'             => $this->sanitize_recipients( $raw['to'] ?? array() ),
-			'subject'        => is_scalar( $raw['subject'] ?? null ) ? mb_substr( sanitize_text_field( (string) $raw['subject'] ), 0, 300 ) : $defaults['subject'],
-			'body'           => is_scalar( $raw['body'] ?? null ) ? mb_substr( sanitize_textarea_field( (string) $raw['body'] ), 0, 20000 ) : $defaults['body'],
+			'subject'        => is_scalar( $raw['subject'] ?? null ) ? mb_substr( Plain_Text::line( (string) $raw['subject'] ), 0, 300 ) : $defaults['subject'],
+			'body'           => is_scalar( $raw['body'] ?? null ) ? mb_substr( Plain_Text::block( (string) $raw['body'] ), 0, 20000 ) : $defaults['body'],
 			'format'         => self::FORMAT_TEXT === ( $raw['format'] ?? null ) ? self::FORMAT_TEXT : self::FORMAT_HTML,
 			'reply_to_field' => 1 === preg_match( Field::ID_PATTERN, $reply_to ) ? $reply_to : '',
 		);

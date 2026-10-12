@@ -10,6 +10,7 @@ namespace Formulario_Mensaje\Uploads;
 use Formulario_Mensaje\Container;
 use Formulario_Mensaje\Database\Schema;
 use Formulario_Mensaje\Fields\Field_Type_Registry;
+use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Lifecycle\Maintenance_Schedule;
 use Formulario_Mensaje\Mail\Attachment_Source;
 use Formulario_Mensaje\Service_Provider;
@@ -60,7 +61,8 @@ final class Uploads_Provider implements Service_Provider {
 			static fn ( Container $c ): Submission_Uploads => new Submission_Uploads(
 				$c->get( Upload_Collector::class ),
 				$c->get( Upload_Store::class ),
-				$c->get( Download_Links::class )
+				$c->get( Download_Links::class ),
+				$c->get( Form_Repository::class )
 			)
 		);
 
@@ -85,6 +87,14 @@ final class Uploads_Provider implements Service_Provider {
 			'formulario_mensaje_submissions_deleted',
 			static function ( array $ids ) use ( $container ): void {
 				$container->get( Upload_Store::class )->delete_for_submissions( $ids );
+			}
+		);
+
+		// Cuando un envío ya no tiene entregas fallidas, sobran los ficheros que se guardaban solo para reintentarlas.
+		add_action(
+			'formulario_mensaje_submission_settled',
+			static function ( int $submission_id ) use ( $container ): void {
+				$container->get( Submission_Uploads::class )->settle( $submission_id );
 			}
 		);
 

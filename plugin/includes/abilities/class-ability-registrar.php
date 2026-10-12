@@ -36,7 +36,7 @@ final class Ability_Registrar {
 			self::CATEGORY,
 			array(
 				'label'       => __( 'Formulario Mensaje', 'formulario-mensaje' ),
-				'description' => __( 'Forms of the site and the submissions they have received.', 'formulario-mensaje' ),
+				'description' => __( 'The site’s forms and the submissions they have received.', 'formulario-mensaje' ),
 			)
 		);
 	}

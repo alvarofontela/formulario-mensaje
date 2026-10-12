@@ -8,6 +8,7 @@
 namespace Formulario_Mensaje\Uploads;
 
 use Formulario_Mensaje\Forms\Form;
+use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Submissions\Submission_Entry;
 use WP_Error;
 
@@ -28,11 +29,13 @@ final class Submission_Uploads {
 	 * @param Upload_Collector $collector Recogida de los ficheros de una petición.
 	 * @param Upload_Store     $store     Ficheros de los envíos.
 	 * @param Download_Links   $links     Enlaces de descarga.
+	 * @param Form_Repository  $forms     Almacén de formularios.
 	 */
 	public function __construct(
 		private readonly Upload_Collector $collector,
 		private readonly Upload_Store $store,
-		private readonly Download_Links $links
+		private readonly Download_Links $links,
+		private readonly Form_Repository $forms
 	) {}
 
 	/**
@@ -119,12 +122,42 @@ final class Submission_Uploads {
 	/**
 	 * Borra, terminado el envío, los ficheros que solo hacían falta para sus acciones.
 	 *
+	 * Si alguna acción ha fallado y el envío está guardado, se esperan: la entrega fallida se puede
+	 * reintentar desde la administración, y sin el fichero el correo saldría sin su adjunto. Se
+	 * borran cuando el envío deja de tener entregas fallidas (ver settle()) o con el propio envío.
+	 *
 	 * @param Form   $form          Formulario.
 	 * @param string $reference     Número de referencia del envío.
 	 * @param int    $submission_id Identificador del envío guardado, o 0 si no se guarda.
+	 * @param bool   $has_failures  Si alguna acción del envío ha fallado.
 	 */
-	public function finish( Form $form, string $reference, int $submission_id ): void {
+	public function finish( Form $form, string $reference, int $submission_id, bool $has_failures = false ): void {
+		if ( $submission_id > 0 && $has_failures ) {
+			return;
+		}
+
 		$this->store->cleanup( $form, $reference, $submission_id );
+	}
+
+	/**
+	 * Borra los ficheros que se guardaban solo para reintentar, cuando un envío guardado ya no tiene
+	 * entregas fallidas. Los de los campos que mandan conservarlos no se tocan.
+	 *
+	 * @param int $submission_id Identificador del envío guardado.
+	 */
+	public function settle( int $submission_id ): void {
+		$files = $this->store->for_submission( $submission_id );
+
+		if ( array() === $files ) {
+			return;
+		}
+
+		$form = $this->forms->find( $files[0]->form_id );
+
+		// Sin formulario no se sabe qué campos conservaban sus ficheros: se quedan con el envío hasta que se borre.
+		if ( null !== $form ) {
+			$this->store->cleanup( $form, $files[0]->reference, $submission_id );
+		}
 	}
 
 	/**

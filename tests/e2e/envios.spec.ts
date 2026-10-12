@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import { AdminApi, contactDefinition, notifyTo, submitWithoutJs, visitorContext } from './support/forms';
 import { clearMail, waitForMail } from './support/mailpit';
 
-// Pantalla de envíos: listado, detalle, entregas fallidas, borrado, exportación y ajustes de datos.
+// Pantalla de mensajes: la bandeja y el mensaje abierto, entregas fallidas, borrado, exportación y ajustes de datos.
 
 const submissionsScreen = '/wp-admin/admin.php?page=formulario-mensaje-submissions';
 
@@ -28,28 +28,44 @@ test('un envío guardado se ve en el listado y en su detalle, como texto', async
 
   await page.goto(`${submissionsScreen}&form=${formId}`);
 
-  const row = page.locator('tbody tr').first();
-  await expect(row).toContainText('Ana "la jefa" & Cía');
-  await expect(row).toContainText('Guardados e2e');
-  await expect(row.locator('.fm-badge')).toHaveCount(0);
+  const item = page.locator('li.fm-message').first();
+  await expect(item).toContainText('Ana "la jefa" & Cía');
+  await expect(item).toContainText('Guardados e2e');
+  await expect(item.locator('.fm-badge')).toHaveCount(0);
 
-  await row.locator('.fm-admin__row-title').click();
+  await item.locator('.fm-message__open').click();
 
   await expect(page).toHaveURL(/submission=\d+/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Envío [A-Z2-9]{4}-[A-Z2-9]{4}/);
 
-  const fields = page.locator('.fm-detail__fields');
-  await expect(fields.locator('dt')).toHaveText(['Nombre', 'Correo', 'Mensaje']);
-  await expect(fields.locator('dd').nth(0)).toHaveText('Ana "la jefa" & Cía');
+  const reader = page.locator('.fm-reader');
+
+  // Quien escribe encabeza el mensaje, su correo va debajo y el texto largo se lee como el mensaje en sí.
+  await expect(reader.locator('h2.fm-reader__title')).toHaveText('Ana "la jefa" & Cía');
+  await expect(reader.locator('.fm-reader__contact')).toHaveText('ana@example.test');
+  await expect(reader.locator('.fm-reader__meta')).toContainText('Enviado con el formulario Guardados e2e');
   // Las etiquetas del plugin no se interpretan dentro de lo que escribió el visitante.
-  await expect(fields.locator('dd').nth(2)).toHaveText('Primera línea\nSegunda línea con {reference} y =1+1');
-  await expect(page.locator('.fm-detail__deliveries li')).toContainText('Notificación por correo');
-  await expect(page.locator('.fm-detail__deliveries .fm-badge')).toHaveText('Entregada');
-  // Ni IP ni navegador: el formulario no los pide.
-  await expect(page.locator('.fm-detail__meta')).not.toContainText('Dirección IP');
+  await expect(reader.locator('.fm-reader__text')).toHaveText('Primera línea\nSegunda línea con {reference} y =1+1');
+  // Los tres datos están ya en la cabecera y en el cuerpo: no se repiten en la lista de los demás.
+  await expect(reader.locator('.fm-reader__facts')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Envíos' }).click();
+  // Tras el «Guardado en Mensajes», que va siempre, la única entrega del formulario.
+  const trail = reader.locator('ol.fm-trail > li');
+  await expect(trail).toHaveCount(2);
+  await expect(trail.nth(1)).toContainText('Notificación por correo');
+  await expect(trail.nth(1).locator('.fm-badge')).toHaveText('Entregada');
+
+  // La referencia está en los detalles técnicos. Ni IP ni navegador: el formulario no los pide.
+  const details = reader.locator('.fm-reader__details');
+  await details.locator('summary').click();
+  await expect(details.locator('dt').first()).toHaveText('Referencia');
+  await expect(details.locator('dd').first()).toHaveText(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+  await expect(details).not.toContainText('Dirección IP');
+
+  // En un ordenador la lista y el mensaje se ven a la vez y no hay botón de volver (el del móvil lo prueba
+  // panel.spec.ts): el mensaje se cierra con el botón de volver del navegador.
+  await page.goBack();
   await expect(page).not.toHaveURL(/submission=/);
+  await expect(page.locator('.fm-inbox__placeholder')).toBeVisible();
 });
 
 test('una notificación fallida se avisa, se reintenta y se entrega tras corregir el formulario', async ({ page }) => {
@@ -62,28 +78,30 @@ test('una notificación fallida se avisa, se reintenta y se entrega tras corregi
 
   await page.goto(`${submissionsScreen}&form=${formId}`);
 
-  // El menú avisa de que hay entregas fallidas pendientes.
-  await expect(page.locator('#toplevel_page_formulario-mensaje .awaiting-mod').first()).toBeVisible();
-  await expect(page.locator('tbody tr').first().locator('.fm-badge')).toHaveText('Error');
+  // La bandeja avisa de que hay entregas fallidas pendientes: el globo del menú cuenta ahora los mensajes sin leer.
+  await expect(page.getByRole('button', { name: /^Entregas fallidas · \d+/ })).toBeVisible();
+  await expect(page.locator('li.fm-message').first().locator('.fm-badge')).toHaveText('Error');
 
-  await page.getByLabel('Solo con errores').check();
-  await expect(page.locator('tbody tr')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Con problemas' }).click();
+  await expect(page.getByRole('button', { name: 'Con problemas' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('li.fm-message')).toHaveCount(1);
 
-  await page.locator('.fm-admin__row-title').first().click();
+  await page.locator('.fm-message__open').first().click();
 
-  const delivery = page.locator('.fm-detail__deliveries li');
+  const reader = page.locator('.fm-reader');
+  const delivery = reader.locator('ol.fm-trail > li', { hasText: 'Notificación por correo' });
   await expect(delivery.locator('.fm-badge')).toHaveText('Fallida');
   await expect(delivery).toContainText('La notificación no tiene destinatarios válidos');
 
   await delivery.getByRole('button', { name: 'Reintentar' }).click();
-  await expect(page.locator('.components-notice')).toContainText('Ha vuelto a fallar');
+  await expect(reader.locator('.components-notice')).toContainText('Ha vuelto a fallar');
   await expect(delivery).toContainText('Intentos: 2');
 
   // Se corrige el destinatario del formulario y el reintento usa la configuración nueva.
   await api.updateForm(formId, 'Fallos e2e', contactDefinition());
   await delivery.getByRole('button', { name: 'Reintentar' }).click();
 
-  await expect(page.locator('.components-notice')).toContainText('Entregada.');
+  await expect(reader.locator('.components-notice')).toContainText('Entregada.');
   await expect(delivery.locator('.fm-badge')).toHaveText('Entregada');
   await expect(delivery.getByRole('button', { name: 'Reintentar' })).toHaveCount(0);
 
@@ -99,7 +117,8 @@ test('las entregas fallidas se listan aparte y se pueden descartar', async ({ pa
   await submitWithoutJs(formId, { nombre: 'Marta Ruiz', correo: 'marta@example.test' });
 
   await page.goto(submissionsScreen);
-  await page.locator('.fm-admin__status', { hasText: 'Entregas fallidas' }).click();
+  // Las de toda la web se abren con un botón de la cabecera, que solo está si hay alguna.
+  await page.getByRole('button', { name: /^Entregas fallidas/ }).click();
 
   const row = page.locator('tbody tr').first();
   await expect(row).toContainText('Notificación por correo');
@@ -119,21 +138,28 @@ test('los envíos se buscan y se borran varios a la vez', async ({ page }) => {
   await submitWithoutJs(formId, { nombre: 'Persona Dos', correo: 'dos@example.test' });
 
   await page.goto(`${submissionsScreen}&form=${formId}`);
-  await expect(page.locator('tbody tr')).toHaveCount(2);
 
-  await page.getByPlaceholder('Buscar por referencia o contenido').fill('persona dos');
-  await expect(page.locator('tbody tr')).toHaveCount(1);
-  await expect(page.locator('tbody tr')).toContainText('Persona Dos');
+  const items = page.locator('li.fm-message');
+  await expect(items).toHaveCount(2);
 
-  await page.getByPlaceholder('Buscar por referencia o contenido').fill('');
-  await expect(page.locator('tbody tr')).toHaveCount(2);
+  await page.getByPlaceholder('Buscar por nombre o por lo que escribieron').fill('persona dos');
+  await expect(items).toHaveCount(1);
+  await expect(items).toContainText('Persona Dos');
 
-  await page.getByLabel('Seleccionar todos').check();
-  await page.getByRole('button', { name: 'Borrar 2 envíos' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Borrar', exact: true }).click();
+  await page.getByPlaceholder('Buscar por nombre o por lo que escribieron').fill('');
+  await expect(items).toHaveCount(2);
 
-  await expect(page.locator('.components-notice')).toContainText('2 envíos borrados.');
-  await expect(page.locator('.fm-admin__empty')).toContainText('Ningún envío cumple estos filtros.');
+  // No hay casilla para marcarlos todos: se marca cada mensaje con la suya.
+  await page.getByLabel('Seleccionar el mensaje de Persona Uno').check();
+  await page.getByLabel('Seleccionar el mensaje de Persona Dos').check();
+  await page.getByRole('button', { name: 'Borrar 2 mensajes' }).click();
+
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('¿Borrar los mensajes?');
+  await dialog.getByRole('button', { name: 'Borrar', exact: true }).click();
+
+  await expect(page.locator('.components-notice')).toContainText('2 mensajes borrados.');
+  await expect(page.locator('.fm-inbox__empty')).toContainText('Ningún mensaje coincide con estos filtros.');
 });
 
 test('los envíos de un formulario se exportan a CSV con las fórmulas neutralizadas', async ({ page }) => {
@@ -142,15 +168,16 @@ test('los envíos de un formulario se exportan a CSV con las fórmulas neutraliz
   await submitWithoutJs(formId, { nombre: '=HYPERLINK("http://malo.example")', correo: 'ana@example.test', mensaje: 'Hola; "con comillas"' });
 
   await page.goto(submissionsScreen);
-
-  // Sin elegir formulario no se puede exportar: las columnas dependen de sus campos.
-  await expect(page.getByRole('button', { name: /Exportar CSV|Elige un formulario/ })).toBeDisabled();
-
-  await page.getByLabel('Formulario', { exact: true }).selectOption(String(formId));
   await page.getByRole('button', { name: 'Exportar CSV' }).click();
 
+  // Las columnas dependen de los campos, así que se exporta formulario a formulario: se elige en la ventana.
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('Exportar mensajes');
+  await dialog.getByLabel('Formulario', { exact: true }).selectOption(String(formId));
+  await expect(dialog.getByRole('link', { name: 'Descargar CSV' })).toHaveAttribute('href', new RegExp(`[?&]form=${formId}(&|$)`));
+
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('link', { name: 'Descargar CSV' }).click();
+  await dialog.getByRole('link', { name: 'Descargar CSV' }).click();
   const download = await downloadPromise;
 
   expect(download.suggestedFilename()).toMatch(/^Exportar-e2e-\d{4}-\d{2}-\d{2}\.csv$/);
@@ -167,7 +194,9 @@ test('el guardado de cada formulario se configura en el constructor', async ({ p
   const formId = await api.createForm('Guardado e2e');
 
   await page.goto(`/wp-admin/admin.php?page=formulario-mensaje&form=${formId}`);
-  await page.getByRole('tab', { name: 'Guardado' }).click();
+  // El guardado es uno de los apartados plegables del paso «Al recibirlo».
+  await page.getByRole('tab', { name: 'Al recibirlo' }).click();
+  await page.getByRole('button', { name: /^Guardar los mensajes/ }).click();
 
   await expect(page.getByLabel('Guardar los envíos')).toBeChecked();
   await page.getByLabel('Dirección IP').selectOption('anonymized');
@@ -177,19 +206,21 @@ test('el guardado de cada formulario se configura en el constructor', async ({ p
   await expect(page.locator('.components-notice')).toContainText('Formulario guardado.');
 
   await page.reload();
-  await page.getByRole('tab', { name: 'Guardado' }).click();
+  await page.getByRole('tab', { name: 'Al recibirlo' }).click();
+  await page.getByRole('button', { name: /^Guardar los mensajes/ }).click();
   await expect(page.getByLabel('Dirección IP')).toHaveValue('anonymized');
   await expect(page.getByLabel('Borrar los envíos pasados (días)')).toHaveValue('90');
 
-  // Un envío real guarda la IP recortada y el navegador.
+  // Un envío real guarda la IP recortada y el navegador: están en los detalles técnicos del mensaje.
   await submitWithoutJs(formId, { nombre: 'Ana', correo: 'ana@example.test' });
   await page.goto(`${submissionsScreen}&form=${formId}`);
-  await page.locator('.fm-admin__row-title').first().click();
+  await page.locator('.fm-message__open').first().click();
 
-  const meta = page.locator('.fm-detail__meta');
-  await expect(meta).toContainText('Dirección IP');
-  await expect(meta).toContainText(/127\.0\.0\.0|::(?!1)/);
-  await expect(meta).toContainText('Navegador');
+  const details = page.locator('.fm-reader__details');
+  await details.locator('summary').click();
+  await expect(details.locator('dt')).toContainText(['Dirección IP', 'Navegador']);
+  await expect(details.locator('dt:text-is("Dirección IP") + dd')).toHaveText(/127\.0\.0\.0|::(?!1)/);
+  await expect(details.locator('dt:text-is("Navegador") + dd')).not.toBeEmpty();
 });
 
 test('el listado de formularios enlaza a sus envíos y al borrar uno se pueden borrar con él', async ({ page }) => {
@@ -200,21 +231,25 @@ test('el listado de formularios enlaza a sus envíos y al borrar uno se pueden b
 
   await page.goto('/wp-admin/admin.php?page=formulario-mensaje');
 
-  const row = page.locator('tr', { hasText: title });
-  await expect(row.getByRole('link', { name: '1', exact: true })).toHaveAttribute('href', new RegExp(`formulario-mensaje-submissions&form=${formId}`));
+  const row = page.locator('li.fm-form-row', { hasText: title });
+  await expect(row.locator('.fm-form-row__activity')).toContainText('1 mensaje este mes');
 
-  await row.getByRole('button', { name: `Enviar «${title}» a la papelera` }).click();
+  // El formulario no está en ninguna página, así que el enlace a sus mensajes está en el menú de la fila.
+  await row.getByRole('button', { name: `Más acciones de «${title}»` }).click();
+  await expect(page.getByRole('menuitem', { name: 'Ver mensajes' })).toHaveAttribute('href', new RegExp(`formulario-mensaje-submissions&form=${formId}`));
+
+  await page.getByRole('menuitem', { name: 'Mover a la papelera' }).click();
   await expect(page.locator('.components-notice')).toContainText('Formulario enviado a la papelera.');
-  await page.locator('.fm-admin__status', { hasText: 'Papelera' }).click();
+  await page.getByRole('button', { name: 'Papelera', exact: true }).click();
   await row.getByRole('button', { name: `Borrar «${title}» definitivamente` }).click();
 
   const dialog = page.getByRole('dialog');
-  await dialog.getByLabel('Borrar también su envío guardado (1)').check();
+  await dialog.getByLabel('Borrar también su mensaje guardado (1)').check();
   await dialog.getByRole('button', { name: 'Borrar definitivamente' }).click();
   await expect(page.locator('.components-notice')).toContainText('Formulario borrado.');
 
   await page.goto(`${submissionsScreen}&form=${formId}`);
-  await expect(page.locator('.fm-admin__empty')).toBeVisible();
+  await expect(page.locator('.fm-inbox__empty')).toBeVisible();
 });
 
 test('los ajustes permiten rechazar los envíos sin JavaScript y lanzar la limpieza', async ({ page, browser }) => {

@@ -1,42 +1,8 @@
-import { useCallback, useEffect, useState } from '@wordpress/element';
-
 import FormEditor from './form-editor';
 import FormsList from './forms-list';
+import { useUrlParam } from './hooks';
+import Inbox from './inbox';
 import SettingsPage from './settings-page';
-import SubmissionDetail from './submission-detail';
-import SubmissionsPage from './submissions-page';
-import { getQueryParam, setQueryParam } from './utils';
-
-/**
- * Lee de la URL y mantiene en ella un parámetro que decide qué se muestra, para que el botón de
- * volver del navegador funcione dentro de la aplicación.
- *
- * @param {string} name Nombre del parámetro.
- * @return {[?string, Function]} Valor actual y función para cambiarlo (null lo quita).
- */
-function useUrlParam( name ) {
-	const [ value, setValue ] = useState( () => getQueryParam( name ) );
-
-	useEffect( () => {
-		const onPopState = () => setValue( getQueryParam( name ) );
-
-		window.addEventListener( 'popstate', onPopState );
-
-		return () => window.removeEventListener( 'popstate', onPopState );
-	}, [ name ] );
-
-	const change = useCallback(
-		( next ) => {
-			const text = next === null ? null : String( next );
-
-			setQueryParam( name, text );
-			setValue( text );
-		},
-		[ name ]
-	);
-
-	return [ value, change ];
-}
 
 /**
  * Raíz de la aplicación. El servidor indica la pantalla (`forms`, `submissions` o `settings`); dentro
@@ -54,15 +20,11 @@ export default function App( { initialView } ) {
 	}
 
 	if ( initialView === 'submissions' ) {
-		return submissionParam ? (
-			<SubmissionDetail
-				submissionId={ Number( submissionParam ) }
-				onClose={ () => openSubmission( null ) }
-			/>
-		) : (
-			<SubmissionsPage
+		return (
+			<Inbox
 				// En esta pantalla, `form` es el filtro del listado.
 				initialFormId={ Number( formParam ) || 0 }
+				openId={ Number( submissionParam ) || 0 }
 				onOpen={ openSubmission }
 			/>
 		);

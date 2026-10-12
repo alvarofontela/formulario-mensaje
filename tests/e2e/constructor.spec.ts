@@ -45,11 +45,24 @@ test('se crea un formulario desde el constructor y aparece en el listado', async
   await expect(page).toHaveURL(/form=\d+/);
   await expect(page.getByRole('button', { name: 'Guardar', exact: true })).toBeDisabled();
 
-  await page.getByRole('button', { name: 'Formularios' }).click();
+  // El código para pegarlo en una página está en el paso «Publicar».
+  await page.getByRole('tab', { name: 'Publicar' }).click();
+  await expect(page.locator('code.fm-admin__shortcode')).toHaveText(/\[formulario_mensaje id="\d+"\]/);
 
-  const row = page.locator('tr', { hasText: title });
-  await expect(row).toContainText('4 campos');
-  await expect(row.locator('code')).toHaveText(/\[formulario_mensaje id="\d+"\]/);
+  await page.getByRole('button', { name: 'Volver a los formularios' }).click();
+
+  // En el listado aparece como una fila más; su código está en el menú de acciones.
+  const row = page.locator('li.fm-form-row', { hasText: title });
+  await expect(row).toBeVisible();
+  await row.getByRole('button', { name: `Más acciones de «${title}»` }).click();
+  await expect(page.getByRole('menuitem', { name: 'Copiar el código para pegar' })).toContainText(/\[formulario_mensaje id="\d+"\]/);
+  await page.keyboard.press('Escape');
+
+  // El listado ya no dice cuántos campos tiene: se comprueba abriéndolo otra vez, con lo que guardó el servidor.
+  await row.getByRole('button', { name: title, exact: true }).click();
+  await expect(page).toHaveURL(/form=\d+/);
+  await expect(fields).toHaveCount(4);
+  await expect(fields.nth(3)).toContainText('Teléfono de contacto');
 });
 
 test('los campos se reordenan, se duplican y se borran, y el cambio se conserva al guardar', async ({ page }) => {
@@ -97,11 +110,16 @@ test('la notificación y el comportamiento tras el envío se configuran y se gua
 
   await page.goto(`${formsScreen}&form=${formId}`);
 
-  await page.getByRole('tab', { name: 'Notificaciones' }).click();
+  // Las notificaciones y lo que ve el visitante son apartados del paso «Al recibirlo». El de las
+  // notificaciones ya está abierto al entrar; abrir otro lo cierra.
+  const afterSending = page.getByRole('button', { name: /^Qué ve quien lo envía/ });
+
+  await page.getByRole('tab', { name: 'Al recibirlo' }).click();
+  await expect(page.getByRole('button', { name: /^Notificaciones por correo/ })).toHaveAttribute('aria-expanded', 'true');
   await page.getByLabel('Enviar a', { exact: true }).fill('uno@example.test, no-es-correo, dos@example.test');
   await page.getByLabel('Asunto', { exact: true }).fill('Aviso de {form_title}');
 
-  await page.getByRole('tab', { name: 'Tras el envío' }).click();
+  await afterSending.click();
   await page.getByLabel('Texto del botón').fill('Pedir presupuesto');
   await page.getByLabel('Vaciarlo para permitir otro envío').check();
   await page.getByLabel('Redirigir a otra página').check();
@@ -115,12 +133,12 @@ test('la notificación y el comportamiento tras el envío se configuran y se gua
   await expect(page.locator('.components-notice')).toContainText('Formulario guardado.');
 
   await page.reload();
-  await page.getByRole('tab', { name: 'Notificaciones' }).click();
+  await page.getByRole('tab', { name: 'Al recibirlo' }).click();
   // El servidor se queda solo con las direcciones válidas.
   await expect(page.getByLabel('Enviar a', { exact: true })).toHaveValue('uno@example.test, dos@example.test');
   await expect(page.getByLabel('Asunto', { exact: true })).toHaveValue('Aviso de {form_title}');
 
-  await page.getByRole('tab', { name: 'Tras el envío' }).click();
+  await afterSending.click();
   await expect(page.getByLabel('Texto del botón')).toHaveValue('Pedir presupuesto');
   await expect(page.getByLabel('Vaciarlo para permitir otro envío')).toBeChecked();
   await expect(page.getByLabel('Dirección', { exact: true })).toHaveValue('/gracias/');
@@ -132,20 +150,27 @@ test('un formulario va a la papelera, se restaura y se borra definitivamente', a
 
   await page.goto(formsScreen);
 
-  const row = page.locator('tr', { hasText: title });
-  const trashTab = page.locator('.fm-admin__status', { hasText: 'Papelera' });
+  const row = page.locator('li.fm-form-row', { hasText: title });
+  const trashTab = page.getByRole('button', { name: 'Papelera', exact: true });
 
-  await row.getByRole('button', { name: `Enviar «${title}» a la papelera` }).click();
+  // Mover a la papelera es una de las acciones del menú de la fila.
+  const moveToTrash = async () => {
+    await row.getByRole('button', { name: `Más acciones de «${title}»` }).click();
+    await page.getByRole('menuitem', { name: 'Mover a la papelera' }).click();
+  };
+
+  await moveToTrash();
   await expect(page.locator('.components-notice')).toContainText('Formulario enviado a la papelera.');
   await expect(row).toHaveCount(0);
 
   await trashTab.click();
+  await expect(trashTab).toHaveAttribute('aria-pressed', 'true');
   await expect(row).toBeVisible();
   await row.getByRole('button', { name: `Restaurar «${title}»` }).click();
   await expect(page.locator('.components-notice')).toContainText('Formulario restaurado.');
 
-  await page.getByRole('button', { name: 'Publicados' }).click();
-  await row.getByRole('button', { name: `Enviar «${title}» a la papelera` }).click();
+  await page.getByRole('button', { name: 'Publicados', exact: true }).click();
+  await moveToTrash();
   await expect(row).toHaveCount(0);
 
   await trashTab.click();

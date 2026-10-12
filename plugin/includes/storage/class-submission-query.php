@@ -43,6 +43,7 @@ final class Submission_Query {
 	 * @param string $to_gmt      Fecha máxima en GMT (formato MySQL); vacío para no filtrar.
 	 * @param int    $page        Página, empezando en 1.
 	 * @param int    $per_page    Envíos por página.
+	 * @param bool   $only_unread Solo los envíos que nadie ha leído todavía.
 	 */
 	public function __construct(
 		public readonly int $form_id = 0,
@@ -51,7 +52,8 @@ final class Submission_Query {
 		public readonly string $from_gmt = '',
 		public readonly string $to_gmt = '',
 		int $page = 1,
-		int $per_page = 20
+		int $per_page = 20,
+		public readonly bool $only_unread = false
 	) {
 		$this->per_page = max( 1, min( self::MAX_PER_PAGE, $per_page ) );
 		$this->page     = max( 1, $page );

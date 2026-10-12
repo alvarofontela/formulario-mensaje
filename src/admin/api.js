@@ -63,6 +63,11 @@ export const listSubmissions = ( query ) => paginated( '/submissions', query );
 export const getSubmission = ( id ) => request( `/submissions/${ id }` );
 export const deleteSubmissions = ( ids ) =>
 	request( '/submissions/delete', 'POST', { ids } );
+export const getSubmissionCounts = () => request( '/submissions/counts' );
+export const markSubmissionsRead = ( ids, read = true ) =>
+	request( '/submissions/read', 'POST', { ids, read } );
+export const markAllSubmissionsRead = () =>
+	request( '/submissions/read', 'POST', { all: true } );
 export const listFailedDeliveries = ( query ) =>
 	paginated( '/deliveries', query );
 export const retryDelivery = ( id ) =>

@@ -65,7 +65,7 @@ final class Smtp_Transport implements Mail_Transport {
 		$sender = $this->sender_address( $settings );
 
 		if ( false === is_email( $sender ) ) {
-			return new WP_Error( 'formulario_mensaje_smtp_no_sender', __( 'Set a sender address in the email settings: the default one of this site is not a valid email address.', 'formulario-mensaje' ) );
+			return new WP_Error( 'formulario_mensaje_smtp_no_sender', __( 'Set a sender address in the email settings: this site’s default address is not a valid email address.', 'formulario-mensaje' ) );
 		}
 
 		// Las clases de PHPMailer que trae WordPress solo se cargan cuando se envía un correo.

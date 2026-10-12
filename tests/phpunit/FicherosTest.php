@@ -154,7 +154,7 @@ class FicherosTest extends Caso_Formulario {
 			Plugin::service( Submission_Journal::class ),
 			Plugin::service( Action_Runner::class ),
 			Plugin::service( Queue_Dispatcher::class ),
-			new Submission_Uploads( Plugin::service( Upload_Collector::class ), $this->almacen(), new Download_Links( $this->reloj ) ),
+			new Submission_Uploads( Plugin::service( Upload_Collector::class ), $this->almacen(), new Download_Links( $this->reloj ), Plugin::service( Form_Repository::class ) ),
 			Plugin::service( Confirmation_Builder::class ),
 			Plugin::service( Reference_Generator::class ),
 			Plugin::service( Clock::class )
@@ -241,7 +241,7 @@ class FicherosTest extends Caso_Formulario {
 		$mentira = new Uploaded_File( 'grande.pdf', $this->temporal( $this->pdf( 2 * MB_IN_BYTES ) ), 10, UPLOAD_ERR_OK );
 		$this->assertStringContainsString( 'too large', $tipo->validate_files( $this->campo(), array( $mentira ) ) );
 
-		$this->assertStringContainsString( 'This site accepts files of up to', $tipo->validate_files( $this->campo(), array( $this->fichero( 'a.pdf', $this->pdf(), UPLOAD_ERR_INI_SIZE ) ) ) );
+		$this->assertStringContainsString( 'This site accepts files up to', $tipo->validate_files( $this->campo(), array( $this->fichero( 'a.pdf', $this->pdf(), UPLOAD_ERR_INI_SIZE ) ) ) );
 		$this->assertStringContainsString( 'could not be uploaded', $tipo->validate_files( $this->campo(), array( $this->fichero( 'a.pdf', $this->pdf(), UPLOAD_ERR_PARTIAL ) ) ) );
 		$this->assertStringContainsString( 'could not be uploaded', $tipo->validate_files( $this->campo(), array( new Uploaded_File( 'a.pdf', '/no/existe', 10, UPLOAD_ERR_OK ) ) ) );
 	}
@@ -361,6 +361,78 @@ class FicherosTest extends Caso_Formulario {
 		$this->assertSame( array( 'informe.pdf' ), array_column( $this->correos[0]->attachments, 'name' ), 'El correo salió con el adjunto.' );
 		$this->assertSame( array(), $this->guardados( $formulario, $resultado->to_array()['reference'] ) );
 		$this->assertSame( array(), glob( $this->directorio->base() . '/*/*.dat' ) );
+	}
+
+	public function test_un_fichero_que_solo_se_adjunta_espera_al_reintento_si_la_notificacion_falla() {
+		$campos = array(
+			array( 'id' => 'nombre', 'type' => 'text', 'settings' => array( 'label' => 'Nombre', 'required' => true ) ),
+			array( 'id' => 'adjunto', 'type' => 'file', 'settings' => array( 'label' => 'Adjunto', 'keep' => false ) ),
+		);
+		$rota   = $this->definicion()['actions'][0];
+
+		$rota['settings']['to'] = array();
+
+		$formulario = $this->crear_formulario( array( 'fields' => $campos, 'actions' => array( $rota ) ) );
+
+		// Dos envíos cuya notificación falla: uno se reintentará y el otro se descartará.
+		$primero = $this->enviar_con_ficheros( $formulario, array( 'nombre' => 'Ana' ), array( 'adjunto' => array( array( 'informe.pdf', $this->pdf() ) ) ) );
+		$segundo = $this->enviar_con_ficheros( $formulario, array( 'nombre' => 'Luis' ), array( 'adjunto' => array( array( 'otro.pdf', $this->pdf() ) ) ) );
+
+		$this->assertInstanceOf( Submission_Result::class, $primero, 'El visitante recibe su confirmación: el envío está guardado.' );
+		$this->assertSame( array(), $this->correos );
+
+		// El correo no ha salido, así que el fichero que solo existía para adjuntarlo sigue ahí.
+		$fichero_primero = $this->guardados( $formulario, $primero->to_array()['reference'] );
+		$fichero_segundo = $this->guardados( $formulario, $segundo->to_array()['reference'] );
+
+		$this->assertCount( 1, $fichero_primero );
+		$this->assertCount( 1, $fichero_segundo );
+		$this->assertFileExists( $this->directorio->base() . '/' . $fichero_primero[0]->path );
+
+		// Se corrige el formulario y se reintenta la primera entrega: ahora sí lleva su adjunto.
+		$this->como_administrador();
+
+		$buena = $this->definicion()['actions'][0];
+		$this->rest( 'PUT', "/forms/$formulario", array( 'definition' => array( 'fields' => $campos, 'actions' => array( $buena ) ) ) );
+
+		$fallidas = array_column( $this->rest( 'GET', '/deliveries' )->get_data(), 'id', 'submission_id' );
+		$this->assertCount( 2, $fallidas );
+
+		$reintento = $this->rest( 'POST', '/deliveries/' . $fallidas[ $fichero_primero[0]->submission_id ] . '/retry' );
+
+		$this->assertSame( 'success', $reintento->get_data()['status'] );
+		$this->assertCount( 1, $this->correos );
+		$this->assertSame( array( 'informe.pdf' ), array_column( $this->correos[0]->attachments, 'name' ) );
+
+		// Entregado, el fichero ya no hace falta; el del otro envío, que sigue fallido, se queda.
+		$this->assertSame( array(), $this->guardados( $formulario, $primero->to_array()['reference'] ) );
+		$this->assertFileDoesNotExist( $this->directorio->base() . '/' . $fichero_primero[0]->path );
+		$this->assertCount( 1, $this->guardados( $formulario, $segundo->to_array()['reference'] ) );
+
+		// Descartar la entrega también lo libera: nadie va a reintentarla.
+		$this->assertSame( 200, $this->rest( 'POST', '/deliveries/' . $fallidas[ $fichero_segundo[0]->submission_id ] . '/dismiss' )->get_status() );
+		$this->assertSame( array(), $this->guardados( $formulario, $segundo->to_array()['reference'] ) );
+		$this->assertFileDoesNotExist( $this->directorio->base() . '/' . $fichero_segundo[0]->path );
+	}
+
+	public function test_un_fichero_que_se_conserva_no_se_borra_al_resolverse_una_entrega_fallida() {
+		$campos = array(
+			array( 'id' => 'nombre', 'type' => 'text', 'settings' => array( 'label' => 'Nombre', 'required' => true ) ),
+			array( 'id' => 'adjunto', 'type' => 'file', 'settings' => array( 'label' => 'Adjunto', 'keep' => true ) ),
+		);
+		$rota   = $this->definicion()['actions'][0];
+
+		$rota['settings']['to'] = array();
+
+		$formulario = $this->crear_formulario( array( 'fields' => $campos, 'actions' => array( $rota ) ) );
+		$resultado  = $this->enviar_con_ficheros( $formulario, array( 'nombre' => 'Ana' ), array( 'adjunto' => array( array( 'informe.pdf', $this->pdf() ) ) ) );
+
+		$this->como_administrador();
+
+		$fallida = $this->rest( 'GET', '/deliveries' )->get_data()[0]['id'];
+
+		$this->assertSame( 200, $this->rest( 'POST', "/deliveries/$fallida/dismiss" )->get_status() );
+		$this->assertCount( 1, $this->guardados( $formulario, $resultado->to_array()['reference'] ), 'El campo manda conservarlo con el envío.' );
 	}
 
 	public function test_si_el_formulario_no_guarda_los_envios_tampoco_guarda_sus_ficheros() {

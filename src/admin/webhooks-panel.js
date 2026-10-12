@@ -125,7 +125,7 @@ function TestSender( { title, definition, action } ) {
 					message: sprintf(
 						/* translators: 1: HTTP status code, 2: number of milliseconds. */
 						__(
-							'The destination answered with HTTP status %1$d in %2$d ms.',
+							'The destination responded with HTTP status %1$d in %2$d ms.',
 							'formulario-mensaje'
 						),
 						response.status,
@@ -144,7 +144,7 @@ function TestSender( { title, definition, action } ) {
 		<div className="fm-test">
 			<p className="fm-settings__note">
 				{ __(
-					'The test sends sample data right now, with the header X-Formulario-Mensaje-Test, and shows the answer of the destination.',
+					'The test sends sample data right now, with the header X-Formulario-Mensaje-Test, and shows the destination’s response.',
 					'formulario-mensaje'
 				) }
 			</p>
@@ -235,7 +235,7 @@ export default function WebhooksPanel( { title, definition, onChange } ) {
 									'formulario-mensaje'
 								) }
 								help={ __(
-									'It must start with https:// or http:// and be reachable from the internet: addresses of the internal network are rejected.',
+									'It must start with https:// or http:// and be reachable from the internet: internal network addresses are rejected.',
 									'formulario-mensaje'
 								) }
 								placeholder="https://"
@@ -362,7 +362,7 @@ export default function WebhooksPanel( { title, definition, onChange } ) {
 									placeholder={
 										stored
 											? __(
-													'Stored. Write to replace it',
+													'Stored. Type to replace it',
 													'formulario-mensaje'
 												)
 											: ''

@@ -84,13 +84,18 @@ test('un formulario se duplica, se exporta sin secretos y se importa con las acc
   await api.createForm(title, definition);
   await page.goto(formsScreen);
 
-  // Los botones se buscan por su nombre exacto: la copia tendrá los suyos, con «(copia)».
-  await page.getByRole('button', { name: `Duplicar «${title}»`, exact: true }).click();
+  // Duplicar y exportar están en el menú de acciones de cada fila. El menú se busca por su nombre
+  // exacto: la copia tendrá el suyo, con «(copia)».
+  const moreActions = page.getByRole('button', { name: `Más acciones de «${title}»`, exact: true });
+
+  await moreActions.click();
+  await page.getByRole('menuitem', { name: 'Duplicar', exact: true }).click();
   await expect(page.locator('.components-notice').first()).toContainText('Formulario duplicado.');
-  await expect(page.locator('tr', { hasText: `${title} (copia)` })).toHaveCount(1);
+  await expect(page.locator('li.fm-form-row', { hasText: `${title} (copia)` })).toHaveCount(1);
 
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: `Exportar «${title}»`, exact: true }).click();
+  await moreActions.click();
+  await page.getByRole('menuitem', { name: 'Exportar', exact: true }).click();
   const download = await downloadPromise;
   const path = await download.path();
   const text = readFileSync(path, 'utf8');
@@ -114,11 +119,16 @@ test('un formulario se duplica, se exporta sin secretos y se importa con las acc
 
   await expect(page.locator('.components-notice').first()).toContainText(`«${title} importado» importado`);
 
-  await page.locator('tr', { hasText: `${title} importado` }).locator('.fm-admin__row-title').click();
-  await page.getByRole('tab', { name: 'Notificaciones' }).click();
-  await expect(page.locator('.fm-fields__item').first()).toContainText('En pausa');
-  await page.getByRole('tab', { name: 'Webhooks' }).click();
-  await expect(page.locator('.fm-fields__item').first()).toContainText('En pausa');
+  await page.locator('li.fm-form-row', { hasText: `${title} importado` }).locator('.fm-admin__row-title').click();
+
+  // Notificaciones y webhooks son apartados del paso «Al recibirlo»; el de las notificaciones ya
+  // está abierto al entrar. Cada lista se busca dentro de su apartado: solo hay uno abierto a la vez.
+  const openSection = (name: string) => page.locator('.fm-section.is-open', { hasText: name });
+
+  await page.getByRole('tab', { name: 'Al recibirlo' }).click();
+  await expect(openSection('Notificaciones por correo').locator('.fm-fields__item').first()).toContainText('En pausa');
+  await page.getByRole('button', { name: /^Conectar con otra aplicación/ }).click();
+  await expect(openSection('Conectar con otra aplicación').locator('.fm-fields__item').first()).toContainText('En pausa');
 
   // Un fichero cualquiera no se importa.
   await page.goto(formsScreen);

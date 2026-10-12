@@ -51,7 +51,7 @@ final class Resend_Transport implements Mail_Transport {
 		if ( '' === $api_key || '' === $settings->from_email ) {
 			return new WP_Error(
 				'formulario_mensaje_resend_not_configured',
-				__( 'Resend needs an API key and a sender address of a domain verified in Resend.', 'formulario-mensaje' )
+				__( 'Resend needs an API key and a sender address on a domain verified in Resend.', 'formulario-mensaje' )
 			);
 		}
 
@@ -115,7 +115,7 @@ final class Resend_Transport implements Mail_Transport {
 			mb_substr(
 				sprintf(
 					/* translators: 1: HTTP status code, 2: error message returned by Resend. */
-					__( 'Resend answered with error %1$d. %2$s', 'formulario-mensaje' ),
+					__( 'Resend responded with error %1$d. %2$s', 'formulario-mensaje' ),
 					$status,
 					sanitize_text_field( $detail )
 				),

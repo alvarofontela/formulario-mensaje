@@ -13,6 +13,7 @@ use Formulario_Mensaje\Fields\Input_Field_Type;
 use Formulario_Mensaje\Fields\Prefill_Resolver;
 use Formulario_Mensaje\Fields\Render_Context;
 use Formulario_Mensaje\Forms\Field;
+use Formulario_Mensaje\Support\Plain_Text;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -132,7 +133,7 @@ abstract class Abstract_Text_Field_Type implements Input_Field_Type {
 			return '';
 		}
 
-		return mb_substr( sanitize_text_field( (string) $raw ), 0, $this->max_length() );
+		return mb_substr( Plain_Text::line( (string) $raw ), 0, $this->max_length() );
 	}
 
 	/**

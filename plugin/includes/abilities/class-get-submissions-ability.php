@@ -11,6 +11,7 @@ use Formulario_Mensaje\Lifecycle\Capabilities;
 use Formulario_Mensaje\Storage\Stored_Submission;
 use Formulario_Mensaje\Storage\Submission_Query;
 use Formulario_Mensaje\Storage\Submission_Service;
+use Formulario_Mensaje\Support\Plain_Text;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -179,7 +180,7 @@ final class Get_Submissions_Ability implements Ability {
 		$result = $this->submissions->search(
 			new Submission_Query(
 				is_int( $input['form_id'] ?? null ) ? max( 0, $input['form_id'] ) : 0,
-				is_string( $input['search'] ?? null ) ? mb_substr( sanitize_text_field( $input['search'] ), 0, 200 ) : '',
+				is_string( $input['search'] ?? null ) ? mb_substr( Plain_Text::line( $input['search'] ), 0, 200 ) : '',
 				true === ( $input['only_failed'] ?? false ),
 				$this->to_gmt( $input['after'] ?? null ),
 				$this->to_gmt( $input['before'] ?? null ),

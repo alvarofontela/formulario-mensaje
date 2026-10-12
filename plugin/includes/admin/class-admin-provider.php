@@ -16,7 +16,7 @@ use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Lifecycle\Translations;
 use Formulario_Mensaje\Service_Provider;
 use Formulario_Mensaje\Storage\Csv_Exporter;
-use Formulario_Mensaje\Storage\Failure_Counter;
+use Formulario_Mensaje\Storage\Submission_Service;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -31,7 +31,7 @@ final class Admin_Provider implements Service_Provider {
 	 * @param Container $container Contenedor del plugin.
 	 */
 	public function register( Container $container ): void {
-		$container->set( Admin_Menu::class, static fn ( Container $c ): Admin_Menu => new Admin_Menu( $c->get( Failure_Counter::class ) ) );
+		$container->set( Admin_Menu::class, static fn ( Container $c ): Admin_Menu => new Admin_Menu( $c->get( Submission_Service::class ) ) );
 
 		$container->set(
 			Export_Controller::class,
@@ -44,7 +44,8 @@ final class Admin_Provider implements Service_Provider {
 				$c->get( Field_Type_Registry::class ),
 				$c->get( Action_Type_Registry::class ),
 				$c->get( Form_Templates::class ),
-				$c->get( Form_Style::class )
+				$c->get( Form_Style::class ),
+				$c->get( Submission_Service::class )
 			)
 		);
 

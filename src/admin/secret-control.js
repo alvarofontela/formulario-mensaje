@@ -55,7 +55,7 @@ export default function SecretControl( {
 				placeholder={
 					stored
 						? __(
-								'Stored. Write to replace it',
+								'Stored. Type to replace it',
 								'formulario-mensaje'
 							)
 						: ''

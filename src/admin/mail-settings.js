@@ -100,7 +100,7 @@ export default function MailSettings( {
 				<h2>{ __( 'Email delivery', 'formulario-mensaje' ) }</h2>
 				<p>
 					{ __(
-						'How the emails of the forms are sent. It only affects the emails of this plugin: the rest of the email of the site does not change.',
+						'How form emails are sent. It only affects this plugin’s emails: the rest of the site’s email does not change.',
 						'formulario-mensaje'
 					) }
 				</p>
@@ -198,7 +198,7 @@ export default function MailSettings( {
 							<ToggleControl
 								__nextHasNoMarginBottom
 								label={ __(
-									'The server asks for user and password',
+									'The server requires a username and password',
 									'formulario-mensaje'
 								) }
 								checked={ !! settings.smtp_auth }
@@ -213,7 +213,7 @@ export default function MailSettings( {
 										__nextHasNoMarginBottom
 										autoComplete="off"
 										label={ __(
-											'User',
+											'Username',
 											'formulario-mensaje'
 										) }
 										value={ settings.smtp_username }
@@ -262,7 +262,7 @@ export default function MailSettings( {
 							/>
 							<p className="fm-settings__note">
 								{ __(
-									'Resend only sends from an address of a domain verified in your Resend account: fill in the sender address below.',
+									'Resend only sends from an address on a domain verified in your Resend account: fill in the sender address below.',
 									'formulario-mensaje'
 								) }
 							</p>
@@ -279,7 +279,7 @@ export default function MailSettings( {
 								'formulario-mensaje'
 							) }
 							help={ __(
-								'Empty to use the one of the site.',
+								'Leave empty to use the site’s address.',
 								'formulario-mensaje'
 							) }
 							value={ settings.from_email }
@@ -290,7 +290,7 @@ export default function MailSettings( {
 							__nextHasNoMarginBottom
 							label={ __( 'Sender name', 'formulario-mensaje' ) }
 							help={ __(
-								'Empty to use the name of the site.',
+								'Leave empty to use the site name.',
 								'formulario-mensaje'
 							) }
 							value={ settings.from_name }
@@ -349,7 +349,7 @@ export default function MailSettings( {
 				<h2>{ __( 'Email appearance', 'formulario-mensaje' ) }</h2>
 				<p>
 					{ __(
-						'Brand of the notifications sent in HTML format.',
+						'Branding for the notifications sent in HTML format.',
 						'formulario-mensaje'
 					) }
 				</p>
@@ -362,7 +362,7 @@ export default function MailSettings( {
 								type="url"
 								label={ __( 'Logo', 'formulario-mensaje' ) }
 								help={ __(
-									'Address of the image. Without a logo, the emails show the name of the site.',
+									'Image address. Without a logo, the emails show the site name.',
 									'formulario-mensaje'
 								) }
 								value={ settings.brand_logo_url }
@@ -386,7 +386,7 @@ export default function MailSettings( {
 					</div>
 					<div className="fm-color">
 						<label htmlFor="fm-brand-color">
-							{ __( 'Brand colour', 'formulario-mensaje' ) }
+							{ __( 'Brand color', 'formulario-mensaje' ) }
 						</label>
 						<input
 							id="fm-brand-color"
@@ -402,7 +402,7 @@ export default function MailSettings( {
 						__nextHasNoMarginBottom
 						label={ __( 'Footer text', 'formulario-mensaje' ) }
 						help={ __(
-							'For example, the name and address of the company. Without it, the footer shows the name of the site.',
+							'For example, the company name and address. Without it, the footer shows the site name.',
 							'formulario-mensaje'
 						) }
 						rows={ 3 }

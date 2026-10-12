@@ -45,10 +45,10 @@ final class Settings_Controller {
 	 * Registra las rutas.
 	 */
 	public function register_routes(): void {
+		// Ningún argumento lleva valor por defecto: lo que no viene en la petición se queda como está.
 		$list = array(
-			'type'    => 'array',
-			'items'   => array( 'type' => 'string' ),
-			'default' => array(),
+			'type'  => 'array',
+			'items' => array( 'type' => 'string' ),
 		);
 
 		register_rest_route(
@@ -69,34 +69,28 @@ final class Settings_Controller {
 							'description' => __( 'Where the visitor IP address is taken from.', 'formulario-mensaje' ),
 							'type'        => 'string',
 							'enum'        => array_column( Trusted_Proxy_Mode::cases(), 'value' ),
-							'default'     => Trusted_Proxy_Mode::None->value,
 						),
 						'trusted_proxies'          => array( 'description' => __( 'IP addresses or CIDR ranges of your own proxy.', 'formulario-mensaje' ) ) + $list,
 						'allowed_redirect_hosts'   => array( 'description' => __( 'External domains that forms may redirect to.', 'formulario-mensaje' ) ) + $list,
 						'accept_no_js'             => array(
 							'description' => __( 'Accept submissions sent without JavaScript.', 'formulario-mensaje' ),
 							'type'        => 'boolean',
-							'default'     => true,
 						),
 						'delete_data_on_uninstall' => array(
 							'description' => __( 'Delete forms, submissions and settings when the plugin is uninstalled.', 'formulario-mensaje' ),
 							'type'        => 'boolean',
-							'default'     => false,
 						),
 						'failure_alerts'           => array(
 							'description' => __( 'Send an email when the actions of a form fail.', 'formulario-mensaje' ),
 							'type'        => 'boolean',
-							'default'     => true,
 						),
 						'failure_alert_email'      => array(
-							'description' => __( 'Address that receives those emails. Empty to use the one of the site administrator.', 'formulario-mensaje' ),
+							'description' => __( 'Address that receives those emails. Leave empty to use the site administrator’s address.', 'formulario-mensaje' ),
 							'type'        => 'string',
-							'default'     => '',
 						),
 						'delivery_log_days'        => array(
 							'description' => __( 'Days the delivery log is kept.', 'formulario-mensaje' ),
 							'type'        => 'integer',
-							'default'     => Settings::DEFAULT_DELIVERY_LOG_DAYS,
 						),
 					),
 				),
@@ -134,18 +128,16 @@ final class Settings_Controller {
 	 * @param WP_REST_Request $request Petición.
 	 */
 	public function update_settings( WP_REST_Request $request ): WP_REST_Response {
-		$settings = $this->sanitizer->sanitize(
-			array(
-				'trusted_proxy_mode'       => $request['trusted_proxy_mode'],
-				'trusted_proxies'          => $request['trusted_proxies'],
-				'allowed_redirect_hosts'   => $request['allowed_redirect_hosts'],
-				'accept_no_js'             => $request['accept_no_js'],
-				'delete_data_on_uninstall' => $request['delete_data_on_uninstall'],
-				'failure_alerts'           => $request['failure_alerts'],
-				'failure_alert_email'      => $request['failure_alert_email'],
-				'delivery_log_days'        => $request['delivery_log_days'],
-			)
-		);
+		// Se parte de lo guardado y se cambia solo lo que trae la petición: enviar un ajuste no devuelve los demás a su valor de fábrica.
+		$values = $this->settings->get()->to_array();
+
+		foreach ( array_keys( $values ) as $key ) {
+			if ( null !== $request[ $key ] ) {
+				$values[ $key ] = $request[ $key ];
+			}
+		}
+
+		$settings = $this->sanitizer->sanitize( $values );
 
 		$this->settings->save( $settings );
 

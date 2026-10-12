@@ -1,4 +1,6 @@
-import { useCallback, useRef, useState } from '@wordpress/element';
+import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
+
+import { getQueryParam, setQueryParam } from './utils';
 
 /**
  * Permite pedir desde un manejador de eventos que un listado se vuelva a cargar.
@@ -40,4 +42,35 @@ export function useLatest() {
 			);
 		} );
 	}, [] );
+}
+
+/**
+ * Lee de la URL y mantiene en ella un parámetro que decide qué se muestra, para que el botón de
+ * volver del navegador funcione dentro de la aplicación.
+ *
+ * @param {string} name Nombre del parámetro.
+ * @return {[?string, Function]} Valor actual y función para cambiarlo (null lo quita).
+ */
+export function useUrlParam( name ) {
+	const [ value, setValue ] = useState( () => getQueryParam( name ) );
+
+	useEffect( () => {
+		const onPopState = () => setValue( getQueryParam( name ) );
+
+		window.addEventListener( 'popstate', onPopState );
+
+		return () => window.removeEventListener( 'popstate', onPopState );
+	}, [ name ] );
+
+	const change = useCallback(
+		( next ) => {
+			const text = next === null ? null : String( next );
+
+			setQueryParam( name, text );
+			setValue( text );
+		},
+		[ name ]
+	);
+
+	return [ value, change ];
 }

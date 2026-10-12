@@ -8,6 +8,7 @@
 namespace Formulario_Mensaje\Rules;
 
 use Formulario_Mensaje\Forms\Field;
+use Formulario_Mensaje\Support\Plain_Text;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -49,7 +50,7 @@ final class Condition_Sanitizer {
 			$rules[] = array(
 				'field'    => $field,
 				'operator' => $operator->value,
-				'value'    => $operator->needs_value() && is_scalar( $rule['value'] ?? null ) ? mb_substr( sanitize_text_field( (string) $rule['value'] ), 0, 500 ) : '',
+				'value'    => $operator->needs_value() && is_scalar( $rule['value'] ?? null ) ? mb_substr( Plain_Text::line( (string) $rule['value'] ), 0, 500 ) : '',
 			);
 		}
 

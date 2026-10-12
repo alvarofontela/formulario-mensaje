@@ -1,6 +1,6 @@
 # formulario-mensaje
 
-Plugin de formularios para WordPress, pensado para instalarse en webs propias o de clientes; no se publica en el directorio de WordPress.org. El código del plugin vive en `plugin/` (fichero principal: `plugin/formulario-mensaje.php`). El resto del repositorio es el entorno para desarrollarlo y probarlo de forma agéntica.
+Plugin de formularios para WordPress, pensado para webs propias y de clientes y preparado para publicarse en el directorio de WordPress.org (ver «Directorio de WordPress.org»). El código del plugin vive en `plugin/` (fichero principal: `plugin/formulario-mensaje.php`). El resto del repositorio es el entorno para desarrollarlo y probarlo de forma agéntica.
 
 ## Reglas de trabajo
 
@@ -66,8 +66,8 @@ Al seguirlas en este proyecto:
 ### 3. Ninguna tarea está terminada sin tests y sin verificar
 
 - Cada cambio de comportamiento lleva su test: PHPUnit para la lógica y Playwright cuando cambia algo visible (el formulario, una pantalla de administración, un correo).
-- Una tarea está terminada cuando se cumplen las cuatro cosas: `rt lint` sin errores, `rt phpunit` en verde, `rt e2e` en verde y `rt logs wp` sin avisos ni errores nuevos (ejecuta `rt logs clear` antes de probar para distinguirlos).
-- Antes de verificar: si has tocado `src/`, `rt build`; si has añadido o cambiado textos de interfaz, tradúcelos en `scripts/i18n/es_ES.json` y ejecuta `rt i18n` (falla si falta alguno). Los tests usan lo compilado. Para el JavaScript, además, `npm run lint:js` sin errores.
+- Una tarea está terminada cuando se cumplen las cinco cosas: `rt lint` sin errores, `rt phpunit` en verde, `rt e2e` en verde, `rt check` sin hallazgos y `rt logs wp` sin avisos ni errores nuevos (ejecuta `rt logs clear` antes de probar para distinguirlos).
+- Antes de verificar: si has tocado `src/`, `rt build`; si has añadido o cambiado textos de interfaz, ejecuta `rt i18n`, tradúcelos en cada `.po` de `plugin/languages/` (los nuevos quedan al final, con el `msgstr` vacío) y vuelve a ejecutarlo (falla mientras falte alguno). Los tests usan lo compilado. Para el JavaScript, además, `npm run lint:js` sin errores.
 - Además, no puede quedar ningún hallazgo de la revisión de seguridad sin corregir o justificar (regla 7).
 - Y el código cumple los principios SOLID y las buenas prácticas de WordPress (regla 8): que funcione y pase los tests no basta.
 - Si algo no se ha podido verificar, se dice expresamente al informar; no se da por bueno.
@@ -83,7 +83,7 @@ Al seguirlas en este proyecto:
 
 - **En inglés**: identificadores (funciones, clases, variables, hooks, claves de opciones) y todos los textos de la interfaz, que deben ser siempre traducibles con el text domain del plugin.
 - **En español**: comentarios y docblocks, mensajes de commit, documentación y la conversación con el usuario.
-- El plugin incluye la traducción a `es_ES`. Cada texto de interfaz que se añada o cambie se traduce en la misma tarea.
+- El inglés de EE. UU. (`en_US`) es el idioma de origen: son los textos del código y no lleva ficheros de traducción, así que se escriben en inglés estadounidense («color», no «colour») y con comillas y apóstrofos tipográficos (“ ” ’). La primera traducción es `es_ES`, que sirve además de reserva a las demás variantes del español. Cada texto de interfaz que se añada o cambie se traduce en la misma tarea a todos los idiomas que haya en `plugin/languages/`.
 
 ### 6. Git
 
@@ -154,7 +154,7 @@ SOLID no justifica la sobreingeniería, que va contra la ligereza del plugin: un
 | Carga de clases | Autoloader propio registrado en el fichero principal; sin PSR-4 y sin Composer en producción |
 | PHP mínimo | 8.1 |
 | WordPress mínimo | 7.0 |
-| Distribución | Zip o repositorio privado; sin revisión de WordPress.org |
+| Distribución | Directorio de WordPress.org; lo que se sube es el zip de `rt package` |
 
 El slug está definido en `scripts/runtime.config.psd1` y los prefijos y el text domain en `phpcs.xml.dist`; si cambia uno, hay que cambiarlo en los dos sitios y aquí.
 
@@ -173,7 +173,7 @@ Hace falta Windows con PowerShell 7, Node.js, git y Python 3.10 o posterior (el 
 - `.claude/skills/`: copia de [WordPress/agent-skills](https://github.com/WordPress/agent-skills) (commit `3cf7f6f`). Para actualizarlas, clona ese repositorio y ejecuta en él `node shared/scripts/skillpack-build.mjs --clean --targets=claude` y `node shared/scripts/skillpack-install.mjs --dest=<ruta de este proyecto> --targets=claude`.
 - `vendor/` y `node_modules/`: salen de `composer.lock` y `package-lock.json`.
 - `plugin/build/`: resultado de compilar `src/` con `rt build`. Se versiona para que `plugin/` sea instalable tal cual.
-- `plugin/languages/`: lo genera `rt i18n` a partir del código y de `scripts/i18n/es_ES.json`, que es donde se escriben las traducciones.
+- En `plugin/languages/`, todo menos los `.po`: la plantilla `.pot` y los compilados (`.mo`, `.l10n.php` y `.json`) los genera `rt i18n`. Los `.po` sí se editan, a mano o con Poedit: son la fuente de las traducciones.
 - El mu-plugin del entorno se edita en `scripts/templates/rt-environment.php` y se aplica con `rt setup`, no en `.runtime/www`.
 
 ## Revisión de seguridad (`security-guidance`)
@@ -187,7 +187,7 @@ Hace falta Windows con PowerShell 7, Node.js, git y Python 3.10 o posterior (el 
 
 Límites que conviene conocer al tocar esos ficheros:
 
-- Las reglas comparten un máximo de 8192 caracteres con las de usuario (`~/.claude/claude-security-guidance.md`), que van delante: lo que sobra se corta por el final. El plugin añade unos 30 caracteres de envoltorio, así que el fichero no puede pasar de 8160 (`len()` en Python, no bytes). Hoy ocupa 8141: al añadir texto hay que recortar otro, medirlo y comprobar en `~/.claude/security/log.txt` que no aparece «truncating». Se envían al modelo en cada revisión, así que no llevan secretos.
+- Las reglas comparten un máximo de 8192 caracteres con las de usuario (`~/.claude/claude-security-guidance.md`), que van delante: lo que sobra se corta por el final. El plugin añade unos 30 caracteres de envoltorio, así que el fichero no puede pasar de 8160 (`len()` en Python, no bytes). Hoy ocupa 8146: al añadir texto hay que recortar otro, medirlo y comprobar en `~/.claude/security/log.txt` que no aparece «truncating». Se envían al modelo en cada revisión, así que no llevan secretos.
 - Como mucho 50 patrones, con avisos de hasta 1024 caracteres. Un patrón mal formado o con una expresión regular que el plugin considere lenta se descarta sin avisar: tras cambiarlos, mira `~/.claude/security/log.txt`. Cada aviso sale una vez por fichero y sesión, y solo mira el texto que se escribe en esa edición.
 - La revisión de commits no lee las reglas del proyecto; tiene las suyas y puede leer otros ficheros del repositorio para seguir el flujo de los datos.
 - Las revisiones con modelo no miran nada dentro de `vendor/`, `node_modules/`, `build/` ni `dist/`, ni los ficheros `.min.js`: se revisan los fuentes, no lo compilado. Tampoco miran los ficheros que git ignora.
@@ -218,8 +218,11 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 | `rt lint [args]` / `rt lint fix` | PHPCS sobre `plugin/`: estándares de WordPress y compatibilidad con PHP 8.1+ |
 | `rt phpunit [args]` | Tests de integración (`tests/phpunit/*Test.php`) |
 | `rt e2e [args]` | Tests de Playwright (`tests/e2e/*.spec.ts`) |
+| `rt matrix [args]` | Matriz de combinaciones (`tests/matriz/`): muchos formularios con configuraciones distintas, probados con varios navegadores a la vez |
 | `rt build` | Compila `src/` (constructor en React y bloque) a `plugin/build/` con `@wordpress/scripts` |
-| `rt i18n` | Regenera el `.pot` y, desde `scripts/i18n/*.json`, los `.po`, `.mo`, `.l10n.php` y `.json` de `plugin/languages/` |
+| `rt i18n` | Regenera el `.pot` desde el código, lo fusiona en cada `.po` de `plugin/languages/` y compila sus `.mo`, `.l10n.php` y `.json`. Falla si a un idioma le queda un texto sin traducir, dudoso («fuzzy») o con marcadores (`%s`, `{reference}`) distintos de los del original |
+| `rt package` | Crea en `dist/` el zip instalable del plugin (`formulario-mensaje-<versión>.zip`), con la carpeta del plugin dentro. Lo genera `scripts/package.py` con Python para que sea como uno hecho en Linux: rutas con `/`, permisos Unix y nombres en UTF-8. Empaqueta `plugin/` tal como está (antes, `rt build` e `rt i18n` si procede) y le añade `src/` y `webpack.config.js`, el código legible de lo que va compilado en `build/` |
+| `rt check [args]` | Pasa Plugin Check, la herramienta con la que WordPress.org revisa lo que recibe, al plugin instalado (con las comprobaciones que necesitan ejecutarlo) y al contenido del zip, que regenera antes. Falla si encuentra algo. Instala Plugin Check en el entorno si falta |
 | `rt shot <ruta> <png> [opciones]` | Captura de pantalla con el Chromium del entorno; imprime los errores de consola. Opciones en `scripts/shot.mjs` (`--admin`, `--full`, `--no-js`, `--click=`, `--wait=`) |
 | `npm run lint:js` | ESLint con las reglas de WordPress sobre `src/` y `plugin/assets/js/` (`-- --fix` corrige el formato) |
 | `rt mail [--json]` / `rt mail clear` | Correos que ha enviado WordPress |
@@ -244,10 +247,23 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 | `plugin/includes/` | Clases PHP, una carpeta por módulo (subnamespace): cada una tiene su proveedor (`class-…-provider.php`), que declara sus servicios y registra sus hooks |
 | `plugin/assets/` | CSS y JavaScript del formulario en el frontend. No se compilan: el script es un módulo sin dependencias |
 | `src/` | Fuentes de lo que sí se compila: la aplicación de administración (`src/admin/`) y el bloque (`src/blocks/form/`) |
-| `plugin/build/`, `plugin/languages/` | Generados (ver «Qué no se edita a mano») |
+| `plugin/readme.txt` | Ficha del plugin en el directorio de WordPress.org, en inglés (ver «Directorio de WordPress.org») |
+| `PRODUCT.md`, `design/propuestas-backend/` | Para quién es el panel y las maquetas de las que salió su diseño (la D es la elegida). No forman parte del plugin |
+| `plugin/build/` | Generado (ver «Qué no se edita a mano») |
+| `plugin/languages/` | Traducciones: un `.po` por idioma, que es lo que se edita, y la plantilla y los compilados que genera `rt i18n` |
 | `docs/` | Documentación para quien extiende el plugin: `hooks.md` y `extender.md`. Un hook, un comando o una ability nuevos se documentan ahí en la misma tarea |
 
+El panel (`src/admin/`) tiene tres pantallas, y `app.js` decide cuál por la vista que indica el servidor: la bandeja de mensajes (`inbox.js`, con `message-reader.js` para el mensaje abierto), el listado de formularios (`forms-list.js`) y los ajustes (`settings-page.js`, con el resumen de `settings-status.js`). El constructor (`form-editor.js`) son cuatro pasos; «Al recibirlo» (`received-panel.js`) reúne en apartados plegables los paneles de guardado, notificaciones, tras el envío y webhooks, que no saben que están dentro de él. Todo el panel se usa también en tableta y móvil: los estilos (`admin.scss`) cortan a 1080 y 782 px, y cualquier pantalla o control nuevo se comprueba en esos tamaños (`tests/e2e/panel.spec.ts` lo hace con las que hay).
+
+Un envío guardado es un «mensaje» en la interfaz y un `submission` en el código y en la REST API. Lleva estado de lectura (`read_at`; `Submission_Service::mark_read()`), y `Stored_Submission` deduce de sus datos quién escribe, su correo, su teléfono y el comienzo del texto para presentarlo. En qué páginas está cada formulario lo averigua `Form_Placements` (bloque, shortcode y widget de Elementor en el contenido publicado), que guarda el resultado en un transient y lo olvida al guardar o borrar cualquier contenido.
+
+Las traducciones siguen el formato estándar de WordPress: `Translations` registra la carpeta y WordPress carga el `.l10n.php` o, si no está, el `.mo`; los textos del panel van en los `.json`. Para añadir un idioma se copia la plantilla `.pot` a `plugin/languages/formulario-mensaje-<locale>.po`, se rellena su cabecera (`Language`, `Plural-Forms`), se traduce y se ejecuta `rt i18n`. Como WordPress carga antes el `.l10n.php` que el `.mo`, un `.po` editado no se ve hasta ejecutar `rt i18n`; `tests/phpunit/TraduccionesTest.php` falla si los compilados no corresponden a su `.po`. Una variante sin traducción propia (`es_MX`, `es_AR`) usa la de su idioma según `Locale_Fallback`; para que otro idioma tenga reserva se añade una entrada a su lista. La traducción que un sitio instale en `wp-content/languages/plugins/` tiene prioridad sobre la del plugin y sobre la reserva.
+
 Para añadir un tipo de acción (como el correo o el webhook): una clase que implemente `Action_Type` y su proveedor. `is_deferred()` decide si se ejecuta mientras el visitante espera o en segundo plano, por la cola (`plugin/includes/queue/`), con reintentos. La cola no es una tabla aparte: son las filas en estado pendiente del registro de entregas.
+
+El texto sin formato (lo que escribe un visitante, una etiqueta, un asunto) se sanea con `Plain_Text::line()` o `Plain_Text::block()` (`plugin/includes/support/`), no con `sanitize_text_field()`: la de WordPress convierte en `&lt;` los «<» que no son HTML y quita todo «%» seguido de dos cifras hexadecimales (estropea las direcciones con `%20` y textos como «50%de»), y como aquí el texto se guarda tal cual y se escapa al mostrarlo, lo primero acababa viéndose como `&lt;` y lo segundo se guardaba roto. Son funciones estáticas y puras, sin estado: la excepción a «las dependencias se inyectan» es deliberada, porque sustituyen una a una a funciones globales de WordPress.
+
+La papelera de los formularios es del plugin, no la de WordPress: `Post_Form_Repository::trash()` cambia el estado sin `wp_trash_post()`, para que WordPress no borre el formulario por su cuenta y deje sus envíos sin dueño. Una actualización por REST o por el servicio (`Form_Service::update()`, ajustes) cambia solo lo que se le indica: lo que no viene se queda como está.
 
 Para añadir un comando de WP-CLI: un método público en la clase de su grupo (`plugin/includes/cli/`) o una clase nueva registrada en `Cli_Provider`. El docblock es la ayuda que muestra `wp help`, así que va en inglés y sin notas de diseño; esas van en el comentario que precede a la clase. Para añadir una ability: una clase que implemente `Ability` (`plugin/includes/abilities/`) y una línea en `Abilities_Provider`. Hoy todas son de solo lectura y el registro las anota así; una que escriba obliga a ampliar el contrato. Si su resultado lleva texto escrito por visitantes, `returns_visitor_content()` devuelve `true` (no se ofrece por MCP por defecto) y el resultado lo avisa; y ninguna devuelve ajustes de acciones, que es donde están las direcciones de los webhooks y los destinatarios. Comandos y abilities son adaptadores: llaman al servicio, no a una ruta REST.
 
@@ -283,9 +299,25 @@ Para añadir un tipo de campo: una clase en `plugin/includes/fields/types/` que 
 - Los servicios externos se sustituyen por dobles: las peticiones HTTP, con el filtro `pre_http_request`; el SMTP se prueba contra Mailpit (`127.0.0.1:1025`, sin cifrado ni credenciales). Los tests de Playwright que cambian los ajustes de correo los devuelven a los de fábrica al terminar (`AdminApi.saveMailSettings({})`).
 - En PHPUnit no hay subidas HTTP, así que `wp_handle_upload()` rechazaría cualquier fichero: los tests de ficheros componen el servicio de envío con `Movedor_De_Pruebas` (`tests/phpunit/FicherosTest.php`). La subida de verdad la prueba Playwright con `setInputFiles()`.
 - Dentro de un test de Playwright, `request.newContext()` hereda la sesión de administrador de la configuración: una petición anónima necesita `storageState: { cookies: [], origins: [] }`.
+- `rt matrix` es una suite aparte de `rt e2e` (`playwright.matriz.config.ts`, `tests/matriz/`) que prueba combinaciones de opciones con cuatro navegadores en paralelo; no sustituye a `rt e2e`, la complementa, y conviene pasarla tras cualquier cambio que toque el envío, los campos o el constructor. Para poder correr a la vez, cada test usa el banco de pruebas `lab` (`tests/matriz/support/lab.ts`): crea sus propios formularios y páginas, reconoce sus correos por un destinatario propio y sus webhooks por un canal propio del receptor (`rt/v1/sink/<canal>`), y no vacía el buzón ni cambia ajustes del sitio. Tres clases de fichero: `*.spec.ts` (en paralelo), `*.admin.ts` (los que trabajan en el constructor, de dos en dos: el Chromium del entorno no puede con cuatro pantallas de administración a la vez) y `*.global.ts` (los que cambian ajustes de todo el sitio: captcha, correo, plugins activos; corren después, de uno en uno, y los restauran).
+- El límite de envíos es de cinco por formulario e IP cada diez minutos (dos sin JavaScript): un test que envíe más veces al mismo formulario se topa con él.
 - Los comandos de WP-CLI no se pueden cargar en PHPUnit (no hay WP-CLI): los prueba `tests/e2e/cli.spec.ts` lanzando el WP-CLI del entorno con `spawnSync`. Las rutas de fichero se pasan relativas a la raíz del proyecto: PowerShell parte un argumento como `--file=C:/…` por los dos puntos.
 - Las abilities se prueban en PHPUnit con `wp_get_ability( … )->execute()`, que valida la entrada y comprueba el permiso como cualquier cliente, y por la REST API del núcleo (`/wp-abilities/v1/abilities/<nombre>/run`, con `GET` por ser de solo lectura).
+- En el panel, un aviso de `@wordpress/components` se repite en una región oculta para lectores de pantalla: `getByText()` encuentra dos elementos. Se localiza por `.components-notice__content` (con `.is-success` si puede haber otro aviso a la vez).
+- Los tests de tableta y móvil del panel fijan el tamaño con `test.use({ viewport })` y comprueban que ninguna pantalla se pueda desplazar de lado (`scrollWidth` frente a `innerWidth`) y que los botones de la barra miden al menos 44 px.
 - `tests/phpunit/EntornoTest.php` y `tests/e2e/entorno.spec.ts` solo comprueban el entorno; sirven de plantilla.
+
+## Directorio de WordPress.org
+
+El plugin se mantiene listo para enviarse al directorio oficial. Lo comprueba `rt check`, pero Plugin Check no ve todo lo que mira la revisión manual: al tocar algo de esta lista se carga además la skill `wp-plugin-directory-guidelines`.
+
+- **`plugin/readme.txt`** es la ficha del directorio y va en inglés. Su `Stable tag`, sus requisitos y su licencia tienen que coincidir con la cabecera del plugin, y cada versión lleva su entrada en `== Changelog ==`: subir la versión es cambiarla en la cabecera, en `FORMULARIO_MENSAJE_VERSION`, en `Stable tag` y añadir esa entrada. `tests/phpunit/DirectorioTest.php` falla si no coinciden.
+- **Servicios externos.** El plugin no se conecta a nada que el administrador no haya configurado, y cada servicio con el que puede hablar (captchas, Resend) tiene su apartado en `== External services ==`, con qué datos se envían, cuándo y los enlaces a sus condiciones y a su política de privacidad. Un dominio nuevo en el código sin su apartado hace fallar `DirectorioTest`. Nada de telemetría, de avisos fuera de las pantallas del plugin ni de enlaces de crédito en el formulario.
+- **Código legible.** Lo que va compilado en `build/` tiene que ir acompañado de sus fuentes: por eso el zip lleva `src/` y `webpack.config.js`, y el readme dice cómo compilarlas. Lo que se añada a `src/` viaja solo; una herramienta de compilación nueva hay que añadirla a `rt package` y a ese apartado.
+- **Falsos positivos de Plugin Check.** Se anotan en la línea con `// phpcs:ignore <código> -- motivo`, como los demás avisos de PHPCS, y solo cuando de verdad lo son. Hoy hay dos: la dirección de verificación de Turnstile (la regla toma por un recurso externo cualquier texto con «cloudflare.com») y `load_plugin_textdomain()`, que hace falta porque el plugin trae traducciones propias.
+- **Rutas.** Las del plugin salen de `plugin_dir_path()`, `plugins_url()` y `plugin_basename()` sobre `FORMULARIO_MENSAJE_FILE`, nunca de `WP_PLUGIN_DIR` ni de `WP_CONTENT_DIR`. Lo que el plugin escribe va a la carpeta de subidas (`Upload_Directory`), no a la suya.
+- **Consultas.** `get_results()`, `get_row()` y compañía reciben el `prepare()` directamente, no una variable con la consulta ya preparada: Plugin Check no puede seguirla y la da por insegura.
+- Lo que no está en el repositorio y hay que hacer al enviarlo: poner en `Contributors` el usuario de WordPress.org (hoy es el marcador `tu-usuario`, y `rt check` lo recuerda), y subir al SVN del directorio el icono, la cabecera y las capturas (`assets/`), que no forman parte del plugin.
 
 ## A tener en cuenta
 

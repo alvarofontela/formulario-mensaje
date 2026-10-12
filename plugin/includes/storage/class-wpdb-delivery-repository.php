@@ -91,8 +91,11 @@ final class Wpdb_Delivery_Repository implements Delivery_Repository {
 			return array();
 		}
 
-		return $this->rows(
-			$wpdb->prepare( 'SELECT * FROM %i WHERE submission_id = %d ORDER BY id ASC', $this->schema->deliveries_table(), $submission_id )
+		return $this->to_deliveries(
+			$wpdb->get_results(
+				$wpdb->prepare( 'SELECT * FROM %i WHERE submission_id = %d ORDER BY id ASC', $this->schema->deliveries_table(), $submission_id ),
+				ARRAY_A
+			)
 		);
 	}
 
@@ -106,13 +109,16 @@ final class Wpdb_Delivery_Repository implements Delivery_Repository {
 	public function failed( int $limit, int $offset ): array {
 		$wpdb = $this->wpdb;
 
-		return $this->rows(
-			$wpdb->prepare(
-				'SELECT * FROM %i WHERE status = %s ORDER BY id DESC LIMIT %d OFFSET %d',
-				$this->schema->deliveries_table(),
-				Delivery_Status::Failed->value,
-				max( 1, $limit ),
-				max( 0, $offset )
+		return $this->to_deliveries(
+			$wpdb->get_results(
+				$wpdb->prepare(
+					'SELECT * FROM %i WHERE status = %s ORDER BY id DESC LIMIT %d OFFSET %d',
+					$this->schema->deliveries_table(),
+					Delivery_Status::Failed->value,
+					max( 1, $limit ),
+					max( 0, $offset )
+				),
+				ARRAY_A
 			)
 		);
 	}
@@ -198,21 +204,12 @@ final class Wpdb_Delivery_Repository implements Delivery_Repository {
 	}
 
 	/**
-	 * Ejecuta una consulta ya preparada y convierte sus filas en entregas.
+	 * Convierte las filas de una consulta en entregas.
 	 *
-	 * @param string|null $prepared Consulta devuelta por prepare().
+	 * @param mixed $rows Lo que devuelve get_results(): las filas, o null si la consulta ha fallado.
 	 * @return Delivery[]
 	 */
-	private function rows( ?string $prepared ): array {
-		$wpdb = $this->wpdb;
-
-		if ( null === $prepared ) {
-			return array();
-		}
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- La prepara quien llama, con prepare().
-		$rows = $wpdb->get_results( $prepared, ARRAY_A );
-
+	private function to_deliveries( mixed $rows ): array {
 		return array_map( array( $this, 'to_delivery' ), is_array( $rows ) ? $rows : array() );
 	}
 

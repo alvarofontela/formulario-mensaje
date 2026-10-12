@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuestas para el panel</title>
+<style>
+/* Comparador de las tres propuestas. Cada maqueta es una página real y adaptable: aquí se carga en marcos con el
+   ancho de un ordenador, una tableta y un móvil, así que lo que se ve es su comportamiento de verdad. */
+:root { --tx: #16181d; --sub: #5a606b; --line: #d9dce3; --bg: #f4f5f7; --card: #fff; --pick: #16181d; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--tx); font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; }
+h1, h2, h3, p, ul { margin: 0; padding: 0; }
+ul { list-style: none; }
+::selection { background: #cfd6ea; }
+:focus-visible { outline: 2px solid var(--tx); outline-offset: 2px; border-radius: 6px; }
+
+.head { max-width: 1480px; margin: 0 auto; padding: 32px 24px 8px; }
+.head h1 { font-size: 28px; line-height: 1.2; font-weight: 700; text-wrap: balance; }
+.head p { margin-top: 8px; max-width: 72ch; color: var(--sub); }
+
+.bar { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+.bar-in { max-width: 1480px; margin: 0 auto; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+.grp { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.grp > span { color: var(--sub); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.seg { display: flex; padding: 3px; border-radius: 10px; background: #e4e7ed; overflow-x: auto; max-width: 100%; }
+.seg button { flex: none; min-height: 36px; padding: 0 14px; border: 0; border-radius: 7px; background: none; color: var(--sub); font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.seg button:hover { color: var(--tx); }
+.seg button[aria-pressed="true"] { background: var(--card); color: var(--tx); box-shadow: 0 1px 2px rgba(0, 0, 0, .14); }
+.seg.big button[aria-pressed="true"] { background: var(--pick); color: #fff; }
+.alone { margin-left: auto; color: var(--tx); font-weight: 600; text-underline-offset: 3px; white-space: nowrap; }
+
+.stage { max-width: 1480px; margin: 0 auto; padding: 24px 24px 8px; display: flex; gap: 24px; align-items: flex-start; justify-content: center; }
+.dev { min-width: 0; }
+.dev h2 { font-size: 13px; font-weight: 600; color: var(--sub); margin-bottom: 8px; }
+.dev h2 b { color: var(--tx); }
+.port { position: relative; overflow: hidden; border-radius: 10px; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .1), 0 12px 32px rgba(0, 0, 0, .1); }
+.port iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; background: #fff; }
+
+.notes { max-width: 1480px; margin: 0 auto; padding: 32px 24px 24px; }
+.notes > h2 { font-size: 22px; font-weight: 700; line-height: 1.25; }
+.notes > p { margin-top: 6px; max-width: 72ch; font-size: 16px; }
+.facts { margin-top: 24px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 32px; border-top: 1px solid var(--line); }
+.facts section { padding: 18px 0 8px; }
+.facts h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.facts li { position: relative; padding-left: 14px; margin-bottom: 6px; color: #2c3038; font-size: 14px; }
+.facts li::before { content: ""; position: absolute; left: 0; top: .72em; width: 6px; height: 1.5px; background: var(--sub); }
+
+.verdict { max-width: 1480px; margin: 0 auto; padding: 8px 24px 64px; }
+.verdict div { padding: 24px 28px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+.verdict h2 { font-size: 18px; font-weight: 700; }
+.verdict p { margin-top: 8px; max-width: 78ch; }
+
+@media (max-width: 900px) {
+	.head, .stage, .notes, .verdict { padding-inline: 16px; }
+	.bar-in { padding-inline: 16px; }
+	.grp { flex: 1 1 100%; }
+	.alone { margin-left: 0; }
+	.stage { flex-direction: column; align-items: stretch; }
+	.facts { grid-template-columns: minmax(0, 1fr); }
+	.facts section + section { border-top: 1px solid var(--line); }
+}
+</style>
+</head>
+<body>
+<header class="head">
+	<h1>Propuestas para el panel de Formulario Mensaje</h1>
+	<p>La D es la combinación elegida: la estructura de la B con el aspecto de la A. Las otras tres siguen aquí para comparar. Son maquetas navegables, no el plugin: los datos son de ejemplo (una clínica dental) y los botones no guardan nada. Puedes pulsar dentro de cada marco para moverte por los menús, abrir un mensaje o elegir un campo.</p>
+</header>
+
+<div class="bar">
+	<div class="bar-in">
+		<div class="grp"><span>Propuesta</span><div class="seg big" id="pick-proposal" role="group" aria-label="Propuesta"></div></div>
+		<div class="grp"><span>Pantalla</span><div class="seg" id="pick-screen" role="group" aria-label="Pantalla"></div></div>
+		<div class="grp"><span>Tamaño</span><div class="seg" id="pick-size" role="group" aria-label="Tamaño"></div></div>
+		<a class="alone" id="alone" target="_blank" rel="noopener">Abrir en una pestaña</a>
+	</div>
+</div>
+
+<main>
+	<div class="stage" id="stage"></div>
+	<section class="notes" id="notes" aria-live="polite"></section>
+	<section class="verdict">
+		<div>
+			<h2>Siguiente paso</h2>
+			<p>Si la D te vale, la llevo al plugin por partes, cada una con sus tests y comprobada en ordenador, tableta y móvil: primero lo que hoy no existe (leído y sin leer, páginas donde está cada formulario), después Mensajes, Formularios, el constructor por pasos y Ajustes.</p>
+			<p>Si quieres cambiar algo antes (la barra inferior del móvil, el guardado, recuperar la tira del recorrido de la C), dímelo sobre la maqueta: es más barato que cambiarlo en el plugin.</p>
+		</div>
+	</section>
+</main>
+
+<script>
+/* Textos fijos de esta página; no se lee nada de fuera. */
+const PROPOSALS = [
+	{
+		id: 'a', name: 'A · Nativa', title: 'A · Nativa: una pantalla más de WordPress',
+		lead: 'Mismo lenguaje que el editor del sitio: listados con filtros, y un constructor con la disposición del editor de bloques (lista de campos, lienzo e inspector).',
+		screens: { formularios: 'formularios', constructor: 'constructor', enviar: 'constructor:formulario', mensajes: 'envios', mensaje: 'envios:abrir', ajustes: 'ajustes' },
+		facts: [
+			[ 'Qué cambia para tu cliente', [ 'El campo se edita donde se ve: se pulsa en la vista previa y sus ajustes aparecen al lado.', 'Las seis pestañas del constructor pasan a dos: «Campo» y «Formulario».', 'El detalle de un envío se abre junto a la lista, sin cambiar de pantalla.', 'El fallo de una entrega se ve en la lista y se reintenta desde el detalle.' ] ],
+			[ 'En tableta y móvil', [ 'Las tablas pasan a lista: nombre, resumen y acciones.', 'En el constructor el inspector baja a una hoja inferior, como en el editor de bloques.', 'El detalle del envío es un cajón en tableta y pantalla completa en móvil.', 'Botones y controles de 44 px.' ] ],
+			[ 'Qué hay que construir', [ 'Reorganizar el constructor en tres zonas.', 'Listados con el paquete DataViews de WordPress.', 'Ninguna función nueva en el servidor.', 'Coste: el más bajo de las tres.' ] ],
+			[ 'El riesgo', [ 'Sigue hablando en técnico: «webhooks», «entregas», «insertar».', 'Quien no conoce el editor de bloques tiene que aprender dónde está cada cosa.', 'Es la que menos cambia la experiencia de un cliente no técnico.' ] ],
+		],
+	},
+	{
+		id: 'b', name: 'B · Bandeja', title: 'B · Bandeja: se entra por los mensajes',
+		lead: 'El plugin se abre en una bandeja como la del correo, habla sin jerga y lleva de la mano al crear un formulario: preguntas, qué pasa al recibirlo, aspecto y dónde ponerlo.',
+		screens: { formularios: 'formularios', constructor: 'constructor', enviar: 'constructor:recibir', mensajes: 'mensajes', mensaje: 'mensajes:leer', ajustes: 'ajustes' },
+		facts: [
+			[ 'Qué cambia para tu cliente', [ 'Lo primero que ve son sus mensajes, con los que no ha leído arriba.', 'Lee, responde o llama desde el propio mensaje.', '«Qué pasó con este mensaje» explica cada entrega en una frase.', 'Los ajustes son una lista de comprobación; lo técnico queda aparte, «para quien mantiene la web».', 'Publicar deja de ser copiar un shortcode: tres caminos explicados.' ] ],
+			[ 'En tableta y móvil', [ 'Barra inferior con las tres secciones.', 'Lista de mensajes y, al tocar uno, el mensaje entero con «Responder» arriba.', 'En el constructor, la vista previa se abre con un botón y los pasos se deslizan.', 'Controles de 46 px.' ] ],
+			[ 'Qué hay que construir', [ 'Mensajes leídos y sin leer (dato nuevo y migración).', 'Saber en qué páginas está cada formulario.', 'Botón «Responder», que abre el correo con la dirección del visitante.', 'Estilos propios sobre los componentes de WordPress.', 'Coste: medio.' ] ],
+			[ 'El riesgo', [ 'Tiene color y cabecera propios: se nota que no es una pantalla del núcleo.', 'Los cuatro pasos son más lentos para quien ya sabe lo que quiere.', 'Renombrar «envíos» a «mensajes» obliga a revisar todos los textos.' ] ],
+		],
+	},
+	{
+		id: 'c', name: 'C · Talonario', title: 'C · Talonario: cada mensaje, un resguardo con sus copias',
+		lead: 'El constructor ocupa toda la pantalla y se edita sobre la propia hoja. Debajo, una tira de cupones enseña el recorrido del envío: el original que se guarda y cada copia que sale. El estado de cada cosa se sella.',
+		screens: { formularios: 'formularios', constructor: 'constructor', enviar: { wide: 'constructor:copia', phone: 'constructor:recorrido' }, mensajes: 'mensajes', mensaje: 'mensajes:abrir', ajustes: 'ajustes' },
+		facts: [
+			[ 'Qué cambia para tu cliente', [ 'Edita tocando el formulario: la etiqueta, las opciones y lo obligatorio se cambian ahí mismo.', 'Ve de un vistazo qué pasa al enviar, sin abrir pestañas.', 'Cada mensaje es un resguardo numerado, con un sello por copia: entregado o fallido.', 'En la lista de formularios, un fallo se ve en el tramo que ha fallado.' ] ],
+			[ 'En tableta y móvil', [ 'En tableta, la paleta de campos se queda en una columna de iconos.', 'En móvil se alterna entre «Hoja» y «Recorrido», y las acciones del campo bajan a una barra.', 'Las copias del resguardo se apilan.', 'Controles de 46 px.' ] ],
+			[ 'Qué hay que construir', [ 'Edición directa sobre la vista previa, que hoy pinta el servidor: es la parte cara.', 'Modo a pantalla completa y arrastre desde la paleta.', 'Mensajes leídos y sin leer, y páginas donde está cada formulario.', 'Lenguaje visual propio completo.', 'Coste: el más alto.' ] ],
+			[ 'El riesgo', [ 'Es la que más se aleja de WordPress.', 'La metáfora del talonario puede cansar con el uso diario.', 'Editar sobre la hoja obliga a mantener a la par dos formas de pintar el formulario.' ] ],
+		],
+	},
+];
+PROPOSALS.push( {
+	id: 'd', name: 'D · Elegida', title: 'D · La estructura de la B con el aspecto de la A',
+	lead: 'Se entra por los mensajes, se habla sin jerga y el constructor guía paso a paso, pero todo con el lenguaje de WordPress: página blanca, el azul del panel, controles rectos y las secciones en el menú de siempre.',
+	screens: { formularios: 'formularios', constructor: 'constructor', enviar: 'constructor:recibir', mensajes: 'mensajes', mensaje: 'mensajes:leer', ajustes: 'ajustes' },
+	facts: [
+		[ 'Qué viene de cada una', [ 'De la B: la bandeja de mensajes con «Responder» y «Llamar», «Qué pasó con este mensaje», el constructor en cuatro pasos, los ajustes como lista de comprobación y publicar sin copiar códigos.', 'De la A: el aspecto. Cabecera de página, botones, pestañas, conmutadores y listas como los del resto del panel.', 'De la C, nada: la tira del recorrido no entra salvo que la pidas.' ] ],
+		[ 'Lo que he decidido al combinarlas', [ 'Sin cabecera propia: las tres secciones están en el submenú de WordPress.', 'En móvil se mantiene la barra inferior de secciones. WordPress no tiene nada parecido y es lo que más ayuda a leer mensajes con una mano.', 'El guardado sigue siendo con el botón «Guardar», como en el resto de WordPress, y no automático.', 'El texto del mensaje va algo más grande que el resto del panel, para leerlo cómodo.' ] ],
+		[ 'Qué hay que construir', [ 'Mensajes leídos y sin leer (dato nuevo y migración).', 'Saber en qué páginas está cada formulario.', 'Botón «Responder», que abre el correo con la dirección del visitante.', 'Reorganizar el constructor en pasos y renombrar «envíos» a «mensajes» en todos los textos.', 'Sin estilos propios que mantener: coste entre el de la A y el de la B.' ] ],
+		[ 'El riesgo', [ 'Los cuatro pasos son más lentos para quien ya sabe lo que quiere; se puede saltar de uno a otro por las pestañas.', 'La barra inferior del móvil es lo único que no existe en WordPress.', 'Saber en qué páginas está un formulario obliga a buscar el bloque, el widget y el shortcode en el contenido.' ] ],
+	],
+} );
+
+const SCREENS = [ [ 'formularios', 'Formularios' ], [ 'constructor', 'Constructor' ], [ 'enviar', 'Al enviar' ], [ 'mensajes', 'Mensajes' ], [ 'mensaje', 'Un mensaje' ], [ 'ajustes', 'Ajustes' ] ];
+const DEVICES = [ { id: 'desk', name: 'Ordenador', w: 1440, h: 900 }, { id: 'tab', name: 'Tableta', w: 820, h: 1100 }, { id: 'phone', name: 'Móvil', w: 390, h: 800 } ];
+const SIZES = [ [ 'all', 'Los tres' ], ...DEVICES.map( ( d ) => [ d.id, d.name ] ) ];
+
+const state = { proposal: 'd', screen: 'mensajes', size: 'all' };
+const stage = document.getElementById( 'stage' );
+
+function buttons( host, list, key ) {
+	host.innerHTML = list.map( ( [ id, label ] ) => `<button type="button" data-v="${ id }">${ label }</button>` ).join( '' );
+	host.addEventListener( 'click', ( event ) => {
+		const button = event.target.closest( 'button' );
+
+		if ( button ) {
+			state[ key ] = button.dataset.v;
+			render();
+		}
+	} );
+}
+
+function src( proposal, device ) {
+	const target = proposal.screens[ state.screen ];
+	const hash = typeof target === 'string' ? target : target[ device.id === 'phone' ? 'phone' : 'wide' ];
+
+	return `${ proposal.id }.html#${ hash }`;
+}
+
+function shownDevices() {
+	return DEVICES.filter( ( d ) => state.size === 'all' || d.id === state.size );
+}
+
+/* Ajusta el tamaño de los marcos al ancho disponible sin volver a cargar las maquetas. */
+function fit() {
+	const shown = shownDevices();
+	const room = stage.clientWidth - 48 - 24 * ( shown.length - 1 );
+	const stacked = window.innerWidth <= 900;
+	// Con los tres a la vez se igualan las alturas; con uno solo se enseña a su tamaño si cabe.
+	const height = room / shown.reduce( ( sum, d ) => sum + d.w / d.h, 0 );
+
+	shown.forEach( ( d, at ) => {
+		const scale = stacked ? Math.min( 1, ( stage.clientWidth - 32 ) / d.w ) : Math.min( 1, shown.length > 1 ? height / d.h : room / d.w );
+		const dev = stage.children[ at ];
+		const port = dev.querySelector( '.port' );
+
+		dev.querySelector( 'h2' ).innerHTML = `<b>${ d.name }</b> · ${ d.w } px${ scale < 1 ? ` · al ${ Math.round( scale * 100 ) } %` : '' }`;
+		port.style.width = `${ Math.round( d.w * scale ) }px`;
+		port.style.height = `${ Math.round( d.h * scale ) }px`;
+		port.querySelector( 'iframe' ).style.transform = `scale(${ scale })`;
+	} );
+}
+
+function render() {
+	const proposal = PROPOSALS.find( ( p ) => p.id === state.proposal );
+
+	document.querySelectorAll( '.seg' ).forEach( ( seg ) => {
+		const key = { 'pick-proposal': 'proposal', 'pick-screen': 'screen', 'pick-size': 'size' }[ seg.id ];
+
+		seg.querySelectorAll( 'button' ).forEach( ( b ) => b.setAttribute( 'aria-pressed', String( b.dataset.v === state[ key ] ) ) );
+	} );
+
+	stage.innerHTML = shownDevices().map( ( d ) => `<div class="dev"><h2></h2><div class="port"><iframe title="${ proposal.name }, ${ d.name }" src="${ src( proposal, d ) }" width="${ d.w }" height="${ d.h }"></iframe></div></div>` ).join( '' );
+	fit();
+
+	document.getElementById( 'alone' ).href = src( proposal, DEVICES[ 0 ] );
+	document.getElementById( 'notes' ).innerHTML = `<h2>${ proposal.title }</h2><p>${ proposal.lead }</p>
+		<div class="facts">${ proposal.facts.map( ( [ title, list ] ) => `<section><h3>${ title }</h3><ul>${ list.map( ( item ) => `<li>${ item }</li>` ).join( '' ) }</ul></section>` ).join( '' ) }</div>`;
+}
+
+buttons( document.getElementById( 'pick-proposal' ), [ PROPOSALS[ 3 ], ...PROPOSALS.slice( 0, 3 ) ].map( ( p ) => [ p.id, p.name ] ), 'proposal' );
+buttons( document.getElementById( 'pick-screen' ), SCREENS, 'screen' );
+buttons( document.getElementById( 'pick-size' ), SIZES, 'size' );
+window.addEventListener( 'resize', fit );
+render();
+</script>
+</body>
+</html>

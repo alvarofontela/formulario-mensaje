@@ -1,0 +1,128 @@
+/* Base común de las maquetas: el marco de wp-admin (barra superior y menú) y el formulario público de ejemplo.
+   Cada propuesta añade encima su propio lenguaje. Los puntos de corte son los de wp-admin: 960 y 782 px. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+	margin: 0;
+	background: #f0f0f1;
+	color: #1e1e1e;
+	font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+	font-variant-numeric: tabular-nums;
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+h1, h2, h3, p, ul, ol, dl, dd, figure { margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+a { color: inherit; }
+[hidden] { display: none !important; }
+
+.ic { display: inline-flex; flex: none; }
+.ic svg { display: block; }
+
+.sr {
+	position: absolute; width: 1px; height: 1px; overflow: hidden;
+	clip-path: inset(50%); white-space: nowrap;
+}
+
+/* ── Marco de wp-admin ───────────────────────────────────────────────────── */
+
+.wp-bar {
+	position: fixed; inset: 0 0 auto 0; z-index: 60;
+	height: 32px; padding: 0 12px 0 8px;
+	display: flex; align-items: center; gap: 14px;
+	background: #1d2327; color: #f0f0f1; font-size: 13px;
+}
+.wp-bar .wp-bar__site { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.wp-bar .wp-bar__user { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.wp-bar .wp-bar__avatar { width: 18px; height: 18px; border-radius: 50%; background: #a7aaad; }
+.wp-bar__burger { display: none; background: none; border: 0; padding: 6px; color: inherit; }
+
+.wp-menu {
+	position: fixed; inset: 32px auto 0 0; z-index: 55;
+	width: 160px; padding: 10px 0;
+	background: #1d2327; color: #f0f0f1; overflow-y: auto;
+	font-size: 14px;
+}
+.wp-menu a {
+	display: flex; align-items: center; gap: 8px;
+	padding: 7px 10px; text-decoration: none; color: #f0f0f1;
+}
+.wp-menu a .ic { color: #a7aaad; }
+.wp-menu a:hover { color: #9db2ff; }
+.wp-menu li.is-current > a { background: #3858e9; color: #fff; font-weight: 500; }
+.wp-menu li.is-current > a .ic { color: #fff; }
+.wp-menu .wp-sub { background: #101517; padding: 6px 0 8px; font-size: 13px; }
+.wp-menu .wp-sub a { padding: 5px 12px; color: #c3c4c7; gap: 6px; }
+.wp-menu .wp-sub a[aria-current="page"] { color: #fff; font-weight: 600; }
+.wp-menu .wp-count {
+	min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+	display: inline-flex; align-items: center; justify-content: center;
+	background: #3858e9; color: #fff; font-size: 11px; font-weight: 600;
+}
+.wp-menu .wp-sep { height: 10px; }
+
+.wp-content { margin-left: 160px; padding-top: 32px; min-height: 100vh; }
+
+@media (max-width: 960px) {
+	.wp-menu { width: 36px; padding-top: 6px; }
+	.wp-menu a { padding: 8px; justify-content: center; }
+	.wp-menu a span:not(.ic), .wp-menu .wp-sub { display: none; }
+	.wp-content { margin-left: 36px; }
+}
+
+@media (max-width: 782px) {
+	.wp-bar { height: 46px; padding-left: 4px; gap: 6px; }
+	.wp-bar__burger { display: inline-flex; }
+	.wp-bar .wp-bar__site span:not(.ic), .wp-bar .wp-bar__user span { display: none; }
+	.wp-menu { display: none; top: 46px; width: 190px; font-size: 16px; }
+	.wp-menu a { justify-content: flex-start; padding: 10px 12px; }
+	.wp-menu a span:not(.ic) { display: inline; }
+	.wp-menu .wp-sub { display: block; font-size: 14px; }
+	.wp-menu .wp-sub a { padding: 9px 14px; }
+	body.menu-open .wp-menu { display: block; }
+	.wp-content { margin-left: 0; padding-top: 46px; }
+}
+
+/* Pantalla completa: la propuesta tapa el marco, como hace el editor de bloques. */
+body.is-fullscreen .wp-bar, body.is-fullscreen .wp-menu { display: none; }
+body.is-fullscreen .wp-content { margin-left: 0; padding-top: 0; }
+
+/* ── Formulario público de ejemplo (lo que ve el visitante) ───────────────── */
+
+.pf { container-type: inline-size; color: #111; font-size: 15px; line-height: 1.45; }
+.pf__note { color: #555; font-size: 14px; margin-bottom: 14px; }
+.pf__note b, .pf-req { color: #b3261e; font-weight: 600; }
+.pf__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 18px; }
+.pf-field { grid-column: span 2; min-width: 0; position: relative; }
+.pf-field.is-half { grid-column: span 1; }
+.pf-field > label, .pf-field > .pf-legend { display: block; font-weight: 600; margin-bottom: 6px; }
+.pf-control {
+	display: flex; align-items: center; justify-content: space-between;
+	width: 100%; min-height: 44px; padding: 9px 12px;
+	border: 1px solid #8c8f94; border-radius: 4px; background: #fff; color: #6b6f76;
+}
+.pf-control.is-area { min-height: 96px; align-items: flex-start; }
+.pf-options { display: flex; flex-wrap: wrap; gap: 8px 20px; min-height: 44px; align-items: center; }
+.pf-options span { display: inline-flex; align-items: center; gap: 8px; }
+.pf-options span::before {
+	content: ""; width: 18px; height: 18px; border: 1px solid #8c8f94; border-radius: 50%; background: #fff;
+}
+.pf-field > label.pf-consent { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; }
+.pf-consent::before {
+	content: ""; flex: none; width: 18px; height: 18px; margin-top: 2px;
+	border: 1px solid #8c8f94; border-radius: 3px; background: #fff;
+}
+.pf-consent u { text-underline-offset: 2px; }
+.pf-submit {
+	margin-top: 18px; padding: 12px 26px; min-height: 46px;
+	border: 0; border-radius: 4px; background: #111; color: #fff; font-size: 15px; font-weight: 600;
+}
+
+@container (max-width: 460px) {
+	.pf__grid { grid-template-columns: minmax(0, 1fr); }
+	.pf-field, .pf-field.is-half { grid-column: span 1; }
+}

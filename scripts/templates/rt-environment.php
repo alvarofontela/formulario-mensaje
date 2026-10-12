@@ -100,6 +100,61 @@ add_action(
 );
 
 /*
+ * Receptor de webhooks por canal, para los tests que corren en paralelo (tests/matriz): cada test
+ * usa su propio canal, así que ni comparten lo recibido ni se pisan al guardarlo. El código de la
+ * respuesta va en la propia dirección, no en un ajuste común.
+ *
+ *   POST|PUT|PATCH /wp-json/rt/v1/sink/<canal>[?status=500]   guarda la petición y responde con ese código
+ *   GET            /wp-json/rt/v1/sink/<canal>                devuelve las peticiones guardadas de ese canal
+ */
+add_action(
+	'rest_api_init',
+	static function () {
+		register_rest_route(
+			'rt/v1',
+			'/sink/(?P<channel>[a-z0-9-]{1,60})',
+			array(
+				array(
+					'methods'             => 'POST, PUT, PATCH',
+					'permission_callback' => '__return_true',
+					'callback'            => static function ( WP_REST_Request $request ) {
+						$option = 'rt_sink_' . $request['channel'];
+
+						wp_cache_delete( $option, 'options' );
+
+						$received   = get_option( $option, array() );
+						$received   = is_array( $received ) ? $received : array();
+						$received[] = array(
+							'method'  => $request->get_method(),
+							'headers' => array_map( static fn ( $values ) => implode( ', ', (array) $values ), $request->get_headers() ),
+							'body'    => $request->get_body(),
+						);
+
+						update_option( $option, array_slice( $received, -50 ), false );
+
+						// El código sale de la dirección: el cuerpo de un webhook puede traer su propio «status».
+						$status = (int) ( $request->get_query_params()['status'] ?? 200 );
+
+						return new WP_REST_Response( array( 'ok' => true ), max( 200, min( 599, $status ) ) );
+					},
+				),
+				array(
+					'methods'             => 'GET',
+					'permission_callback' => '__return_true',
+					'callback'            => static function ( WP_REST_Request $request ) {
+						$option = 'rt_sink_' . $request['channel'];
+
+						wp_cache_delete( $option, 'options' );
+
+						return array_values( (array) get_option( $option, array() ) );
+					},
+				),
+			)
+		);
+	}
+);
+
+/*
  * Doble de los servicios de captcha para los tests: un testigo que empieza por «rt-» no se consulta
  * a Cloudflare, Google ni hCaptcha, sino que se responde aquí. «rt-valido» es bueno; cualquier otro
  * «rt-…», no. Los demás testigos siguen yendo al servicio real, para poder probarlo a mano.

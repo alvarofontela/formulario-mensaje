@@ -40,7 +40,39 @@ final class Lifecycle_Provider implements Service_Provider {
 
 		$container->set(
 			Translations::class,
-			static fn (): Translations => new Translations( plugin_basename( FORMULARIO_MENSAJE_FILE ) )
+			static fn (): Translations => new Translations( FORMULARIO_MENSAJE_FILE )
+		);
+
+		$container->set(
+			Locale_Fallback::class,
+			static fn ( Container $c ): Locale_Fallback => new Locale_Fallback( $c->get( Translations::class ), WP_LANG_DIR . '/plugins' )
+		);
+
+		// Estos dos filtros pasan por las traducciones de todo el sitio: el servicio solo se pide para las del plugin.
+		add_filter(
+			'load_textdomain_mofile',
+			static function ( $mofile, $domain ) use ( $container ) {
+				if ( Translations::DOMAIN !== $domain || ! is_string( $mofile ) ) {
+					return $mofile;
+				}
+
+				return $container->get( Locale_Fallback::class )->mo_file( $mofile );
+			},
+			10,
+			2
+		);
+
+		add_filter(
+			'load_script_translation_file',
+			static function ( $file, $handle, $domain ) use ( $container ) {
+				if ( Translations::DOMAIN !== $domain || ! is_string( $file ) ) {
+					return $file;
+				}
+
+				return $container->get( Locale_Fallback::class )->script_file( $file );
+			},
+			10,
+			3
 		);
 
 		// Una actualización por zip no pasa por el hook de activación: se detecta en la administración.

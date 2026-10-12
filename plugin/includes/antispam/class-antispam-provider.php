@@ -10,6 +10,7 @@ namespace Formulario_Mensaje\Antispam;
 use Formulario_Mensaje\Captcha\Captcha_Check;
 use Formulario_Mensaje\Container;
 use Formulario_Mensaje\Database\Schema;
+use Formulario_Mensaje\Lifecycle\Maintenance_Schedule;
 use Formulario_Mensaje\Service_Provider;
 use Formulario_Mensaje\Settings\Settings_Repository;
 use Formulario_Mensaje\Support\Clock;
@@ -64,6 +65,14 @@ final class Antispam_Provider implements Service_Provider {
 					$c->get( Captcha_Check::class ),
 				)
 			)
+		);
+
+		// Cada visitante que envía deja su contador: los que ya han caducado se borran con el mantenimiento diario.
+		add_action(
+			Maintenance_Schedule::HOOK,
+			static function () use ( $container ): void {
+				$container->get( Rate_Limiter::class )->purge_expired();
+			}
 		);
 	}
 }

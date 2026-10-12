@@ -1,32 +1,67 @@
 // Aplicación de administración de Formulario Mensaje.
-// Sigue el aspecto del escritorio de WordPress: sus colores, bordes y espaciados.
+// Usa el lenguaje del propio WordPress (página blanca, color del panel, controles rectos) y se adapta a
+// tableta y móvil con los mismos puntos de corte que wp-admin: 960 px y 782 px.
 
-$border: #dcdcde;
-$muted: #646970;
+@use 'settings-status';
+
+$text: #1e1e1e;
+$muted: #6c6c6c;
+$border: #e0e0e0;
+$soft: #f6f7f7;
 $surface: #fff;
-$accent: var(--wp-admin-theme-color, #2271b1);
+$accent: var(--wp-admin-theme-color, #3858e9);
+$accent-wash: color-mix(in srgb, #{$accent} 8%, #fff);
+$ok: #007017;
+$ok-wash: #e6f5e8;
+$warn: #8a5200;
+$warn-wash: #fdf0d5;
+$bad: #cc1818;
+$bad-wash: #fcebea;
+$bar: var(--wp-admin--admin-bar--height, 32px);
+$narrow: 782px;
+$medium: 1080px;
+
+// ── La pantalla dentro de wp-admin ───────────────────────────────────────────
+// El panel ocupa toda la zona de contenido, como el editor del sitio: sin los márgenes de `.wrap`
+// ni el pie de WordPress, que quedaría flotando sobre las listas a pantalla completa.
+.formulario-mensaje-screen {
+	#wpcontent {
+		padding-left: 0;
+	}
+
+	#wpbody-content {
+		padding-bottom: 0;
+	}
+
+	#wpfooter {
+		display: none;
+	}
+
+	.wrap {
+		margin: 0;
+
+		// Avisos de WordPress y de otros plugins, que se colocan antes de la aplicación.
+		> .notice,
+		> .error,
+		> .updated {
+			margin: 12px 24px;
+		}
+	}
+}
+
+// wp-admin no usa `border-box` en los contenedores: sin esto, un ancho del 100 % con relleno se sale.
+[class^="fm-"],
+[class*=" fm-"] {
+	box-sizing: border-box;
+}
 
 .fm-admin {
-	max-width: 1400px;
-	margin-top: 12px;
+	min-height: calc(100vh - #{$bar});
+	background: $surface;
+	color: $text;
 
-	.components-notice {
-		margin: 0 0 16px;
-	}
-
-	&__header {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		margin-bottom: 16px;
-	}
-
-	&__title {
-		margin: 0;
-		padding: 0;
-		font-size: 23px;
-		font-weight: 400;
-		line-height: 1.3;
+	> .components-notice {
+		margin: 12px 24px 0;
 	}
 
 	&__loading {
@@ -35,39 +70,13 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		padding: 48px 0;
 	}
 
-	&__statuses {
-		float: none;
-		margin: 0 0 12px;
-	}
-
-	&__status {
-		padding: 0;
-		border: 0;
-		background: none;
-		color: $accent;
-		cursor: pointer;
-		font: inherit;
-
-		&.is-current {
-			color: #1d2327;
-			font-weight: 600;
-		}
-
-		&:focus-visible {
-			outline: 2px solid $accent;
-			outline-offset: 2px;
-		}
-	}
-
 	&__empty {
-		padding: 48px 24px;
-		border: 1px solid $border;
-		background: $surface;
+		padding: 48px 0;
 		text-align: center;
 
 		h2 {
 			margin: 0 0 8px;
-			font-size: 18px;
+			font-size: 16px;
 		}
 
 		p {
@@ -77,24 +86,17 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		}
 	}
 
-	&__table {
-		td {
-			vertical-align: middle;
-		}
-	}
-
 	&__row-title {
 		padding: 0;
 		border: 0;
 		background: none;
-		color: $accent;
+		color: inherit;
 		cursor: pointer;
 		font: inherit;
-		font-weight: 600;
 		text-align: start;
 
 		&:hover {
-			text-decoration: underline;
+			color: $accent;
 		}
 
 		&:focus-visible {
@@ -110,17 +112,12 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		margin-top: 4px;
 	}
 
-	// La columna del nombre lleva además las acciones de la fila: necesita más sitio que las otras.
-	&__table .column-primary {
-		width: 32%;
-	}
-
 	&__shortcode {
-		margin-inline-end: 8px;
-		padding: 3px 6px;
+		padding: 6px 10px;
 		border-radius: 2px;
-		background: #f0f0f1;
+		background: $soft;
 		font-size: 12px;
+		overflow-wrap: anywhere;
 		user-select: all;
 	}
 
@@ -130,47 +127,598 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		gap: 12px;
 		margin-top: 24px;
 	}
-}
 
-.fm-card {
-	margin-bottom: 16px;
-	padding: 20px 24px;
-	border: 1px solid $border;
-	background: $surface;
-
-	h2 {
-		margin: 0 0 8px;
-		font-size: 14px;
-	}
-
-	> p {
-		max-width: 60em;
-		margin: 0 0 16px;
+	&__muted {
 		color: $muted;
-	}
-}
-
-.fm-settings-page {
-	max-width: 800px;
-
-	.fm-card > &__ip {
-		margin: 16px 0 0;
 		font-size: 12px;
 	}
 
-	&__tabs {
-		margin-bottom: 16px;
+	&__summary {
+		overflow-wrap: anywhere;
+	}
 
-		> .components-tab-panel__tabs {
-			margin-bottom: 16px;
-			border-bottom: 1px solid $border;
+	&__table td {
+		vertical-align: middle;
+	}
+
+	&__cell-actions {
+		white-space: nowrap;
+
+		.components-button + .components-button {
+			margin-inline-start: 4px;
 		}
 	}
 }
 
-.fm-admin__header-actions {
+// Cabecera de página, como en el resto del panel.
+.fm-page {
+	&__header {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		min-height: 69px;
+		padding: 12px 24px;
+		border-bottom: 1px solid $border;
+	}
+
+	// Con `.fm-admin` delante para ganar a los estilos de `.wrap h1` de wp-admin.
+	.fm-admin &__title {
+		display: block;
+		margin: 0;
+		padding: 0;
+		font-size: 20px;
+		font-weight: 500;
+		line-height: 1.3;
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-inline-start: auto;
+	}
+
+	&__body {
+		max-width: 1000px;
+		padding: 16px 24px 48px;
+	}
+}
+
+// Filtros en forma de píldora.
+.fm-chips {
 	display: flex;
-	gap: 8px;
+	gap: 6px;
+	overflow-x: auto;
+
+	&__item {
+		flex: none;
+		min-height: 30px;
+		padding: 0 12px;
+		border: 1px solid $border;
+		border-radius: 16px;
+		background: $surface;
+		color: $text;
+		cursor: pointer;
+		font: inherit;
+
+		&:hover {
+			border-color: $accent;
+			color: $accent;
+		}
+
+		&[aria-pressed="true"] {
+			border-color: $accent;
+			background: $accent-wash;
+			color: $accent;
+			font-weight: 500;
+		}
+
+		&:focus-visible {
+			outline: 2px solid $accent;
+			outline-offset: 1px;
+		}
+	}
+}
+
+.fm-badge {
+	display: inline-block;
+	padding: 1px 8px;
+	border-radius: 2px;
+	font-size: 11px;
+	font-weight: 500;
+	line-height: 1.6;
+	white-space: nowrap;
+
+	&--error {
+		background: $bad-wash;
+		color: #8a2424;
+	}
+
+	&--ok {
+		background: $ok-wash;
+		color: #005c12;
+	}
+
+	&--wait {
+		background: $warn-wash;
+		color: #6e4e00;
+	}
+}
+
+.fm-pagination {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 12px;
+	padding: 12px 16px;
+	color: $muted;
+	font-size: 12px;
+}
+
+// ── Bandeja de mensajes ──────────────────────────────────────────────────────
+.fm-inbox-page {
+	display: flex;
+	flex-direction: column;
+	height: calc(100vh - #{$bar});
+}
+
+.fm-inbox {
+	display: grid;
+	flex: 1;
+	grid-template-columns: 380px minmax(0, 1fr);
+	min-height: 0;
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		border-inline-end: 1px solid $border;
+	}
+
+	&__tools {
+		display: grid;
+		gap: 10px;
+		padding: 12px 16px 10px;
+		border-bottom: 1px solid $border;
+	}
+
+	&__bulk {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	// `position: relative` en las dos zonas con barra propia: lo que va oculto para lectores de pantalla
+	// (`.screen-reader-text`) se posiciona en absoluto, y sin un ancestro posicionado aquí dentro cuelga
+	// de `#wpbody`, no se recorta con la zona y alarga la página entera hasta donde acabe la lista.
+	&__items {
+		position: relative;
+		flex: 1;
+		overflow-y: auto;
+
+		ul {
+			margin: 0;
+		}
+	}
+
+	&__day {
+		position: sticky;
+		z-index: 1;
+		top: 0;
+		margin: 0;
+		padding: 6px 16px;
+		background: $soft;
+		font-size: 11px;
+		font-weight: 500;
+		text-transform: uppercase;
+	}
+
+	&__empty {
+		padding: 40px 24px;
+		text-align: center;
+
+		h2 {
+			margin: 0 0 8px;
+			font-size: 15px;
+		}
+
+		p {
+			margin: 0 0 16px;
+			color: $muted;
+		}
+	}
+
+	&__reader {
+		position: relative;
+		min-width: 0;
+		overflow-y: auto;
+	}
+
+	&__placeholder {
+		margin: 0;
+		padding: 80px 24px;
+		color: $muted;
+		text-align: center;
+	}
+}
+
+.fm-message {
+	display: flex;
+	align-items: flex-start;
+	margin: 0;
+	border-bottom: 1px solid #f0f0f0;
+
+	&:hover {
+		background: #f8f8f8;
+	}
+
+	&.is-open {
+		background: $accent-wash;
+	}
+
+	&__check {
+		flex: none;
+		padding: 14px 0 0 12px;
+	}
+
+	&__open {
+		display: grid;
+		flex: 1;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 2px 8px;
+		min-width: 0;
+		padding: 12px 16px 12px 10px;
+		border: 0;
+		background: none;
+		color: inherit;
+		cursor: pointer;
+		font: inherit;
+		text-align: start;
+
+		&:focus-visible {
+			outline: 2px solid $accent;
+			outline-offset: -2px;
+		}
+	}
+
+	&__who {
+		overflow: hidden;
+		font-size: 14px;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	// Sin leer: en negrita y con un punto delante, que no dependa solo del color.
+	&.is-unread &__who {
+		font-weight: 600;
+
+		&::before {
+			display: inline-block;
+			width: 8px;
+			height: 8px;
+			margin-inline-end: 8px;
+			border-radius: 50%;
+			background: $accent;
+			content: "";
+			vertical-align: 1px;
+		}
+	}
+
+	&__when {
+		padding-top: 2px;
+		color: $muted;
+		font-size: 12px;
+	}
+
+	&__form {
+		display: flex;
+		grid-column: 1 / -1;
+		align-items: center;
+		gap: 6px;
+		color: $muted;
+		font-size: 12px;
+	}
+
+	&__text {
+		display: -webkit-box;
+		grid-column: 1 / -1;
+		overflow: hidden;
+		overflow-wrap: anywhere;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+	}
+}
+
+.fm-reader {
+	&__bar {
+		position: sticky;
+		z-index: 2;
+		top: 0;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-height: 61px;
+		padding: 8px 24px;
+		border-bottom: 1px solid $border;
+		background: $surface;
+	}
+
+	&__back {
+		display: none;
+	}
+
+	&__tools {
+		display: flex;
+		margin-inline-start: auto;
+	}
+
+	&__content {
+		max-width: 760px;
+		padding: 24px 32px 48px;
+
+		> .components-notice {
+			margin: 0 0 16px;
+		}
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 20px;
+		font-weight: 600;
+		line-height: 1.3;
+		overflow-wrap: anywhere;
+	}
+
+	&__contact {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 2px 16px;
+		margin: 4px 0 0;
+		overflow-wrap: anywhere;
+	}
+
+	&__meta {
+		margin: 4px 0 0;
+		color: $muted;
+	}
+
+	// El mensaje en sí se lee algo más grande que el resto del panel.
+	&__text {
+		max-width: 66ch;
+		margin: 20px 0 0;
+		font-size: 15px;
+		line-height: 1.6;
+		overflow-wrap: anywhere;
+		white-space: pre-wrap;
+	}
+
+	&__facts {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 14px 24px;
+		margin: 20px 0 0;
+		padding-top: 16px;
+		border-top: 1px solid $border;
+
+		dt {
+			color: $muted;
+			font-size: 12px;
+		}
+
+		dd {
+			margin: 2px 0 0;
+			overflow-wrap: anywhere;
+			white-space: pre-wrap;
+		}
+	}
+
+	&__files {
+		margin-top: 20px;
+
+		h3 {
+			margin: 0 0 8px;
+			font-size: 11px;
+			font-weight: 500;
+			text-transform: uppercase;
+		}
+
+		ul {
+			margin: 0;
+		}
+
+		li {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			margin: 0 0 4px;
+			overflow-wrap: anywhere;
+		}
+	}
+
+	&__heading {
+		margin: 32px 0 12px;
+		font-size: 11px;
+		font-weight: 500;
+		text-transform: uppercase;
+	}
+
+	&__details {
+		margin-top: 16px;
+		color: $muted;
+		font-size: 12px;
+
+		summary {
+			cursor: pointer;
+		}
+
+		dl {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr);
+			gap: 4px 16px;
+			margin: 8px 0 0;
+		}
+
+		dd {
+			margin: 0;
+			overflow-wrap: anywhere;
+		}
+	}
+}
+
+// Qué pasó con el mensaje: una línea de tiempo con cada entrega.
+.fm-trail {
+	margin: 0;
+	list-style: none;
+
+	li {
+		position: relative;
+		display: grid;
+		grid-template-columns: 24px minmax(0, 1fr);
+		gap: 12px;
+		margin: 0;
+		padding-bottom: 16px;
+
+		&:not(:last-child)::before {
+			position: absolute;
+			top: 24px;
+			bottom: 0;
+			left: 11px;
+			width: 2px;
+			background: $border;
+			content: "";
+		}
+
+		> .dashicon {
+			display: grid;
+			width: 24px;
+			height: 24px;
+			border-radius: 50%;
+			background: $ok-wash;
+			color: $ok;
+			font-size: 16px;
+			place-items: center;
+		}
+
+		&.is-failed > .dashicon,
+		&.is-dismissed > .dashicon {
+			background: $bad-wash;
+			color: $bad;
+		}
+
+		&.is-pending > .dashicon {
+			background: $warn-wash;
+			color: $warn;
+		}
+
+		strong {
+			font-weight: 500;
+		}
+
+		p {
+			margin: 4px 0 0;
+		}
+	}
+
+	&__error {
+		padding: 8px 10px;
+		border-radius: 2px;
+		background: $bad-wash;
+		color: #8a2424;
+		overflow-wrap: anywhere;
+	}
+
+	&__actions {
+		display: flex;
+		gap: 8px;
+		margin-top: 8px;
+	}
+}
+
+// ── Formularios ──────────────────────────────────────────────────────────────
+.fm-form-rows {
+	margin: 12px 0 0;
+	border-top: 1px solid $border;
+}
+
+.fm-form-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto auto;
+	align-items: center;
+	gap: 6px 24px;
+	margin: 0;
+	padding: 14px 0;
+	border-bottom: 1px solid $border;
+
+	&__title {
+		margin: 0;
+		font-size: 14px;
+		font-weight: 600;
+		overflow-wrap: anywhere;
+	}
+
+	&__where {
+		display: flex;
+		align-items: flex-start;
+		gap: 6px;
+		margin: 2px 0 0;
+		color: $muted;
+
+		.dashicon {
+			flex: none;
+			margin-top: 2px;
+			color: $ok;
+		}
+
+		&.is-missing,
+		&.is-missing .dashicon {
+			color: $warn;
+		}
+	}
+
+	&__activity {
+		margin: 0;
+		text-align: end;
+
+		strong {
+			display: block;
+			font-weight: 500;
+		}
+
+		span {
+			color: $muted;
+			font-size: 12px;
+		}
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+}
+
+.fm-starters {
+	margin-top: 32px;
+
+	h2 {
+		margin: 0;
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	p {
+		margin: 2px 0 12px;
+		color: $muted;
+	}
+
+	.fm-chips {
+		flex-wrap: wrap;
+	}
+
+	.fm-chips__item {
+		min-height: 36px;
+		padding: 0 14px;
+	}
 }
 
 .fm-templates {
@@ -193,8 +741,8 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		border: 1px solid $border;
 		border-radius: 2px;
 		background: $surface;
-		text-align: start;
 		cursor: pointer;
+		text-align: start;
 
 		span {
 			color: $muted;
@@ -209,74 +757,129 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 	}
 }
 
-// Constructor
-
+// ── Constructor ──────────────────────────────────────────────────────────────
 .fm-editor {
 	&__header {
-		position: sticky;
-		z-index: 10;
-		top: var(--wp-admin--admin-bar--height, 32px);
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		margin: 0 0 16px;
-		padding: 12px 16px;
-		border: 1px solid $border;
-		background: $surface;
+		gap: 8px;
+		min-height: 60px;
+		padding: 0 16px 0 12px;
 	}
 
 	&__title {
 		flex: 1;
 		min-width: 0;
+
+		.components-text-control__input {
+			border-color: transparent;
+			font-size: 15px;
+			font-weight: 500;
+
+			&:hover {
+				border-color: $border;
+			}
+		}
+	}
+
+	&__state {
+		color: $muted;
+		font-size: 12px;
+		white-space: nowrap;
 	}
 
 	&__body {
 		display: grid;
-		grid-template-columns: minmax(360px, 5fr) minmax(0, 6fr);
+		grid-template-columns: minmax(0, 1fr) minmax(320px, 44%);
 		align-items: start;
-		gap: 16px;
 	}
 
 	&__panel {
-		border: 1px solid $border;
-		background: $surface;
+		width: 100%;
+		max-width: 720px;
+		margin: 0 auto;
+		padding: 24px 24px 0;
 
-		// Las pestañas no parten su nombre: si no caben en una fila, pasan a la siguiente.
-		.components-tab-panel__tabs {
-			flex-wrap: wrap;
-			border-bottom: 1px solid $border;
-		}
-
-		.components-tab-panel__tabs-item {
-			white-space: nowrap;
+		.components-notice {
+			margin: 0 0 16px;
 		}
 	}
 
-	&__tab {
-		padding: 16px;
+	&__heading {
+		margin: 0;
+		font-size: 16px;
+		font-weight: 600;
+	}
+
+	&__lead {
+		margin: 2px 0 0;
+		color: $muted;
+	}
+
+	&__heading + *,
+	&__lead + * {
+		margin-top: 16px;
+	}
+
+	&__footer {
+		position: sticky;
+		z-index: 5;
+		bottom: 0;
+		display: flex;
+		justify-content: flex-end;
+		gap: 12px;
+		margin-top: 24px;
+		padding: 12px 0;
+		border-top: 1px solid $border;
+		background: $surface;
+	}
+
+	// La vista previa a un toque solo hace falta cuando no cabe al lado.
+	&__peek {
+		display: none;
 	}
 
 	&__preview {
 		position: sticky;
-		top: calc(var(--wp-admin--admin-bar--height, 32px) + 90px);
-		max-height: calc(100vh - var(--wp-admin--admin-bar--height, 32px) - 110px);
+		top: calc(#{$bar} + 49px);
+		height: calc(100vh - #{$bar} - 49px);
 		overflow: auto;
-		border: 1px solid $border;
-		background: $surface;
+		border-inline-start: 1px solid $border;
+		background: #f0f0f0;
 	}
+}
 
-	@media (max-width: 960px) {
-		&__header {
-			flex-wrap: wrap;
+.fm-steps {
+	position: sticky;
+	z-index: 20;
+	top: $bar;
+	display: flex;
+	gap: 2px;
+	padding: 0 12px;
+	overflow-x: auto;
+	border-bottom: 1px solid $border;
+	background: $surface;
+
+	&__item {
+		flex: none;
+		min-height: 48px;
+		margin-bottom: -1px;
+		padding: 0 12px;
+		border: 0;
+		border-bottom: 2px solid transparent;
+		background: none;
+		color: $text;
+		cursor: pointer;
+		font: inherit;
+		font-weight: 500;
+
+		&[aria-selected="true"] {
+			border-bottom-color: $accent;
 		}
 
-		&__body {
-			grid-template-columns: minmax(0, 1fr);
-		}
-
-		&__preview {
-			position: static;
-			max-height: none;
+		&:focus-visible {
+			outline: 2px solid $accent;
+			outline-offset: -2px;
 		}
 	}
 }
@@ -285,25 +888,43 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 	&__bar {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		gap: 12px;
 		min-height: 48px;
 		padding: 0 16px;
-		border-bottom: 1px solid $border;
 	}
 
 	&__title {
-		margin: 0;
-		color: $muted;
+		margin: 0 auto 0 0;
 		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.04em;
+		font-weight: 500;
 		text-transform: uppercase;
+	}
+
+	&__devices {
+		display: flex;
+		padding: 2px;
+		border: 1px solid #949494;
+		border-radius: 2px;
+		background: $surface;
+	}
+
+	&__close {
+		display: none;
 	}
 
 	&__frame {
 		display: block;
-		width: 100%;
+		width: calc(100% - 32px);
+		max-width: 640px;
+		margin: 4px auto 24px;
 		border: 0;
+		border-radius: 2px;
+		background: $surface;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 20px rgba(0, 0, 0, 0.05);
+
+		&.is-phone {
+			max-width: 390px;
+		}
 	}
 
 	&__error {
@@ -313,8 +934,110 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 	}
 }
 
-// Lista de campos
+// Apartados del paso «Al recibirlo», que se despliegan de uno en uno.
+.fm-section {
+	margin-bottom: -1px;
+	border: 1px solid $border;
 
+	&.is-open {
+		position: relative;
+		margin-bottom: 12px;
+		border-color: $accent;
+		box-shadow: 0 0 0 1px $accent;
+	}
+
+	&__heading {
+		margin: 0;
+		font-size: inherit;
+	}
+
+	&__toggle {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 20px;
+		align-items: center;
+		gap: 0 12px;
+		width: 100%;
+		min-height: 56px;
+		padding: 8px 16px;
+		border: 0;
+		background: none;
+		color: inherit;
+		cursor: pointer;
+		font: inherit;
+		text-align: start;
+
+		&:hover {
+			background: $soft;
+		}
+
+		&:focus-visible {
+			outline: 2px solid $accent;
+			outline-offset: -2px;
+		}
+
+		.dashicon {
+			grid-row: 1 / span 2;
+			grid-column: 2;
+			color: $muted;
+		}
+	}
+
+	&__title {
+		font-weight: 500;
+	}
+
+	&__summary {
+		color: $muted;
+		font-size: 12px;
+	}
+
+	&__body {
+		padding: 8px 16px 16px;
+	}
+}
+
+.fm-publish {
+	&__lead {
+		margin: 0 0 16px;
+		color: $muted;
+	}
+
+	&__way {
+		margin-bottom: 12px;
+		padding: 14px 16px;
+		border: 1px solid $border;
+		border-radius: 2px;
+
+		h3 {
+			margin: 0;
+			font-size: 13px;
+			font-weight: 500;
+		}
+
+		p {
+			margin: 2px 0 0;
+			color: $muted;
+		}
+
+		.components-button {
+			margin-top: 12px;
+		}
+	}
+
+	&__code {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px;
+		margin-top: 12px;
+
+		.components-button {
+			margin-top: 0;
+		}
+	}
+}
+
+// Lista de campos y de acciones
 .fm-fields {
 	&__empty {
 		margin: 0 0 12px;
@@ -328,12 +1051,13 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 	}
 
 	&__item {
-		margin: 0 0 8px;
+		margin: 0 0 -1px;
 		border: 1px solid $border;
-		border-radius: 2px;
 		background: $surface;
 
 		&.is-open {
+			position: relative;
+			margin-bottom: 8px;
 			border-color: $accent;
 			box-shadow: 0 0 0 1px $accent;
 		}
@@ -351,13 +1075,13 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		min-height: 48px;
+		min-height: 52px;
 		padding: 0 8px;
 	}
 
 	&__handle {
 		flex: none;
-		color: #a7aaad;
+		color: #949494;
 		cursor: grab;
 
 		&:active {
@@ -375,6 +1099,7 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		padding: 8px;
 		border: 0;
 		background: none;
+		color: inherit;
 		cursor: pointer;
 		font: inherit;
 		text-align: start;
@@ -388,7 +1113,7 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 	&__name {
 		overflow: hidden;
 		max-width: 100%;
-		font-weight: 600;
+		font-weight: 500;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
@@ -406,7 +1131,6 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 	&__settings {
 		padding: 16px;
 		border-top: 1px solid $border;
-		background: #f6f7f7;
 	}
 
 	&__width {
@@ -418,7 +1142,7 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 	&__item.is-section {
 		margin-top: 16px;
 		border-color: $accent;
-		background: color-mix(in srgb, $accent 6%, #fff);
+		background: $accent-wash;
 	}
 
 	&__id {
@@ -433,7 +1157,6 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 }
 
 // Controles de ajustes
-
 .fm-settings {
 	display: flex;
 	flex-direction: column;
@@ -452,7 +1175,7 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 		flex-direction: column;
 		gap: 16px;
 		padding-inline-start: 16px;
-		border-inline-start: 3px solid $border;
+		border-inline-start: 1px solid $border;
 	}
 
 	&__note {
@@ -472,8 +1195,44 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 	}
 }
 
-// Condiciones, pruebas de correo y credenciales
+.fm-card {
+	margin-bottom: 16px;
+	padding: 20px 0;
+	border-bottom: 1px solid $border;
 
+	h2 {
+		margin: 0 0 8px;
+		font-size: 14px;
+	}
+
+	> p {
+		max-width: 60em;
+		margin: 0 0 16px;
+		color: $muted;
+	}
+}
+
+.fm-settings-page {
+	.fm-card > &__ip {
+		margin: 16px 0 0;
+		font-size: 12px;
+	}
+
+	&__form {
+		max-width: 800px;
+	}
+
+	&__tabs {
+		margin-bottom: 16px;
+
+		> .components-tab-panel__tabs {
+			margin-bottom: 8px;
+			border-bottom: 1px solid $border;
+		}
+	}
+}
+
+// Condiciones, pruebas de correo y credenciales
 .fm-condition {
 	padding-top: 16px;
 	border-top: 1px solid $border;
@@ -649,203 +1408,385 @@ $accent: var(--wp-admin-theme-color, #2271b1);
 	}
 }
 
-// Envíos
-
-.fm-toolbar {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 12px;
-	margin-bottom: 12px;
-
-	> .components-base-control {
-		min-width: 220px;
-	}
-
-	.components-search-control {
-		min-width: 280px;
-	}
-
-	&__actions {
-		display: flex;
-		gap: 8px;
-		margin-inline-start: auto;
-	}
+// Secciones del plugin en una barra inferior: solo en móvil (ver más abajo).
+.fm-sections {
+	display: none;
 }
 
-.fm-admin {
-	&__check {
-		width: 40px;
-		padding: 8px 10px !important;
-		vertical-align: middle;
+// ── Tableta ──────────────────────────────────────────────────────────────────
+@media (max-width: $medium) {
+	.fm-inbox {
+		grid-template-columns: 300px minmax(0, 1fr);
 	}
 
-	&__col-reference {
-		width: 170px;
+	.fm-reader__content {
+		padding: 20px 24px 40px;
 	}
 
-	&__summary {
-		overflow-wrap: anywhere;
+	.fm-form-row {
+		grid-template-columns: minmax(0, 1fr) auto;
+
+		&__activity {
+			display: flex;
+			flex-wrap: wrap;
+			grid-row: 2;
+			grid-column: 1;
+			align-items: baseline;
+			gap: 0 10px;
+			text-align: start;
+
+			strong {
+				white-space: nowrap;
+			}
+		}
+
+		&__actions {
+			grid-row: 1 / span 2;
+			grid-column: 2;
+		}
 	}
 
-	&__muted {
-		color: $muted;
-		font-size: 12px;
+	.fm-editor__body {
+		grid-template-columns: minmax(0, 1fr) 320px;
 	}
 
-	&__cell-actions {
-		white-space: nowrap;
+	.fm-editor__panel {
+		padding-inline: 20px;
+	}
 
-		.components-button + .components-button {
-			margin-inline-start: 4px;
+	// La tabla de entregas fallidas no cabe: cada entrega pasa a ser un bloque.
+	.fm-admin__table {
+		&,
+		tbody,
+		tr,
+		td {
+			display: block;
+		}
+
+		thead {
+			display: none;
+		}
+
+		tr {
+			padding: 12px;
+		}
+
+		td {
+			padding: 2px 0;
 		}
 	}
 }
 
-.fm-badge {
-	display: inline-block;
-	margin-inline-start: 8px;
-	padding: 1px 8px;
-	border-radius: 9px;
-	font-size: 11px;
-	font-weight: 600;
-	line-height: 1.6;
+// ── Móvil: una columna, secciones abajo y controles de 44 px ─────────────────
+@media (max-width: $narrow) {
+	.fm-admin {
+		// Hueco para la barra de secciones, que va fija abajo.
+		padding-bottom: 64px;
+		font-size: 14px;
 
-	&--error {
-		background: #fcf0f1;
-		color: #8a2424;
+		.components-button.is-next-40px-default-size,
+		.components-text-control__input,
+		.components-select-control__input,
+		.components-search-control input[type="search"] {
+			min-height: 44px;
+		}
+
+		.components-button.has-icon:not(.has-text).is-next-40px-default-size {
+			min-width: 44px;
+		}
 	}
 
-	&--ok {
-		background: #edfaef;
-		color: #005c12;
+	.fm-page {
+		&__header {
+			min-height: 61px;
+			padding: 8px 12px 8px 16px;
+		}
+
+		&__wide-only {
+			display: none !important;
+		}
+
+		&__body {
+			padding: 12px 16px 32px;
+		}
 	}
 
-	&--wait {
-		background: #fcf9e8;
-		color: #6e4e00;
-	}
-}
-
-.fm-pagination {
-	display: flex;
-	align-items: center;
-	justify-content: flex-end;
-	gap: 12px;
-	margin-top: 12px;
-}
-
-.fm-detail {
-	&__delete {
-		margin-inline-start: auto;
-	}
-
-	&__body {
+	.fm-sections {
+		position: fixed;
+		z-index: 9980;
+		right: 0;
+		bottom: 0;
+		left: 0;
 		display: grid;
-		grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr);
-		align-items: start;
-		gap: 16px;
+		grid-auto-columns: minmax(0, 1fr);
+		grid-auto-flow: column;
+		padding-bottom: env(safe-area-inset-bottom);
+		border-top: 1px solid $border;
+		background: $surface;
 
-		@media (max-width: 960px) {
+		&__item {
+			position: relative;
+			display: grid;
+			gap: 2px;
+			min-height: 56px;
+			padding: 8px 4px 7px;
+			color: $muted;
+			font-size: 12px;
+			justify-items: center;
+			text-decoration: none;
+
+			&[aria-current="page"] {
+				color: $accent;
+				font-weight: 500;
+			}
+
+			&:focus-visible {
+				outline: 2px solid $accent;
+				outline-offset: -2px;
+			}
+		}
+
+		&__count {
+			position: absolute;
+			top: 5px;
+			left: calc(50% + 8px);
+			min-width: 18px;
+			height: 18px;
+			padding: 0 5px;
+			border-radius: 9px;
+			background: $accent;
+			color: #fff;
+			font-size: 11px;
+			line-height: 18px;
+			text-align: center;
+		}
+	}
+
+	.fm-chips__item {
+		min-height: 36px;
+	}
+
+	// Bandeja: se ve la lista o el mensaje, no las dos cosas.
+	.fm-inbox-page {
+		height: auto;
+	}
+
+	.fm-inbox {
+		display: block;
+
+		&__list {
+			border-inline-end: 0;
+		}
+
+		&__tools {
+			position: sticky;
+			z-index: 3;
+			top: $bar;
+			background: $surface;
+		}
+
+		&__items {
+			overflow: visible;
+		}
+
+		&__day {
+			position: static;
+		}
+
+		&__reader {
+			display: none;
+			overflow: visible;
+		}
+	}
+
+	.fm-inbox-page.is-reading {
+		.fm-page__header,
+		.fm-inbox__list {
+			display: none;
+		}
+
+		.fm-inbox__reader {
+			display: block;
+		}
+	}
+
+	.fm-message {
+		&__check {
+			display: none;
+		}
+
+		&__open {
+			padding: 14px 16px;
+		}
+
+		&__who {
+			font-size: 15px;
+		}
+	}
+
+	.fm-reader {
+		// En el móvil se vuelve a la lista con el botón de la izquierda.
+		&__close {
+			display: none;
+		}
+
+		&__bar {
+			top: $bar;
+			gap: 4px;
+			padding: 8px;
+		}
+
+		&__back {
+			display: inline-flex;
+		}
+
+		// El teléfono es un toque: basta el icono.
+		&__call {
+			width: 44px;
+			padding: 0;
+			font-size: 0;
+
+			.dashicon {
+				margin: 0 auto;
+			}
+		}
+
+		&__content {
+			padding: 20px 16px 32px;
+		}
+
+		&__text {
+			font-size: 16px;
+		}
+
+		&__facts {
 			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 
-	&__fields {
-		margin: 0;
+	.fm-form-row {
+		grid-template-columns: minmax(0, 1fr);
 
-		> div {
-			padding: 12px 0;
-			border-top: 1px solid $border;
+		&__title {
+			font-size: 15px;
+		}
 
-			&:first-child {
-				padding-top: 4px;
-				border-top: 0;
+		&__actions {
+			grid-row: auto;
+			grid-column: 1;
+			margin-top: 8px;
+
+			> .components-button:not(.has-icon) {
+				flex: 1;
+				justify-content: center;
+			}
+		}
+	}
+
+	// Constructor: sin barra de secciones, con la vista previa a un toque.
+	.fm-editor {
+		padding-bottom: 0;
+
+		&__header {
+			min-height: 56px;
+			padding: 0 8px 0 4px;
+			gap: 2px;
+		}
+
+		&__state {
+			display: none;
+		}
+
+		&__body {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		&__panel {
+			padding: 20px 12px 0;
+		}
+
+		&__footer {
+			justify-content: space-between;
+			margin-inline: -12px;
+			padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+
+			.components-button {
+				flex: 1;
+				justify-content: center;
 			}
 		}
 
-		dt {
-			margin-bottom: 4px;
-			color: $muted;
-			font-size: 12px;
-			font-weight: 600;
+		&__peek {
+			display: inline-flex;
+			flex: 0 0 auto !important;
 		}
 
-		dd {
-			margin: 0;
-			overflow-wrap: anywhere;
-			white-space: pre-wrap;
-		}
-	}
-
-	&__files {
-		margin-top: 12px;
-		padding-top: 12px;
-		border-top: 1px solid $border;
-
-		h3 {
-			margin: 0 0 8px;
-			color: $muted;
-			font-size: 12px;
-			font-weight: 600;
+		&__preview {
+			position: fixed;
+			z-index: 9985;
+			top: $bar;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			display: none;
+			height: auto;
+			border-inline-start: 0;
 		}
 
-		ul {
-			margin: 0;
-		}
-
-		li {
-			margin: 0 0 4px;
-			overflow-wrap: anywhere;
+		&.is-peeking &__preview {
+			display: block;
 		}
 	}
 
-	&__meta {
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr);
-		gap: 8px 16px;
-		margin: 0;
+	.fm-steps {
+		padding-inline: 2px;
 
-		dt {
-			color: $muted;
-		}
-
-		dd {
-			margin: 0;
+		&__item {
+			padding: 0 10px;
 		}
 	}
 
-	&__break {
-		overflow-wrap: anywhere;
+	.fm-preview {
+		&__devices {
+			display: none;
+		}
+
+		&__close {
+			display: inline-flex;
+		}
 	}
 
-	&__deliveries {
-		margin: 0;
+	// Las acciones de cada campo bajan a su propia fila, con sitio para el dedo.
+	.fm-fields {
+		&__row {
+			flex-wrap: wrap;
+			padding-block: 4px;
+		}
 
-		li {
-			margin: 0;
-			padding: 12px 0;
-			border-top: 1px solid $border;
+		&__toggle {
+			flex: 1 1 calc(100% - 40px);
+		}
 
-			&:first-child {
-				padding-top: 4px;
-				border-top: 0;
+		&__tools {
+			margin-inline-start: auto;
+
+			.components-button {
+				width: 44px;
+				height: 44px;
+				justify-content: center;
 			}
 		}
 
-		p {
-			margin: 6px 0 0;
+		&__width {
+			max-width: none;
 		}
 	}
 
-	&__error {
-		color: #8a2424;
-		overflow-wrap: anywhere;
+	.fm-test__button {
+		margin-top: 0;
 	}
 
-	&__delivery-actions {
-		display: flex;
-		gap: 8px;
-		margin-top: 8px;
+	.fm-test .fm-options__row {
+		flex-wrap: wrap;
 	}
 }

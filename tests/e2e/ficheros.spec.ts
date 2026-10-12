@@ -97,11 +97,13 @@ test('los ficheros llegan adjuntos al correo, se guardan en privado y se descarg
   expect(mail.Text).toContain('Informe-anual.pdf (');
   expect(mail.Text).not.toContain('admin-post.php');
 
-  // En la administración, el detalle del envío los lista y se descargan con la sesión.
+  // En la administración, el mensaje abierto en la bandeja los lista y se descargan con la sesión.
   await adminPage.goto(`${submissionsScreen}&form=${formId}`);
-  await adminPage.locator('tbody tr').first().locator('.fm-admin__row-title').click();
+  await adminPage.locator('li.fm-message').first().locator('.fm-message__open').click();
+  await expect(adminPage).toHaveURL(/submission=\d+/);
 
-  const files = adminPage.locator('.fm-detail__files');
+  const reader = adminPage.locator('.fm-reader');
+  const files = reader.locator('.fm-reader__files');
   await expect(files.getByRole('heading', { name: 'Ficheros' })).toBeVisible();
   await expect(files.getByRole('link')).toHaveText(['Informe-anual.pdf', 'foto.png']);
 
@@ -126,9 +128,9 @@ test('los ficheros llegan adjuntos al correo, se guardan en privado y se descarg
   expect(existsSync(path.join(env.paths.www, store, token.slice(0, 2), `${token}.dat`))).toBe(false);
   expect(readdirSync(path.join(env.paths.www, store), { recursive: true }).some((name) => String(name).endsWith('.dat'))).toBe(true);
 
-  // Al borrar el envío, el fichero deja de existir.
-  await adminPage.getByRole('button', { name: 'Borrar' }).click();
-  await adminPage.getByRole('dialog').getByRole('button', { name: /^Borrar/ }).click();
+  // Al borrar el mensaje, el fichero deja de existir.
+  await reader.getByRole('button', { name: 'Borrar', exact: true }).click();
+  await adminPage.getByRole('dialog', { name: '¿Borrar el mensaje?' }).getByRole('button', { name: 'Borrar', exact: true }).click();
   await expect(adminPage).not.toHaveURL(/submission=/);
   expect((await adminPage.request.get(adminUrl)).status()).toBe(403);
 });

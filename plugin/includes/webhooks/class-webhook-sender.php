@@ -78,7 +78,7 @@ final class Webhook_Sender {
 		$body = wp_json_encode( $this->payloads->build( $settings, $submission, $form ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 
 		if ( false === $body ) {
-			return new WP_Error( 'formulario_mensaje_webhook_payload', __( 'The data of the submission could not be converted to JSON.', 'formulario-mensaje' ) );
+			return new WP_Error( 'formulario_mensaje_webhook_payload', __( 'The submission data could not be converted to JSON.', 'formulario-mensaje' ) );
 		}
 
 		$headers = array();

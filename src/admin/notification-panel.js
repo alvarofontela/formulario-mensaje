@@ -167,7 +167,7 @@ export default function NotificationPanel( { title, definition, onChange } ) {
 						__nextHasNoMarginBottom
 						label={ __( 'Format', 'formulario-mensaje' ) }
 						help={ __(
-							'The HTML email uses the logo, colour and footer of the plugin settings, and always includes a plain text version.',
+							'The HTML email uses the logo, color and footer from the plugin settings, and always includes a plain text version.',
 							'formulario-mensaje'
 						) }
 						value={ settings.format || 'html' }
@@ -175,7 +175,7 @@ export default function NotificationPanel( { title, definition, onChange } ) {
 							{
 								value: 'html',
 								label: __(
-									'HTML with the brand of the site',
+									'HTML with the site’s branding',
 									'formulario-mensaje'
 								),
 							},

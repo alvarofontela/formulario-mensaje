@@ -62,6 +62,14 @@ Se dispara cuando una acción de un envío falla y ya no se va a reintentar sola
 | --- | --- | --- |
 | `$delivery` | `Delivery` | Entrega fallida. No contiene datos del envío |
 
+### `formulario_mensaje_submission_settled` (acción)
+
+Se dispara cuando, tras un cambio en sus entregas, un envío guardado no tiene ninguna fallida: porque el reintento ha salido bien, porque se ha descartado o porque la cola ha terminado con ellas. El plugin la usa para borrar los ficheros que guardaba solo para poder reintentar una notificación.
+
+| Parámetro | Tipo | |
+| --- | --- | --- |
+| `$submission_id` | `int` | Identificador del envío guardado |
+
 ### `formulario_mensaje_submissions_deleted` (acción)
 
 Se dispara tras borrar envíos, por la vía que sea (a mano, por la retención o al borrar un formulario con sus envíos), para que quien guarde algo ligado a ellos lo borre también. El plugin la usa para borrar los ficheros subidos.
@@ -152,6 +160,27 @@ Filtra las esperas entre los reintentos de una acción en segundo plano. Cada el
 ### `formulario_mensaje_form_templates` (filtro)
 
 Filtra las plantillas entre las que se elige al crear un formulario. Cada plantilla es un array con `id`, `label`, `description` y `definition`, esta última con la misma forma que la definición de un formulario (`fields`, `settings`, `actions`). Lo que se añada pasa por el mismo saneado que cualquier formulario.
+
+## Idiomas
+
+### `formulario_mensaje_locale_fallbacks` (filtro)
+
+Filtra los locales de reserva: qué traducción del plugin se usa cuando el idioma del sitio no tiene la suya. Por defecto, cualquier variante del español usa `es_ES`. Cada elemento es el código de un idioma (lo que va antes del primer guion bajo del locale) y el locale que le sirve de reserva. Un valor que no tenga forma de locale se ignora, y un array vacío desactiva la reserva. Cómo se añade un idioma está en [extender.md](extender.md).
+
+| Parámetro | Tipo | |
+| --- | --- | --- |
+| `$fallbacks` | `array<string, string>` | Locale de reserva de cada idioma: `array( 'es' => 'es_ES' )` |
+
+```php
+// Un sitio en catalán o en gallego ve el plugin en español en vez de en inglés.
+add_filter(
+	'formulario_mensaje_locale_fallbacks',
+	static fn ( array $fallbacks ): array => $fallbacks + array(
+		'ca' => 'es_ES',
+		'gl' => 'es_ES',
+	)
+);
+```
 
 ## Abilities
 

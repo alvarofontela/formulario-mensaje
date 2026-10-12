@@ -52,16 +52,8 @@ final class Delivery_Executor {
 			return $this->permanent( 'formulario_mensaje_delivery_not_retryable', __( 'The submission or its form no longer exists.', 'formulario-mensaje' ), 404 );
 		}
 
-		$current = null;
-
-		foreach ( $form->definition->actions as $action ) {
-			if ( $action['id'] === $delivery->action_id && $action['type'] === $delivery->action_type ) {
-				$current = $action;
-				break;
-			}
-		}
-
-		$type = $this->action_types->get( $delivery->action_type );
+		$current = $form->definition->get_action( $delivery->action_id, $delivery->action_type );
+		$type    = $this->action_types->get( $delivery->action_type );
 
 		if ( null === $current || null === $type ) {
 			return $this->permanent( 'formulario_mensaje_action_not_found', __( 'The form no longer has this action.', 'formulario-mensaje' ), 409 );

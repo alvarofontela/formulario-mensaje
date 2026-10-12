@@ -14,6 +14,7 @@ use Formulario_Mensaje\Captcha\Captcha_Config_Repository;
 use Formulario_Mensaje\Captcha\Captcha_Config_Sanitizer;
 use Formulario_Mensaje\Captcha\Captcha_Provider_Registry;
 use Formulario_Mensaje\Container;
+use Formulario_Mensaje\Forms\Form_Placements;
 use Formulario_Mensaje\Forms\Form_Porter;
 use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Forms\Form_Service;
@@ -72,7 +73,8 @@ final class Rest_Provider implements Service_Provider {
 				$c->get( Form_Service::class ),
 				$c->get( Form_Renderer::class ),
 				$c->get( Frontend_Assets::class ),
-				$c->get( Submission_Service::class )
+				$c->get( Submission_Service::class ),
+				$c->get( Form_Placements::class )
 			)
 		);
 

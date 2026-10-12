@@ -14,6 +14,7 @@ use Formulario_Mensaje\Rules\Condition_Sanitizer;
 use Formulario_Mensaje\Storage\Submission_Journal;
 use Formulario_Mensaje\Submissions\Submission_Result;
 use Formulario_Mensaje\Support\Inline_Html;
+use Formulario_Mensaje\Support\Plain_Text;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -220,7 +221,7 @@ final class Form_Definition_Sanitizer {
 				'id'        => $this->unique_id( $item['id'] ?? null, 'a_', $ids ),
 				'type'      => $type->get_type(),
 				'enabled'   => ! empty( $item['enabled'] ),
-				'name'      => is_scalar( $item['name'] ?? null ) ? mb_substr( sanitize_text_field( (string) $item['name'] ), 0, 100 ) : '',
+				'name'      => is_scalar( $item['name'] ?? null ) ? mb_substr( Plain_Text::line( (string) $item['name'] ), 0, 100 ) : '',
 				'condition' => $this->conditions->sanitize( $item['condition'] ?? array() ),
 				'settings'  => $type->sanitize_settings( $item['settings'] ?? array() ),
 			);
@@ -256,7 +257,7 @@ final class Form_Definition_Sanitizer {
 	 * @param int    $max_length Longitud máxima.
 	 */
 	private function text( mixed $value, string $fallback, int $max_length ): string {
-		$text = is_scalar( $value ) ? mb_substr( sanitize_text_field( (string) $value ), 0, $max_length ) : '';
+		$text = is_scalar( $value ) ? mb_substr( Plain_Text::line( (string) $value ), 0, $max_length ) : '';
 
 		return '' === $text ? $fallback : $text;
 	}

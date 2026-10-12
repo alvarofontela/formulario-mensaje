@@ -95,6 +95,14 @@ Un servicio de captcha tiene dos mitades con el mismo identificador:
 
 El filtro `formulario_mensaje_form_templates` añade plantillas al diálogo de «Añadir formulario». Una plantilla es solo un punto de partida: el formulario creado no guarda relación con ella.
 
+## Traducciones
+
+El plugin se traduce con los ficheros estándar de WordPress, en `languages/`: la plantilla `formulario-mensaje.pot` y, por cada idioma, `formulario-mensaje-<locale>.po` (lo que se edita), `.mo` y `.l10n.php` (lo que WordPress carga) y `.json` (los textos del panel de administración). El text domain es `formulario-mensaje`. Los textos del código están en inglés de EE. UU., que por eso no tiene ficheros; el plugin trae la traducción a `es_ES`.
+
+- **Cambiar un texto en un sitio**, sin tocar el plugin: se deja la traducción en `wp-content/languages/plugins/formulario-mensaje-<locale>.mo` (y los `.json` del panel, con el mismo nombre que los del plugin). Tiene prioridad sobre la del plugin y no se pierde al actualizarlo.
+- **Añadir un idioma al plugin**: se copia `formulario-mensaje.pot` a `formulario-mensaje-<locale>.po`, se traduce con Poedit o a mano y se compila. En el repositorio lo hace `rt i18n`; fuera de él, `wp i18n make-mo`, `wp i18n make-php` y `wp i18n make-json --no-purge` sobre la carpeta. WordPress carga el `.l10n.php` antes que el `.mo`: si solo se regenera el `.mo`, se sigue viendo la traducción anterior.
+- **Variantes de un idioma**: WordPress solo carga la traducción del locale exacto. El plugin hace que las variantes del español sin traducción propia (`es_MX`, `es_AR`…) usen la de `es_ES`; el filtro [`formulario_mensaje_locale_fallbacks`](hooks.md) añade o quita idiomas de reserva.
+
 ## WP-CLI
 
 Los comandos cuelgan de `wp formulario-mensaje`. Son adaptadores sobre los mismos servicios que la administración. `wp help formulario-mensaje <comando>` da el detalle de cada uno.

@@ -7,6 +7,7 @@
 
 namespace Formulario_Mensaje\Storage;
 
+use DateTimeImmutable;
 use Formulario_Mensaje\Support\Clock;
 use WP_Error;
 
@@ -94,6 +95,54 @@ final class Submission_Service {
 	 */
 	public function counts_by_form(): array {
 		return $this->submissions->counts_by_form();
+	}
+
+	/**
+	 * Actividad de cada formulario: envíos guardados, los de este mes, los que están sin leer y la
+	 * fecha del último.
+	 *
+	 * «Este mes» es el mes natural en la zona horaria del sitio, que es como lo cuenta quien lo lee.
+	 *
+	 * @return array<int, array{total: int, recent: int, unread: int, last: int}> Por identificador de formulario.
+	 */
+	public function activity_by_form(): array {
+		$month = ( new DateTimeImmutable( '@' . $this->clock->now() ) )->setTimezone( wp_timezone() )->modify( 'first day of this month midnight' );
+
+		return $this->submissions->activity_by_form( gmdate( 'Y-m-d H:i:s', $month->getTimestamp() ) );
+	}
+
+	/**
+	 * Marca envíos como leídos o como no leídos.
+	 *
+	 * @param int[] $ids  Identificadores de los envíos.
+	 * @param bool  $read Leídos (true) o sin leer (false).
+	 * @return int Envíos cuyo estado ha cambiado.
+	 */
+	public function mark_read( array $ids, bool $read ): int {
+		$ids = array_values( array_unique( array_filter( array_map( 'absint', $ids ) ) ) );
+
+		return array() === $ids ? 0 : $this->submissions->mark_read( $ids, $read ? $this->clock->now() : 0 );
+	}
+
+	/**
+	 * Marca como leídos todos los envíos que no lo estaban.
+	 *
+	 * @return int Envíos marcados.
+	 */
+	public function mark_all_read(): int {
+		return $this->submissions->mark_all_read( $this->clock->now() );
+	}
+
+	/**
+	 * Recuento para la bandeja de mensajes y el aviso del menú.
+	 *
+	 * @return array{unread: int, failed_deliveries: int} Envíos sin leer y entregas fallidas pendientes.
+	 */
+	public function counts(): array {
+		return array(
+			'unread'            => $this->submissions->count_unread(),
+			'failed_deliveries' => $this->failures->total(),
+		);
 	}
 
 	/**

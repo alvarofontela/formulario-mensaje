@@ -11,6 +11,7 @@ use Formulario_Mensaje\Fields\Common_Settings;
 use Formulario_Mensaje\Fields\Field_Markup;
 use Formulario_Mensaje\Fields\Input_Field_Type;
 use Formulario_Mensaje\Forms\Field;
+use Formulario_Mensaje\Support\Plain_Text;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -88,7 +89,30 @@ abstract class Abstract_Choice_Field_Type implements Input_Field_Type {
 	 * @return string|string[]
 	 */
 	public function sanitize_value( Field $field, mixed $raw ): string|array {
-		return is_scalar( $raw ) ? sanitize_text_field( (string) $raw ) : '';
+		return is_scalar( $raw ) ? $this->clean_choice( $field, (string) $raw ) : '';
+	}
+
+	/**
+	 * Limpia el valor de una opción tal como lo envía el navegador.
+	 *
+	 * Hasta la versión 0.11 los «<» de las opciones se guardaban como `&lt;`. Un formulario guardado
+	 * entonces sigue teniéndolas así, y el navegador envía el signo: si el valor limpio no es una de
+	 * las opciones pero el que daba el saneado anterior sí, vale ese.
+	 *
+	 * @param Field  $field Campo al que pertenece el valor.
+	 * @param string $raw   Valor tal como llegó en la petición.
+	 */
+	protected function clean_choice( Field $field, string $raw ): string {
+		$options = $this->options( $field );
+		$value   = Plain_Text::line( $raw );
+
+		if ( isset( $options[ $value ] ) ) {
+			return $value;
+		}
+
+		$legacy = sanitize_text_field( $raw );
+
+		return isset( $options[ $legacy ] ) ? $legacy : $value;
 	}
 
 	/**

@@ -8,6 +8,7 @@
 namespace Formulario_Mensaje\Rest;
 
 use Formulario_Mensaje\Actions\Action_Type_Registry;
+use Formulario_Mensaje\Forms\Form;
 use Formulario_Mensaje\Forms\Form_Service;
 use Formulario_Mensaje\Lifecycle\Capabilities;
 use Formulario_Mensaje\Storage\Action_Retrier;
@@ -15,6 +16,7 @@ use Formulario_Mensaje\Storage\Delivery;
 use Formulario_Mensaje\Storage\Stored_Submission;
 use Formulario_Mensaje\Storage\Submission_Query;
 use Formulario_Mensaje\Storage\Submission_Service;
+use Formulario_Mensaje\Support\Plain_Text;
 use Formulario_Mensaje\Uploads\Download_Links;
 use Formulario_Mensaje\Uploads\Stored_File;
 use Formulario_Mensaje\Uploads\Upload_Store;
@@ -99,6 +101,50 @@ final class Submission_Records_Controller {
 					),
 					'failed' => array(
 						'description' => __( 'Only submissions with failed deliveries.', 'formulario-mensaje' ),
+						'type'        => 'boolean',
+						'default'     => false,
+					),
+					'unread' => array(
+						'description' => __( 'Only submissions that nobody has read yet.', 'formulario-mensaje' ),
+						'type'        => 'boolean',
+						'default'     => false,
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			Rest_Provider::ROUTE_NAMESPACE,
+			'/submissions/counts',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_counts' ),
+				'permission_callback' => array( $this, 'can_view' ),
+			)
+		);
+
+		register_rest_route(
+			Rest_Provider::ROUTE_NAMESPACE,
+			'/submissions/read',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'mark_read' ),
+				'permission_callback' => array( $this, 'can_view' ),
+				'args'                => array(
+					'ids'  => array(
+						'description' => __( 'Identifiers of the submissions to mark.', 'formulario-mensaje' ),
+						'type'        => 'array',
+						'items'       => array( 'type' => 'integer' ),
+						'maxItems'    => 500,
+						'default'     => array(),
+					),
+					'read' => array(
+						'description' => __( 'Mark them as read (true) or as unread (false).', 'formulario-mensaje' ),
+						'type'        => 'boolean',
+						'default'     => true,
+					),
+					'all'  => array(
+						'description' => __( 'Mark every unread submission as read, whatever the identifiers.', 'formulario-mensaje' ),
 						'type'        => 'boolean',
 						'default'     => false,
 					),
@@ -203,16 +249,43 @@ final class Submission_Records_Controller {
 	public function get_items( WP_REST_Request $request ): WP_REST_Response {
 		$query  = new Submission_Query(
 			(int) $request['form'],
-			mb_substr( sanitize_text_field( (string) $request['search'] ), 0, 200 ),
+			mb_substr( Plain_Text::line( (string) $request['search'] ), 0, 200 ),
 			(bool) $request['failed'],
 			'',
 			'',
 			(int) $request['page'],
-			(int) $request['per_page']
+			(int) $request['per_page'],
+			(bool) $request['unread']
 		);
 		$result = $this->submissions->search( $query );
+		$forms  = array();
+		$items  = array();
 
-		return $this->paginated( array_map( array( $this, 'summary' ), $result['items'] ), $result['total'], $query->per_page );
+		foreach ( $result['items'] as $submission ) {
+			$items[] = $this->summary( $submission, $forms );
+		}
+
+		return $this->paginated( $items, $result['total'], $query->per_page );
+	}
+
+	/**
+	 * Devuelve cuántos envíos hay sin leer y cuántas entregas fallidas quedan pendientes.
+	 */
+	public function get_counts(): WP_REST_Response {
+		return new WP_REST_Response( $this->submissions->counts() );
+	}
+
+	/**
+	 * Marca envíos como leídos o como no leídos.
+	 *
+	 * @param WP_REST_Request $request Petición.
+	 */
+	public function mark_read( WP_REST_Request $request ): WP_REST_Response {
+		$updated = (bool) $request['all']
+			? $this->submissions->mark_all_read()
+			: $this->submissions->mark_read( (array) $request['ids'], (bool) $request['read'] );
+
+		return new WP_REST_Response( array( 'updated' => $updated ) + $this->submissions->counts() );
 	}
 
 	/**
@@ -239,12 +312,21 @@ final class Submission_Records_Controller {
 			);
 		}
 
+		$forms      = array();
+		$deliveries = array();
+
+		foreach ( $this->submissions->deliveries( $submission->id ) as $delivery ) {
+			$deliveries[] = $this->delivery( $delivery, $forms );
+		}
+
 		return new WP_REST_Response(
-			$this->summary( $submission ) + array(
-				'ip'         => $submission->ip,
-				'user_agent' => $submission->user_agent,
-				'entries'    => $entries,
-				'files'      => array_map(
+			$this->summary( $submission, $forms ) + array(
+				'ip'            => $submission->ip,
+				// Campos que ya se ven en la cabecera del mensaje, para no repetirlos entre los demás datos.
+				'header_fields' => $submission->header_field_ids(),
+				'user_agent'    => $submission->user_agent,
+				'entries'       => $entries,
+				'files'         => array_map(
 					fn ( Stored_File $file ): array => array(
 						'field_id' => $file->field_id,
 						'name'     => $file->name,
@@ -254,7 +336,7 @@ final class Submission_Records_Controller {
 					),
 					$this->uploads->for_submission( $submission->id )
 				),
-				'deliveries' => array_map( array( $this, 'delivery' ), $this->submissions->deliveries( $submission->id ) ),
+				'deliveries'    => $deliveries,
 			)
 		);
 	}
@@ -289,8 +371,14 @@ final class Submission_Records_Controller {
 	 */
 	public function get_failed_deliveries( WP_REST_Request $request ): WP_REST_Response {
 		$result = $this->submissions->failed_deliveries( (int) $request['page'], (int) $request['per_page'] );
+		$forms  = array();
+		$items  = array();
 
-		return $this->paginated( array_map( array( $this, 'delivery' ), $result['items'] ), $result['total'], (int) $request['per_page'] );
+		foreach ( $result['items'] as $delivery ) {
+			$items[] = $this->delivery( $delivery, $forms );
+		}
+
+		return $this->paginated( $items, $result['total'], (int) $request['per_page'] );
 	}
 
 	/**
@@ -301,8 +389,9 @@ final class Submission_Records_Controller {
 	 */
 	public function retry_delivery( WP_REST_Request $request ): WP_REST_Response|WP_Error {
 		$delivery = $this->retrier->retry( (int) $request['id'] );
+		$forms    = array();
 
-		return is_wp_error( $delivery ) ? $delivery : new WP_REST_Response( $this->delivery( $delivery ) );
+		return is_wp_error( $delivery ) ? $delivery : new WP_REST_Response( $this->delivery( $delivery, $forms ) );
 	}
 
 	/**
@@ -320,38 +409,54 @@ final class Submission_Records_Controller {
 	/**
 	 * Datos de un envío para los listados.
 	 *
-	 * @param Stored_Submission $submission Envío.
+	 * @param Stored_Submission     $submission Envío.
+	 * @param array<int, Form|null> $forms      Formularios ya leídos en esta petición, por identificador.
 	 * @return array<string, mixed>
 	 */
-	private function summary( Stored_Submission $submission ): array {
+	private function summary( Stored_Submission $submission, array &$forms ): array {
+		$form = $this->form( $submission->form_id, $forms );
+
 		return array(
 			'id'             => $submission->id,
 			'form_id'        => $submission->form_id,
-			'form_title'     => $this->form_title( $submission->form_id ),
+			'form_title'     => null === $form ? '' : $form->title,
 			'reference'      => $submission->reference,
 			'created_at'     => gmdate( 'Y-m-d\TH:i:s\Z', $submission->created_at ),
 			'page_url'       => $submission->page_url,
 			'summary'        => $submission->summary(),
 			'failed_actions' => $submission->failed_actions,
+			'read'           => $submission->is_read(),
+			// Para presentarlo como un mensaje: quién escribe, cómo contactarle y cómo empieza.
+			'sender'         => $submission->sender(),
+			'email'          => $submission->email(),
+			'phone'          => $submission->phone(),
+			'excerpt'        => $submission->excerpt(),
+			'has_files'      => $submission->has_files(),
 		);
 	}
 
 	/**
 	 * Datos de una entrega.
 	 *
-	 * @param Delivery $delivery Entrega.
+	 * @param Delivery              $delivery Entrega.
+	 * @param array<int, Form|null> $forms    Formularios ya leídos en esta petición, por identificador.
 	 * @return array<string, mixed>
 	 */
-	private function delivery( Delivery $delivery ): array {
-		$type = $this->action_types->get( $delivery->action_type );
+	private function delivery( Delivery $delivery, array &$forms ): array {
+		$type   = $this->action_types->get( $delivery->action_type );
+		$form   = $this->form( $delivery->form_id, $forms );
+		$action = null === $form ? null : $form->definition->get_action( $delivery->action_id, $delivery->action_type );
 
 		return array(
 			'id'            => $delivery->id,
 			'submission_id' => $delivery->submission_id,
 			'form_id'       => $delivery->form_id,
-			'form_title'    => $this->form_title( $delivery->form_id ),
+			'form_title'    => null === $form ? '' : $form->title,
+			'action_id'     => $delivery->action_id,
 			'action_type'   => $delivery->action_type,
 			'action_label'  => null === $type ? $delivery->action_type : $type->get_label(),
+			// El nombre que se le dio a la acción: con dos notificaciones o dos webhooks, es lo que dice cuál es.
+			'action_name'   => is_string( $action['name'] ?? null ) ? $action['name'] : '',
 			'status'        => $delivery->status->value,
 			'attempts'      => $delivery->attempts,
 			'error'         => $delivery->error,
@@ -363,15 +468,20 @@ final class Submission_Records_Controller {
 	}
 
 	/**
-	 * Nombre de un formulario, o cadena vacía si ya no existe.
+	 * Formulario de un envío o de una entrega, leído una sola vez por petición.
 	 *
-	 * @param int $form_id Identificador del formulario.
+	 * La lista vive en la petición y no en el controlador, que dura más que ella: leer un formulario
+	 * es decodificar su definición entera, y un listado repite el mismo formulario en muchas filas.
+	 *
+	 * @param int                   $form_id Identificador del formulario.
+	 * @param array<int, Form|null> $forms   Formularios ya leídos en esta petición, por identificador.
 	 */
-	private function form_title( int $form_id ): string {
-		// Sin caché propia: WordPress ya guarda en la suya los formularios leídos en la petición.
-		$form = $this->forms->get( $form_id );
+	private function form( int $form_id, array &$forms ): ?Form {
+		if ( ! array_key_exists( $form_id, $forms ) ) {
+			$forms[ $form_id ] = $this->forms->get( $form_id );
+		}
 
-		return null === $form ? '' : $form->title;
+		return $forms[ $form_id ];
 	}
 
 	/**

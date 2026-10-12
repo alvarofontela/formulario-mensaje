@@ -3,6 +3,10 @@
  *
  * Los fuentes están en `src/` y el resultado va a `plugin/build/`, que es lo que se distribuye.
  * Los bloques se detectan por su `block.json`; la aplicación de administración se añade aquí.
+ *
+ * Este fichero y `src/` se incluyen también en el zip del plugin (`rt package`), donde la carpeta de
+ * salida es `build/`: las rutas de entrada y de salida las dan las opciones `--source-path` y
+ * `--output-path` de quien compila, no este fichero.
  */
 const path = require( 'path' );
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );

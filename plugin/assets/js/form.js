@@ -310,7 +310,8 @@ class FormController {
 				if ( key === 'page_url' ) {
 					input.value = window.location.href;
 				} else if ( key === 'page_title' ) {
-					input.value = document.title;
+					// El servidor ya puso el título de la página; el del documento, que suele llevar además el nombre del sitio, solo si no lo sabía.
+					input.value = input.defaultValue || document.title;
 				} else if ( key === 'referrer' ) {
 					input.value = document.referrer;
 				} else if (

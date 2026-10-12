@@ -50,7 +50,7 @@ export default function TagsHelp( { fields, onInsert } ) {
 			<summary>{ __( 'Available tags', 'formulario-mensaje' ) }</summary>
 			<p>
 				{ __(
-					'Tags are replaced by data of each submission. Click one to add it at the end of the text.',
+					'Tags are replaced with data from each submission. Click one to add it at the end of the text.',
 					'formulario-mensaje'
 				) }
 			</p>

@@ -8,6 +8,7 @@
 namespace Formulario_Mensaje\Fields;
 
 use Formulario_Mensaje\Support\Inline_Html;
+use Formulario_Mensaje\Support\Plain_Text;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -94,7 +95,7 @@ final class Settings_Schema_Sanitizer {
 				return $this->sanitize_options( $value );
 
 			case 'textarea':
-				return is_scalar( $value ) ? mb_substr( sanitize_textarea_field( (string) $value ), 0, self::MAX_LONG_TEXT_LENGTH ) : $default;
+				return is_scalar( $value ) ? mb_substr( Plain_Text::block( (string) $value ), 0, self::MAX_LONG_TEXT_LENGTH ) : $default;
 
 			case 'html':
 				return is_scalar( $value ) ? mb_substr( $this->inline_html->filter( (string) $value ), 0, self::MAX_LONG_TEXT_LENGTH ) : $default;
@@ -105,7 +106,7 @@ final class Settings_Schema_Sanitizer {
 				return implode( ' ', array_filter( array_map( 'sanitize_html_class', is_array( $classes ) ? $classes : array() ) ) );
 
 			default:
-				return is_scalar( $value ) ? mb_substr( sanitize_text_field( (string) $value ), 0, self::MAX_TEXT_LENGTH ) : $default;
+				return is_scalar( $value ) ? mb_substr( Plain_Text::line( (string) $value ), 0, self::MAX_TEXT_LENGTH ) : $default;
 		}
 	}
 
@@ -127,8 +128,8 @@ final class Settings_Schema_Sanitizer {
 				continue;
 			}
 
-			$label        = is_scalar( $option['label'] ?? null ) ? sanitize_text_field( (string) $option['label'] ) : '';
-			$option_value = is_scalar( $option['value'] ?? null ) ? sanitize_text_field( (string) $option['value'] ) : '';
+			$label        = is_scalar( $option['label'] ?? null ) ? Plain_Text::line( (string) $option['label'] ) : '';
+			$option_value = is_scalar( $option['value'] ?? null ) ? Plain_Text::line( (string) $option['value'] ) : '';
 
 			if ( '' === $label && '' === $option_value ) {
 				continue;

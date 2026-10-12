@@ -13,6 +13,7 @@ use Formulario_Mensaje\Fields\Input_Field_Type;
 use Formulario_Mensaje\Fields\Prefill_Resolver;
 use Formulario_Mensaje\Fields\Render_Context;
 use Formulario_Mensaje\Forms\Field;
+use Formulario_Mensaje\Support\Plain_Text;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -118,7 +119,7 @@ final class Textarea_Field_Type implements Input_Field_Type {
 			return '';
 		}
 
-		return mb_substr( sanitize_textarea_field( (string) $raw ), 0, self::MAX_LENGTH );
+		return mb_substr( Plain_Text::block( (string) $raw ), 0, self::MAX_LENGTH );
 	}
 
 	/**

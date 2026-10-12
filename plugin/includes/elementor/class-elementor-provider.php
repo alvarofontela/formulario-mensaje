@@ -8,6 +8,7 @@
 namespace Formulario_Mensaje\Elementor;
 
 use Formulario_Mensaje\Container;
+use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Frontend\Frontend_Assets;
 use Formulario_Mensaje\Service_Provider;
 
@@ -27,6 +28,8 @@ final class Elementor_Provider implements Service_Provider {
 	 * @param Container $container Contenedor del plugin.
 	 */
 	public function register( Container $container ): void {
+		$container->set( Form_Choices::class, static fn ( Container $c ): Form_Choices => new Form_Choices( $c->get( Form_Repository::class ) ) );
+
 		add_action(
 			'elementor/widgets/register',
 			static function ( $widgets_manager ) use ( $container ): void {

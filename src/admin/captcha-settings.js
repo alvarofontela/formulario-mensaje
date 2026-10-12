@@ -33,7 +33,7 @@ export default function CaptchaSettings( {
 			<h2>{ __( 'Captcha', 'formulario-mensaje' ) }</h2>
 			<p>
 				{ __(
-					'Every form is already protected without a captcha. Add one only if you still receive spam: it loads a script from another company in the pages with a form, when the visitor starts filling it in, and a form with captcha cannot be sent without JavaScript.',
+					'Every form is already protected without a captcha. Add one only if you still receive spam: it loads a script from another company on the pages with a form, when the visitor starts filling it in, and a form with a captcha cannot be sent without JavaScript.',
 					'formulario-mensaje'
 				) }
 			</p>
@@ -99,7 +99,7 @@ export default function CaptchaSettings( {
 						) }
 						<p className="fm-settings__note">
 							{ __(
-								'The captcha is used in every form as soon as both keys are saved. Each form can opt out in its “After sending” tab.',
+								'The captcha is used in every form as soon as both keys are saved. Each form can opt out in the “What the sender sees” section of its “When it arrives” step.',
 								'formulario-mensaje'
 							) }
 						</p>

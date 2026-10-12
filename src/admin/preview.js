@@ -1,4 +1,4 @@
-import { Spinner } from '@wordpress/components';
+import { Button, Spinner } from '@wordpress/components';
 import { useEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
@@ -26,16 +26,18 @@ function buildDocument( preview ) {
  * Vista previa en vivo. La genera el mismo código de PHP que pinta el formulario en la web, así que
  * lo que se ve aquí es lo que verá el visitante.
  *
- * @param {Object} props
- * @param {string} props.title      Nombre del formulario.
- * @param {Object} props.definition Definición en edición.
+ * @param {Object}   props
+ * @param {string}   props.title      Nombre del formulario.
+ * @param {Object}   props.definition Definición en edición.
+ * @param {Function} props.onClose    Cierra la vista previa cuando ocupa toda la pantalla (en móvil).
  */
-export default function Preview( { title, definition } ) {
+export default function Preview( { title, definition, onClose } ) {
 	const [ preview, setPreview ] = useState( null );
 	const [ loading, setLoading ] = useState( true );
 	const [ error, setError ] = useState( '' );
 	const frameRef = useRef( null );
 	const [ height, setHeight ] = useState( 320 );
+	const [ device, setDevice ] = useState( 'desktop' );
 
 	useEffect( () => {
 		const controller = new AbortController();
@@ -78,12 +80,41 @@ export default function Preview( { title, definition } ) {
 					{ __( 'Preview', 'formulario-mensaje' ) }
 				</h2>
 				{ loading && <Spinner /> }
+				<div
+					className="fm-preview__devices"
+					role="group"
+					aria-label={ __( 'Preview size', 'formulario-mensaje' ) }
+				>
+					<Button
+						size="compact"
+						icon="desktop"
+						isPressed={ device === 'desktop' }
+						onClick={ () => setDevice( 'desktop' ) }
+					>
+						{ __( 'Computer', 'formulario-mensaje' ) }
+					</Button>
+					<Button
+						size="compact"
+						icon="smartphone"
+						isPressed={ device === 'phone' }
+						onClick={ () => setDevice( 'phone' ) }
+					>
+						{ __( 'Mobile', 'formulario-mensaje' ) }
+					</Button>
+				</div>
+				<Button
+					__next40pxDefaultSize
+					className="fm-preview__close"
+					icon="no-alt"
+					label={ __( 'Close the preview', 'formulario-mensaje' ) }
+					onClick={ onClose }
+				/>
 			</div>
 			{ error && <p className="fm-preview__error">{ error }</p> }
 			{ preview && (
 				<iframe
 					ref={ frameRef }
-					className="fm-preview__frame"
+					className={ `fm-preview__frame is-${ device }` }
 					title={ __( 'Form preview', 'formulario-mensaje' ) }
 					// Sin scripts ni envíos: la vista previa solo se mira. `allow-same-origin` permite medir su altura.
 					sandbox="allow-same-origin"

@@ -22,7 +22,7 @@ export default function StoragePanel( { settings, onChange } ) {
 				__nextHasNoMarginBottom
 				label={ __( 'Store the submissions', 'formulario-mensaje' ) }
 				help={ __(
-					'Stored submissions can be read, searched and exported in the Submissions screen, and a failed notification can be sent again. Without storage, a submission only exists in the notifications it sends.',
+					'Stored submissions can be read, searched and exported on the Messages screen, and a failed notification can be sent again. Without storage, a submission only exists in the notifications it sends.',
 					'formulario-mensaje'
 				) }
 				checked={ enabled }

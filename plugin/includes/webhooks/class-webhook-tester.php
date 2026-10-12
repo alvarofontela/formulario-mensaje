@@ -54,18 +54,16 @@ final class Webhook_Tester {
 	 * @return Webhook_Response|WP_Error
 	 */
 	public function test( Form $form, string $action_id, int $user_id ): Webhook_Response|WP_Error {
-		foreach ( $form->definition->actions as $action ) {
-			if ( $action['id'] !== $action_id || Webhook_Action::TYPE !== $action['type'] ) {
-				continue;
-			}
+		$action = $form->definition->get_action( $action_id, Webhook_Action::TYPE );
 
-			if ( $this->limiter->hit( 'webhook-test:' . $user_id, self::WINDOW ) > self::LIMIT ) {
-				return new WP_Error( 'formulario_mensaje_test_limit', __( 'You have sent too many test webhooks. Wait a few minutes and try again.', 'formulario-mensaje' ), array( 'status' => 429 ) );
-			}
-
-			return $this->sender->send( $action['settings'], $this->samples->create( $form ), $form, true );
+		if ( null === $action ) {
+			return new WP_Error( 'formulario_mensaje_action_not_found', __( 'The form has no webhook with that identifier.', 'formulario-mensaje' ), array( 'status' => 404 ) );
 		}
 
-		return new WP_Error( 'formulario_mensaje_action_not_found', __( 'The form has no webhook with that identifier.', 'formulario-mensaje' ), array( 'status' => 404 ) );
+		if ( $this->limiter->hit( 'webhook-test:' . $user_id, self::WINDOW ) > self::LIMIT ) {
+			return new WP_Error( 'formulario_mensaje_test_limit', __( 'You have sent too many test webhooks. Wait a few minutes and try again.', 'formulario-mensaje' ), array( 'status' => 429 ) );
+		}
+
+		return $this->sender->send( $action['settings'], $this->samples->create( $form ), $form, true );
 	}
 }

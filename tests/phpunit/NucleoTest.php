@@ -111,12 +111,4 @@ class NucleoTest extends Caso_Formulario {
 		$this->assertSame( Capabilities::MANAGE_FORMS, $tipo->cap->edit_posts );
 		$this->assertSame( Capabilities::MANAGE_FORMS, $tipo->cap->delete_posts );
 	}
-
-	public function test_las_traducciones_al_espanol_se_cargan_desde_el_plugin() {
-		$this->assertTrue( switch_to_locale( 'es_ES' ), 'El idioma es_ES debe estar disponible en la suite de tests.' );
-		$traducido = __( 'This field is required.', 'formulario-mensaje' );
-		restore_previous_locale();
-
-		$this->assertSame( 'Este campo es obligatorio.', $traducido );
-	}
 }

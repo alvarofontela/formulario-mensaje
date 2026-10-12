@@ -115,8 +115,9 @@ final class Rule_Evaluator {
 	 * @return int Negativo, cero o positivo; cero también si alguno de los dos no es un número.
 	 */
 	private function compare( array $actual, string $expected ): int {
-		$left  = str_replace( ',', '.', $actual[0] ?? '' );
-		$right = str_replace( ',', '.', $expected );
+		// Sin espacios (también el de los millares) y con punto decimal: lo mismo que hace el campo de número al sanear.
+		$left  = str_replace( ',', '.', (string) preg_replace( '/\s+/u', '', $actual[0] ?? '' ) );
+		$right = str_replace( ',', '.', (string) preg_replace( '/\s+/u', '', $expected ) );
 
 		if ( ! is_numeric( $left ) || ! is_numeric( $right ) ) {
 			return 0;

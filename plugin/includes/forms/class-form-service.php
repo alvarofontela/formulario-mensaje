@@ -8,6 +8,7 @@
 namespace Formulario_Mensaje\Forms;
 
 use Formulario_Mensaje\Submissions\Redirect_Policy;
+use Formulario_Mensaje\Support\Plain_Text;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -86,12 +87,15 @@ final class Form_Service {
 	 * @param mixed $raw_definition Definición sin validar.
 	 * @return Form|WP_Error
 	 */
-	public function update( int $id, mixed $title, mixed $raw_definition ): Form|WP_Error {
-		if ( null === $this->forms->find( $id ) ) {
+	public function update( int $id, mixed $title = null, mixed $raw_definition = null ): Form|WP_Error {
+		$current = $this->forms->find( $id );
+
+		if ( null === $current ) {
 			return $this->not_found();
 		}
 
-		return $this->save( $id, $title, $raw_definition );
+		// Lo que no se indica se queda como está: cambiar solo el nombre no puede vaciar los campos.
+		return $this->save( $id, $title ?? $current->title, $raw_definition ?? $current->definition->to_array() );
 	}
 
 	/**
@@ -155,7 +159,7 @@ final class Form_Service {
 		if ( ! empty( $definition->setting( 'redirect_enabled' ) ) && ! $this->redirect_policy->is_allowed( (string) $definition->setting( 'redirect_url', '' ) ) ) {
 			return new WP_Error(
 				'formulario_mensaje_redirect_not_allowed',
-				__( 'The redirect address is not allowed. Use an address of this site, or add its domain to the allowed domains in the plugin settings.', 'formulario-mensaje' ),
+				__( 'The redirect address is not allowed. Use an address on this site, or add its domain to the allowed domains in the plugin settings.', 'formulario-mensaje' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -198,7 +202,7 @@ final class Form_Service {
 	 * @param mixed $title Nombre sin validar.
 	 */
 	private function sanitize_title( mixed $title ): string {
-		$title = is_scalar( $title ) ? mb_substr( sanitize_text_field( (string) $title ), 0, self::MAX_TITLE_LENGTH ) : '';
+		$title = is_scalar( $title ) ? mb_substr( Plain_Text::line( (string) $title ), 0, self::MAX_TITLE_LENGTH ) : '';
 
 		return '' === $title ? __( 'Untitled form', 'formulario-mensaje' ) : $title;
 	}

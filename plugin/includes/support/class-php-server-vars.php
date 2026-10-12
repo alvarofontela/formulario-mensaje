@@ -27,6 +27,8 @@ final class Php_Server_Vars implements Server_Vars {
 			return '';
 		}
 
-		return sanitize_text_field( wp_unslash( $_SERVER[ $name ] ) );
+		// Plain_Text y no sanitize_text_field(): esta quita los caracteres codificados (%20) de una dirección como la de procedencia.
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Plain_Text::line() envuelve a sanitize_text_field().
+		return Plain_Text::line( wp_unslash( $_SERVER[ $name ] ) );
 	}
 }

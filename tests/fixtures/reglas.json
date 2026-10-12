@@ -612,6 +612,57 @@
         "b": "x"
       },
       "expected": false
+    },
+    {
+      "name": "mayor que, con espacio de millares",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "greater_than",
+            "value": "999"
+          }
+        ]
+      },
+      "values": {
+        "a": "1 000"
+      },
+      "expected": true
+    },
+    {
+      "name": "menor que, con espacios alrededor y en la regla",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "less_than",
+            "value": " 2 000 "
+          }
+        ]
+      },
+      "values": {
+        "a": "  1 500,5 "
+      },
+      "expected": true
+    },
+    {
+      "name": "mayor que, con espacios y sin serlo",
+      "condition": {
+        "match": "all",
+        "rules": [
+          {
+            "field": "a",
+            "operator": "greater_than",
+            "value": "10 000"
+          }
+        ]
+      },
+      "values": {
+        "a": "9 999"
+      },
+      "expected": false
     }
   ],
   "visibility": [

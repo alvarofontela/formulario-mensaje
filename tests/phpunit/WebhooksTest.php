@@ -601,7 +601,7 @@ class WebhooksTest extends Caso_Formulario {
 
 		$guardado = $this->rest( 'PUT', '/settings', array( 'failure_alert_email' => 'avisos@example.org', 'delivery_log_days' => 9999 ) )->get_data();
 
-		$this->assertTrue( $guardado['failure_alerts'], 'Activados salvo que se desactiven expresamente.' );
+		$this->assertFalse( $guardado['failure_alerts'], 'Lo que no viene en la petición se queda como estaba.' );
 		$this->assertSame( 'avisos@example.org', $guardado['failure_alert_email'] );
 		$this->assertSame( 365, $guardado['delivery_log_days'] );
 	}

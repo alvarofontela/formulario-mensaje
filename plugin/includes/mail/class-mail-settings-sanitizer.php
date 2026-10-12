@@ -7,6 +7,8 @@
 
 namespace Formulario_Mensaje\Mail;
 
+use Formulario_Mensaje\Support\Plain_Text;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -46,7 +48,7 @@ final class Mail_Settings_Sanitizer {
 			mb_substr( $this->text( $raw, 'smtp_username' ), 0, 200 ),
 			esc_url_raw( $this->text( $raw, 'brand_logo_url' ), array( 'http', 'https' ) ),
 			is_string( $color ) && '' !== $color ? $color : Mail_Settings::DEFAULT_BRAND_COLOR,
-			is_scalar( $raw['brand_footer'] ?? null ) ? mb_substr( sanitize_textarea_field( (string) $raw['brand_footer'] ), 0, 1000 ) : ''
+			is_scalar( $raw['brand_footer'] ?? null ) ? mb_substr( Plain_Text::block( (string) $raw['brand_footer'] ), 0, 1000 ) : ''
 		);
 	}
 
@@ -57,6 +59,7 @@ final class Mail_Settings_Sanitizer {
 	 * @param string               $key Clave del ajuste.
 	 */
 	private function text( array $raw, string $key ): string {
+		// Son valores de cabeceras y de conexión (nombre del remitente, servidor): aquí se quiere el saneado de WordPress tal cual.
 		return is_scalar( $raw[ $key ] ?? null ) ? sanitize_text_field( (string) $raw[ $key ] ) : '';
 	}
 

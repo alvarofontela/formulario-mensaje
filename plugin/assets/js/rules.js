@@ -41,8 +41,11 @@ const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/;
  * @return {number} Negativo, cero o positivo; cero también si alguno de los dos no es un número.
  */
 function compare( actual, expected ) {
-	const left = ( actual[ 0 ] ?? '' ).replace( ',', '.' );
-	const right = expected.replace( ',', '.' );
+	// Sin espacios (también el de los millares) y con punto decimal, como hace el servidor.
+	const left = ( actual[ 0 ] ?? '' )
+		.replace( /\s+/gu, '' )
+		.replace( ',', '.' );
+	const right = expected.replace( /\s+/gu, '' ).replace( ',', '.' );
 
 	if ( ! NUMBER.test( left ) || ! NUMBER.test( right ) ) {
 		return 0;

@@ -8,7 +8,7 @@
 namespace Formulario_Mensaje\Admin;
 
 use Formulario_Mensaje\Lifecycle\Capabilities;
-use Formulario_Mensaje\Storage\Failure_Counter;
+use Formulario_Mensaje\Storage\Submission_Service;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -45,9 +45,9 @@ final class Admin_Menu {
 	/**
 	 * Constructor.
 	 *
-	 * @param Failure_Counter $failures Contador de entregas fallidas.
+	 * @param Submission_Service $submissions Servicio de envíos guardados.
 	 */
-	public function __construct( private readonly Failure_Counter $failures ) {}
+	public function __construct( private readonly Submission_Service $submissions ) {}
 
 	/**
 	 * Registra el menú y sus pantallas.
@@ -69,7 +69,7 @@ final class Admin_Menu {
 
 		add_menu_page(
 			__( 'Forms', 'formulario-mensaje' ),
-			__( 'Forms', 'formulario-mensaje' ) . $this->failures_bubble(),
+			__( 'Forms', 'formulario-mensaje' ) . $this->unread_bubble(),
 			$parent['capability'],
 			$parent['slug'],
 			'',
@@ -109,20 +109,21 @@ final class Admin_Menu {
 	 * @return array<int, array{slug: string, view: string, capability: string, title: string, menu: string}>
 	 */
 	private function pages(): array {
+		// Los mensajes van primero: es a lo que entra casi siempre quien usa el plugin en el día a día.
 		return array(
+			array(
+				'slug'       => self::SUBMISSIONS_PAGE,
+				'view'       => 'submissions',
+				'capability' => Capabilities::VIEW_SUBMISSIONS,
+				'title'      => __( 'Messages', 'formulario-mensaje' ),
+				'menu'       => __( 'Messages', 'formulario-mensaje' ) . $this->unread_bubble(),
+			),
 			array(
 				'slug'       => self::FORMS_PAGE,
 				'view'       => 'forms',
 				'capability' => Capabilities::MANAGE_FORMS,
 				'title'      => __( 'Forms', 'formulario-mensaje' ),
-				'menu'       => __( 'All forms', 'formulario-mensaje' ),
-			),
-			array(
-				'slug'       => self::SUBMISSIONS_PAGE,
-				'view'       => 'submissions',
-				'capability' => Capabilities::VIEW_SUBMISSIONS,
-				'title'      => __( 'Submissions', 'formulario-mensaje' ),
-				'menu'       => __( 'Submissions', 'formulario-mensaje' ) . $this->failures_bubble(),
+				'menu'       => __( 'Forms', 'formulario-mensaje' ),
 			),
 			array(
 				'slug'       => self::SETTINGS_PAGE,
@@ -135,26 +136,29 @@ final class Admin_Menu {
 	}
 
 	/**
-	 * Aviso con el número de entregas fallidas pendientes, para quien puede ver los envíos.
+	 * Aviso con el número de mensajes sin leer, para quien puede ver los envíos.
 	 *
-	 * @return string HTML del aviso, o cadena vacía si no hay fallos o el usuario no puede verlos.
+	 * Las entregas fallidas ya no se cuentan aquí: se ven en la bandeja, en el propio mensaje, y
+	 * además avisan por correo.
+	 *
+	 * @return string HTML del aviso, o cadena vacía si no hay ninguno o el usuario no puede verlos.
 	 */
-	private function failures_bubble(): string {
-		$failed = current_user_can( Capabilities::VIEW_SUBMISSIONS ) ? $this->failures->total() : 0;
+	private function unread_bubble(): string {
+		$unread = current_user_can( Capabilities::VIEW_SUBMISSIONS ) ? $this->submissions->counts()['unread'] : 0;
 
-		if ( $failed <= 0 ) {
+		if ( $unread <= 0 ) {
 			return '';
 		}
 
 		return sprintf(
 			' <span class="awaiting-mod count-%1$d"><span class="pending-count" aria-hidden="true">%2$s</span><span class="screen-reader-text">%3$s</span></span>',
-			$failed,
-			esc_html( number_format_i18n( $failed ) ),
+			$unread,
+			esc_html( number_format_i18n( $unread ) ),
 			esc_html(
 				sprintf(
-					/* translators: %s: number of failed deliveries. */
-					_n( '%s failed delivery', '%s failed deliveries', $failed, 'formulario-mensaje' ),
-					number_format_i18n( $failed )
+					/* translators: %s: number of unread messages. */
+					_n( '%s unread message', '%s unread messages', $unread, 'formulario-mensaje' ),
+					number_format_i18n( $unread )
 				)
 			)
 		);

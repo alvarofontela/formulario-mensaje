@@ -36,7 +36,7 @@ final class Php_Request_Query implements Request_Query {
 			return '';
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		return mb_substr( sanitize_text_field( wp_unslash( $_GET[ $name ] ) ), 0, self::MAX_LENGTH );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Plain_Text::line() envuelve a sanitize_text_field().
+		return mb_substr( Plain_Text::line( wp_unslash( $_GET[ $name ] ) ), 0, self::MAX_LENGTH );
 	}
 }

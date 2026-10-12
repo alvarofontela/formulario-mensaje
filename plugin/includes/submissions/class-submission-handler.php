@@ -176,10 +176,25 @@ final class Submission_Handler {
 		 */
 		do_action( 'formulario_mensaje_submission_completed', $submission, $form, $results );
 
-		// Hechas las acciones, los ficheros que solo hacían falta para ellas se borran.
-		$this->uploads->finish( $form, $reference, $stored_id );
+		// Hechas las acciones, los ficheros que solo hacían falta para ellas se borran; si alguna ha fallado, cuando se resuelva.
+		$this->uploads->finish( $form, $reference, $stored_id, $this->has_failures( $results ) );
 
 		return $this->confirmation->build( $form, $submission );
+	}
+
+	/**
+	 * Indica si alguna acción ejecutada ha fallado. Las que van por la cola no cuentan: aún no se han intentado.
+	 *
+	 * @param Action_Result[] $results Resultados de las acciones.
+	 */
+	private function has_failures( array $results ): bool {
+		foreach ( $results as $result ) {
+			if ( ! $result->success && ! $result->deferred ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

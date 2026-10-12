@@ -99,6 +99,42 @@ final class Form_Definition {
 	}
 
 	/**
+	 * Busca una acción por su identificador y su tipo.
+	 *
+	 * @param string $id   Identificador de la acción dentro del formulario.
+	 * @param string $type Tipo de la acción.
+	 * @return array<string, mixed>|null
+	 */
+	public function get_action( string $id, string $type ): ?array {
+		foreach ( $this->actions as $action ) {
+			if ( ( $action['id'] ?? '' ) === $id && ( $action['type'] ?? '' ) === $type ) {
+				return $action;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Identificadores de los campos de los que depende la condición de algún otro campo.
+	 *
+	 * @return string[]
+	 */
+	public function condition_sources(): array {
+		$sources = array();
+
+		foreach ( $this->fields as $field ) {
+			foreach ( is_array( $field->condition['rules'] ?? null ) ? $field->condition['rules'] : array() as $rule ) {
+				if ( is_string( $rule['field'] ?? null ) ) {
+					$sources[ $rule['field'] ] = true;
+				}
+			}
+		}
+
+		return array_map( 'strval', array_keys( $sources ) );
+	}
+
+	/**
 	 * Valor de un ajuste del formulario.
 	 *
 	 * @param string $key      Clave del ajuste.

@@ -37,7 +37,9 @@ test('un webhook se configura, se prueba desde el constructor y firma lo que env
   const formId = await api.createForm('Webhook e2e', contactDefinition({ actions: [] }));
 
   await page.goto(`${formsScreen}&form=${formId}`);
-  await page.getByRole('tab', { name: 'Webhooks' }).click();
+  // Los webhooks son uno de los apartados plegables del paso «Al recibirlo»; al abrirlo se cierra el de las notificaciones.
+  await page.getByRole('tab', { name: 'Al recibirlo' }).click();
+  await page.getByRole('button', { name: /^Conectar con otra aplicación/ }).click();
   await expect(page.locator('.fm-fields__empty')).toContainText('no envía ningún webhook');
 
   await page.getByRole('button', { name: 'Añadir webhook' }).click();
@@ -82,7 +84,10 @@ test('un webhook se configura, se prueba desde el constructor y firma lo que env
 
   // Al volver, el secreto está guardado pero no viaja al navegador.
   await page.reload();
-  await page.getByRole('tab', { name: 'Webhooks' }).click();
+  await page.getByRole('tab', { name: 'Al recibirlo' }).click();
+  // El apartado resume lo que hay sin abrirlo.
+  await expect(page.getByRole('button', { name: /^Conectar con otra aplicación/ })).toContainText('1 webhook activo');
+  await page.getByRole('button', { name: /^Conectar con otra aplicación/ }).click();
 
   await expect(page.locator('.fm-fields__item')).toContainText('CRM');
   await expect(page.locator('.fm-fields__item')).toContainText(`POST ${sinkUrl}`);
@@ -114,11 +119,14 @@ test('el webhook de un envío sale en segundo plano con los datos que espera el 
   expect(request.headers.x_formulario_mensaje_reference).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
   expect(request.headers.x_formulario_mensaje_test).toBeUndefined();
 
-  // El detalle del envío dice qué se hizo con él.
+  // El mensaje, abierto en la bandeja, dice qué se hizo con él: tras el «Guardado en Mensajes», su única entrega.
   await page.goto(`${submissionsScreen}&form=${formId}`);
-  await page.locator('tbody tr').first().locator('.fm-admin__row-title').click();
+  await page.locator('.fm-message__open').first().click();
 
-  const delivery = page.locator('.fm-detail__deliveries li');
+  const trail = page.locator('ol.fm-trail > li');
+  await expect(trail).toHaveCount(2);
+
+  const delivery = trail.nth(1);
   await expect(delivery).toContainText('Webhook');
   await expect(delivery.locator('.fm-badge')).toHaveText('Entregada');
 });
@@ -132,9 +140,12 @@ test('si el destino falla, el webhook queda en cola con su error y la fecha del 
   await waitForSink(1);
 
   await page.goto(`${submissionsScreen}&form=${formId}`);
-  await page.locator('tbody tr').first().locator('.fm-admin__row-title').click();
+  await page.locator('.fm-message__open').first().click();
 
-  const delivery = page.locator('.fm-detail__deliveries li');
+  const trail = page.locator('ol.fm-trail > li');
+  await expect(trail).toHaveCount(2);
+
+  const delivery = trail.nth(1);
   await expect(delivery.locator('.fm-badge')).toHaveText('En cola');
   await expect(delivery).toContainText('código HTTP 500');
   await expect(delivery).toContainText('Siguiente intento:');
@@ -143,6 +154,9 @@ test('si el destino falla, el webhook queda en cola con su error y la fecha del 
 });
 
 test('los ajustes guardan los avisos de fallos y los días del registro de entregas', async ({ page }) => {
+  // Se parte de los valores de fábrica: guardar unos ajustes ya no devuelve los demás a su valor inicial,
+  // así que lo que dejó una pasada anterior seguiría ahí.
+  await api.saveSettings({ failure_alerts: true, failure_alert_email: '', delivery_log_days: 30 });
   await page.goto(settingsScreen);
 
   await expect(page.getByLabel('Avisarme por correo cuando falle una acción')).toBeChecked();
@@ -161,5 +175,5 @@ test('los ajustes guardan los avisos de fallos y los días del registro de entre
   await expect(page.locator('.components-notice').first()).toContainText('Ajustes guardados.');
 
   // Se dejan los ajustes como estaban para no afectar a otros tests.
-  await api.saveSettings({ trusted_proxy_mode: 'none', trusted_proxies: [], allowed_redirect_hosts: [] });
+  await api.saveSettings({ failure_alerts: true, failure_alert_email: '', delivery_log_days: 30 });
 });

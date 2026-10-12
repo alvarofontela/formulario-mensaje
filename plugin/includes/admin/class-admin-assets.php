@@ -22,6 +22,11 @@ final class Admin_Assets {
 	private const HANDLE = 'formulario-mensaje-admin';
 
 	/**
+	 * Clase que lleva el `body` en las pantallas del plugin.
+	 */
+	private const BODY_CLASS = 'formulario-mensaje-screen';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Admin_Menu   $menu         Pantallas del plugin.
@@ -49,6 +54,9 @@ final class Admin_Assets {
 		if ( null === $view || ! is_file( $asset_file ) ) {
 			return;
 		}
+
+		// La aplicación ocupa toda la zona de contenido: la clase permite quitarle los márgenes de wp-admin solo aquí.
+		add_filter( 'admin_body_class', static fn ( string $classes ): string => $classes . ' ' . self::BODY_CLASS );
 
 		// Fichero generado por la compilación, dentro del propio plugin: devuelve dependencias y versión.
 		$asset = require $asset_file;

@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propuesta A · Nativa</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Propuesta A: el lenguaje del propio WordPress (editor del sitio, DataViews, inspector lateral). */
+:root {
+	--a: #3858e9; --a-ink: #2145e6; --a-wash: #eef1fe;
+	--tx: #1e1e1e; --sub: #6c6c6c; --line: #e0e0e0; --soft: #f6f7f7;
+	--ok: #007017; --ok-wash: #e6f5e8; --bad: #cc1818; --bad-wash: #fcebea;
+}
+::selection { background: #c9d2fb; }
+:focus-visible { outline: 2px solid var(--a); outline-offset: 1px; border-radius: 2px; }
+
+.wp-content { background: #fff; }
+
+/* Botones y controles */
+.b {
+	display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+	min-height: 36px; padding: 0 14px; border: 0; border-radius: 2px;
+	background: none; color: var(--a); font-weight: 500; text-decoration: none; white-space: nowrap;
+}
+.b:hover { background: var(--a-wash); }
+.b.pri { background: var(--a); color: #fff; }
+.b.pri:hover { background: var(--a-ink); }
+.b.sec { box-shadow: inset 0 0 0 1px var(--a); }
+.b.danger { color: var(--bad); }
+.b.danger:hover { background: var(--bad-wash); }
+.ib {
+	display: inline-flex; align-items: center; justify-content: center;
+	width: 36px; height: 36px; border: 0; border-radius: 2px; background: none; color: var(--tx); text-decoration: none;
+}
+.ib:hover, .ib[aria-pressed="true"] { background: var(--tx); color: #fff; }
+.ib.quiet:hover { background: var(--soft); color: var(--a); }
+.in {
+	width: 100%; min-height: 36px; padding: 6px 10px;
+	border: 1px solid #949494; border-radius: 2px; background: #fff;
+}
+.in:focus { outline: 2px solid var(--a); outline-offset: -1px; border-color: var(--a); }
+.lbl { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 500; text-transform: uppercase; }
+.help { color: var(--sub); font-size: 12px; margin-top: 6px; }
+.seg { display: inline-flex; padding: 2px; border: 1px solid #949494; border-radius: 2px; background: #fff; }
+.seg button {
+	min-height: 30px; padding: 0 12px; border: 0; border-radius: 1px; background: none;
+	display: inline-flex; align-items: center; gap: 6px;
+}
+.seg button[aria-pressed="true"] { background: var(--tx); color: #fff; }
+.tg {
+	position: relative; flex: none; width: 34px; height: 18px; border-radius: 9px;
+	border: 1px solid var(--tx); background: #fff;
+}
+.tg::after { content: ""; position: absolute; top: 3px; left: 3px; width: 10px; height: 10px; border-radius: 50%; background: var(--tx); transition: transform .15s ease-out; }
+.tg.is-on { background: var(--a); border-color: var(--a); }
+.tg.is-on::after { background: #fff; transform: translateX(16px); }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 2px; font-size: 12px; background: var(--soft); color: var(--tx); white-space: nowrap; }
+.badge.ok { background: var(--ok-wash); color: var(--ok); }
+.badge.bad { background: var(--bad-wash); color: var(--bad); }
+
+/* Página y cabecera */
+.page-h {
+	display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+	padding: 16px 24px; border-bottom: 1px solid var(--line);
+}
+.page-h h1 { font-size: 20px; font-weight: 500; margin-right: auto; }
+.page-h .acts { display: flex; gap: 8px; }
+
+/* Listados al estilo DataViews */
+.dv-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 24px; }
+.dv-search { position: relative; flex: 0 1 260px; }
+.dv-search .ic { position: absolute; left: 9px; top: 9px; color: var(--sub); }
+.dv-search .in { padding-left: 34px; background: var(--soft); border-color: transparent; }
+.dv-bar .push { margin-left: auto; display: flex; gap: 4px; }
+.dv-head, .dv-row { display: grid; align-items: center; gap: 16px; padding: 0 24px; }
+.dv-head { min-height: 40px; border-bottom: 1px solid var(--line); font-size: 11px; font-weight: 500; text-transform: uppercase; }
+.dv-row { min-height: 60px; padding-block: 10px; border-bottom: 1px solid #f0f0f0; }
+.dv-row:hover { background: #f8f8f8; }
+.dv-row.is-selected { background: var(--a-wash); }
+.dv-title { font-weight: 500; color: var(--tx); text-decoration: none; }
+.dv-title:hover { color: var(--a); }
+.dv-sub { display: block; color: var(--sub); font-size: 12px; }
+.dv-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.dv-acts { display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
+.dv-foot { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; color: var(--sub); font-size: 12px; }
+
+.forms .dv-head, .forms .dv-row { grid-template-columns: minmax(200px, 2.4fr) .7fr .7fr 1fr 1fr 150px; }
+.only-narrow { display: none; }
+
+/* Envíos: tabla y panel de detalle */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) 400px; }
+.subs .dv-head, .subs .dv-row { grid-template-columns: minmax(150px, 1fr) minmax(0, 1.6fr) 120px 86px; }
+.subs .dv-row { cursor: pointer; }
+.detail { border-left: 1px solid var(--line); background: #fff; min-height: calc(100vh - 32px - 125px); }
+.detail-h { display: flex; align-items: flex-start; gap: 8px; padding: 16px 12px 12px 20px; }
+.detail-h h2 { font-size: 15px; font-weight: 600; }
+.detail-h .ib { margin-left: auto; }
+.detail-body { padding: 0 20px 24px; }
+.answers { border-top: 1px solid var(--line); }
+.answers div { padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.answers dt { color: var(--sub); font-size: 12px; }
+.answers dd { margin-top: 2px; overflow-wrap: anywhere; }
+.detail h3 { margin: 22px 0 8px; font-size: 11px; font-weight: 500; text-transform: uppercase; }
+.deliv li { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; padding: 9px 0; border-bottom: 1px solid #f0f0f0; align-items: start; }
+.deliv .ic { margin-top: 1px; }
+.deliv .is-ok .ic { color: var(--ok); }
+.deliv .is-fail .ic { color: var(--bad); }
+.deliv small { display: block; color: var(--sub); font-size: 12px; }
+.deliv .why { grid-column: 2 / -1; padding: 8px 10px; background: var(--bad-wash); border-radius: 2px; font-size: 12px; }
+.detail-foot { display: flex; justify-content: space-between; margin-top: 20px; }
+
+/* Constructor: lista, lienzo e inspector */
+.ed { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); height: calc(100vh - 32px); }
+.ed-top { display: flex; align-items: center; gap: 8px; min-height: 60px; padding: 0 16px 0 12px; border-bottom: 1px solid var(--line); }
+.ed-name { flex: 1 1 auto; width: 100%; min-width: 0; font-size: 15px; font-weight: 500; border: 1px solid transparent; border-radius: 2px; padding: 6px 8px; background: none; }
+.ed-name:hover { border-color: var(--line); }
+.ed-body { display: grid; grid-template-columns: 280px minmax(0, 1fr) 300px; min-height: 0; }
+.ed-list, .ed-insp { overflow-y: auto; background: #fff; }
+.ed-list { border-right: 1px solid var(--line); }
+.ed-insp { border-left: 1px solid var(--line); }
+.pane-h { display: flex; align-items: center; justify-content: space-between; padding: 12px 8px 8px 16px; font-weight: 500; }
+.fl li {
+	display: grid; grid-template-columns: 20px 20px minmax(0, 1fr) auto; align-items: center; gap: 6px;
+	min-height: 36px; padding: 0 12px 0 8px; margin: 0 8px; border-radius: 2px; cursor: pointer;
+}
+.fl li:hover { background: var(--soft); }
+.fl li.is-selected { background: var(--a); color: #fff; }
+.fl li .ic { color: var(--sub); }
+.fl li.is-selected .ic { color: #fff; }
+.fl .req { font-size: 11px; opacity: .8; }
+.fl-add { margin: 8px 16px 16px; }
+.ed-canvas { overflow-y: auto; padding: 32px 24px 80px; background: #f0f0f0; }
+.ed-sheet { max-width: 640px; margin: 0 auto; padding: 32px; background: #fff; border-radius: 2px; box-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 6px 20px rgba(0, 0, 0, .05); }
+.pf-field { cursor: pointer; border-radius: 2px; }
+.pf-field:hover { box-shadow: 0 0 0 6px #fff, 0 0 0 7px #c9d2fb; }
+.pf-field.is-selected { box-shadow: 0 0 0 6px #fff, 0 0 0 8px var(--a); }
+.fld-tools {
+	position: absolute; right: 0; top: -8px; z-index: 2; display: flex;
+	border: 1px solid var(--tx); border-radius: 2px; background: #fff;
+}
+.fld-tools .ib { width: 30px; height: 30px; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); padding: 0 8px; }
+.tabs-acts { display: none; margin-left: auto; align-items: center; }
+.pf-field { scroll-margin-top: 16px; }
+.tabs button { min-height: 48px; padding: 0 12px; border: 0; background: none; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs button[aria-selected="true"] { border-bottom-color: var(--a); }
+.insp-pad { padding: 16px; display: grid; gap: 18px; }
+.insp-type { display: flex; gap: 10px; align-items: center; }
+.insp-type strong { display: block; font-weight: 500; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.opts li { display: grid; grid-template-columns: 20px 1fr 30px; gap: 4px; align-items: center; margin-bottom: 4px; }
+.opts .ic { color: var(--sub); }
+.opts .ib { width: 30px; height: 30px; }
+.panel { border-top: 1px solid var(--line); }
+.panel > button {
+	display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+	min-height: 48px; padding: 0 16px; border: 0; background: none; font-weight: 500; text-align: left;
+}
+.panel > button small { display: block; font-weight: 400; color: var(--sub); font-size: 12px; }
+.panel > button:hover { background: var(--soft); }
+.ed-only-narrow { display: none; }
+.sheet-grab { display: none; }
+
+/* Ajustes */
+.set { max-width: 860px; padding: 8px 24px 48px; }
+.set-row { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 12px 32px; padding: 24px 0; border-bottom: 1px solid var(--line); }
+.set-row h2 { font-size: 13px; font-weight: 600; }
+.set-row > div:first-child p { color: var(--sub); margin-top: 4px; }
+.set-ctl { display: grid; gap: 14px; }
+.choice { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 2px; cursor: pointer; }
+.choice.is-on { border-color: var(--a); box-shadow: inset 0 0 0 1px var(--a); }
+.choice::before { content: ""; width: 18px; height: 18px; margin-top: 1px; border: 1px solid var(--tx); border-radius: 50%; }
+.choice.is-on::before { border: 5px solid var(--a); }
+.choice strong { display: block; font-weight: 500; }
+.choice span { color: var(--sub); font-size: 12px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.notice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; background: var(--ok-wash); border-radius: 2px; }
+.notice .ic { color: var(--ok); }
+.set-save { position: sticky; bottom: 0; display: flex; gap: 12px; align-items: center; padding: 12px 0; background: #fff; }
+
+/* ── Tableta: la lista de campos pasa a un panel que se abre; el detalle de un envío, a un cajón ── */
+@media (max-width: 1279px) {
+	.split { grid-template-columns: minmax(0, 1fr); }
+	.detail {
+		position: fixed; inset: 32px 0 0 auto; z-index: 40; width: min(420px, 100%);
+		overflow-y: auto; box-shadow: -8px 0 28px rgba(0, 0, 0, .14); display: none;
+	}
+	.subs.is-open .detail { display: block; }
+}
+@media (max-width: 1180px) {
+	.ed-body { grid-template-columns: minmax(0, 1fr) 300px; }
+	.ed-list {
+		position: fixed; inset: 92px auto 0 36px; z-index: 30; width: 280px; display: none;
+		box-shadow: 8px 0 28px rgba(0, 0, 0, .14);
+	}
+	.ed.list-open .ed-list { display: block; }
+	.ed-only-narrow { display: inline-flex; }
+	.forms .dv-head, .forms .dv-row { grid-template-columns: minmax(180px, 2fr) .8fr 1fr 1fr 96px; }
+	.forms .col-fields, .forms .btn-insert { display: none; }
+}
+
+/* ── Móvil: una columna, objetivos táctiles de 44 px, inspector en hoja inferior ── */
+@media (max-width: 782px) {
+	body { font-size: 14px; }
+	.b, .in { min-height: 44px; }
+	.ib { width: 44px; height: 44px; }
+	.page-h, .dv-bar, .dv-foot { padding-inline: 16px; }
+	.page-h h1 { font-size: 20px; }
+	.dv-search { flex: 1 1 100%; }
+	.dv-head { display: none; }
+	.only-narrow { display: block; }
+	.only-wide { display: none !important; }
+
+	.forms .dv-row, .subs .dv-row { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; padding: 12px 8px 12px 16px; }
+	.forms .dv-row > :not(.cell-main):not(.dv-acts) { display: none; }
+	.subs .dv-row { padding-right: 16px; }
+	.subs .cell-who { grid-column: 1; }
+	.subs .cell-date { grid-column: 2; grid-row: 1; color: var(--sub); font-size: 12px; text-align: right; }
+	.subs .cell-text { grid-column: 1 / -1; }
+	.subs .cell-text .dv-ellipsis { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+	.subs .cell-state { grid-column: 1 / -1; }
+	.detail { inset: 46px 0 0 0; width: 100%; box-shadow: none; }
+
+	.ed { height: calc(100vh - 46px); }
+	.ed-top { padding: 0 8px 0 4px; gap: 2px; min-height: 56px; }
+	.ed-body { grid-template-columns: minmax(0, 1fr); }
+	.ed-list { inset: 102px 0 0 0; width: 100%; box-shadow: none; }
+	.ed-canvas { padding: 16px 12px 52vh; }
+	.ed-sheet { padding: 20px 16px; }
+	.ed-insp {
+		position: fixed; inset: auto 0 0 0; z-index: 35; max-height: 46vh;
+		border-left: 0; border-radius: 12px 12px 0 0; box-shadow: 0 -8px 28px rgba(0, 0, 0, .16);
+	}
+	.sheet-grab { display: block; width: 40px; height: 4px; margin: 8px auto 0; border-radius: 2px; background: #c4c4c4; }
+	.fld-tools { display: none; }
+	.tabs-acts { display: flex; }
+	.opts li { grid-template-columns: 20px 1fr 44px; }
+	.devices { display: none; }
+
+	.set { padding-inline: 16px; }
+	.set-row { grid-template-columns: minmax(0, 1fr); padding: 20px 0; }
+	.pair { grid-template-columns: minmax(0, 1fr); }
+	.tabs { overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+<main class="wp-content">
+
+	<!-- Formularios -->
+	<section data-screen="formularios" class="forms">
+		<header class="page-h">
+			<h1>Formularios</h1>
+			<div class="acts"><button class="b only-wide" type="button">Importar</button><a class="b pri" href="#constructor"><i data-i="plus" data-s="18"></i>Añadir formulario</a></div>
+		</header>
+		<div class="dv-bar">
+			<label class="dv-search"><span class="sr">Buscar formularios</span><i data-i="search" data-s="18"></i><input class="in" type="search" placeholder="Buscar"></label>
+			<div class="seg" role="group" aria-label="Estado"><button type="button" aria-pressed="true">Publicados</button><button type="button" aria-pressed="false">Papelera</button></div>
+			<div class="push only-wide"><button class="ib quiet" type="button" aria-label="Añadir filtro"><i data-i="filter"></i></button><button class="ib quiet" type="button" aria-label="Opciones de vista"><i data-i="sliders"></i></button></div>
+		</div>
+		<div class="dv-head"><span>Formulario</span><span class="col-fields">Campos</span><span>Envíos</span><span>Último envío</span><span>Entregas</span><span></span></div>
+		<div id="a-forms"></div>
+		<div class="dv-foot"><span>5 formularios</span><span class="only-wide">Página 1 de 1</span></div>
+	</section>
+
+	<!-- Constructor -->
+	<section data-screen="constructor" class="ed" hidden>
+		<header class="ed-top">
+			<a class="ib" href="#formularios" aria-label="Volver a Formularios"><i data-i="chevL"></i></a>
+			<input class="ed-name" value="Pedir cita" aria-label="Nombre del formulario">
+			<button class="ib ed-only-narrow" type="button" id="a-list-toggle" aria-pressed="false" aria-label="Lista de campos"><i data-i="list"></i></button>
+			<div class="seg devices" role="group" aria-label="Tamaño de la vista previa">
+				<button type="button" aria-pressed="true" aria-label="Escritorio"><i data-i="desktop" data-s="18"></i></button>
+				<button type="button" aria-pressed="false" aria-label="Tableta"><i data-i="tablet" data-s="18"></i></button>
+				<button type="button" aria-pressed="false" aria-label="Móvil"><i data-i="mobile" data-s="18"></i></button>
+			</div>
+			<button class="b only-wide" type="button">Insertar en una página</button>
+			<button class="b pri" type="button">Guardar</button>
+		</header>
+		<div class="ed-body">
+			<aside class="ed-list" aria-label="Campos del formulario">
+				<div class="pane-h"><span>Campos</span><button class="ib quiet" type="button" aria-label="Añadir campo"><i data-i="plus"></i></button></div>
+				<ol class="fl" id="a-fl"></ol>
+				<button class="b sec fl-add" type="button"><i data-i="plus" data-s="18"></i>Añadir campo</button>
+			</aside>
+			<div class="ed-canvas"><div class="ed-sheet" id="a-preview"></div></div>
+			<aside class="ed-insp" aria-label="Ajustes">
+				<span class="sheet-grab"></span>
+				<div class="tabs" role="tablist">
+					<button type="button" role="tab" aria-selected="true" data-tab="campo">Campo</button>
+					<button type="button" role="tab" aria-selected="false" data-tab="formulario">Formulario</button>
+					<div class="tabs-acts" role="toolbar" aria-label="Acciones del campo">
+						<button class="ib quiet" type="button" aria-label="Subir"><i data-i="chevU"></i></button><button class="ib quiet" type="button" aria-label="Bajar"><i data-i="chevD"></i></button><button class="ib quiet" type="button" aria-label="Duplicar"><i data-i="copy"></i></button><button class="ib quiet" type="button" aria-label="Eliminar"><i data-i="trash"></i></button>
+					</div>
+				</div>
+				<div data-pane="campo">
+					<div class="insp-pad">
+						<div class="insp-type"><i data-i="select" data-s="24" id="a-f-ico"></i><div><strong id="a-f-type">Desplegable</strong><span class="help" style="margin:0">El visitante elige una opción de una lista.</span></div></div>
+						<div><label class="lbl" for="a-f-label">Etiqueta</label><input class="in" id="a-f-label" value="¿Qué necesitas?"></div>
+						<div id="a-f-opts"><span class="lbl">Opciones</span>
+							<ul class="opts">
+								<li><i data-i="grip" data-s="18"></i><input class="in" value="Revisión" aria-label="Opción 1"><button class="ib quiet" type="button" aria-label="Quitar opción"><i data-i="x" data-s="16"></i></button></li>
+								<li><i data-i="grip" data-s="18"></i><input class="in" value="Limpieza" aria-label="Opción 2"><button class="ib quiet" type="button" aria-label="Quitar opción"><i data-i="x" data-s="16"></i></button></li>
+								<li><i data-i="grip" data-s="18"></i><input class="in" value="Ortodoncia" aria-label="Opción 3"><button class="ib quiet" type="button" aria-label="Quitar opción"><i data-i="x" data-s="16"></i></button></li>
+								<li><i data-i="grip" data-s="18"></i><input class="in" value="Urgencia" aria-label="Opción 4"><button class="ib quiet" type="button" aria-label="Quitar opción"><i data-i="x" data-s="16"></i></button></li>
+							</ul>
+							<button class="b" type="button" style="padding-left:6px"><i data-i="plus" data-s="18"></i>Añadir opción</button>
+						</div>
+						<div class="row"><span>Obligatorio</span><span class="tg is-on" role="switch" aria-checked="true" tabindex="0"></span></div>
+						<div><span class="lbl">Ancho</span>
+							<div class="seg" role="group" aria-label="Ancho"><button type="button" aria-pressed="true">Completo</button><button type="button" aria-pressed="false">Mitad</button><button type="button" aria-pressed="false">Un tercio</button></div>
+						</div>
+						<div><label class="lbl" for="a-f-help">Texto de ayuda</label><input class="in" id="a-f-help" placeholder="Aparece debajo del campo"></div>
+					</div>
+					<div class="panel"><button type="button"><span>Mostrar según las respuestas<small>Siempre visible</small></span><i data-i="chevD" data-s="18"></i></button></div>
+					<div class="panel"><button type="button"><span>Avanzado<small>Clase CSS, autocompletado y valor inicial</small></span><i data-i="chevD" data-s="18"></i></button></div>
+				</div>
+				<div data-pane="formulario" hidden>
+					<div class="panel" style="border-top:0"><button type="button"><span>Avisos por correo<small>1 aviso a recepcion@clinicaribera.example</small></span><i data-i="chevD" data-s="18"></i></button></div>
+					<div class="panel"><button type="button"><span>Guardar los envíos<small>Sí, con los ficheros adjuntos</small></span><i data-i="chevD" data-s="18"></i></button></div>
+					<div class="panel"><button type="button"><span>Tras el envío<small>Mostrar un mensaje de agradecimiento</small></span><i data-i="chevD" data-s="18"></i></button></div>
+					<div class="panel"><button type="button"><span>Estilo<small>Colores, bordes y espaciado</small></span><i data-i="chevD" data-s="18"></i></button></div>
+					<div class="panel"><button type="button"><span>Webhooks<small>1 conexión: Agenda de citas</small></span><i data-i="chevD" data-s="18"></i></button></div>
+				</div>
+			</aside>
+		</div>
+	</section>
+
+	<!-- Envíos -->
+	<section data-screen="envios" class="subs" hidden>
+		<header class="page-h">
+			<h1>Envíos</h1>
+			<div class="acts"><button class="b sec" type="button"><i data-i="download" data-s="18"></i>Exportar CSV</button></div>
+		</header>
+		<div class="dv-bar">
+			<label class="dv-search"><span class="sr">Buscar envíos</span><i data-i="search" data-s="18"></i><input class="in" type="search" placeholder="Buscar por nombre, correo o referencia"></label>
+			<select class="in" style="width:auto" aria-label="Formulario"><option>Todos los formularios</option><option>Pedir cita</option><option>Contacto</option></select>
+			<div class="seg" role="group" aria-label="Filtro"><button type="button" aria-pressed="true">Todos</button><button type="button" aria-pressed="false">Con entregas fallidas · 1</button></div>
+		</div>
+		<div class="split">
+			<div>
+				<div class="dv-head"><span>Remitente</span><span>Contenido</span><span>Entregas</span><span>Fecha</span></div>
+				<div id="a-subs"></div>
+				<div class="dv-foot"><span>68 envíos</span><span>Página 1 de 4</span></div>
+			</div>
+			<aside class="detail" id="a-detail" aria-label="Detalle del envío"></aside>
+		</div>
+	</section>
+
+	<!-- Ajustes -->
+	<section data-screen="ajustes" hidden>
+		<header class="page-h"><h1>Ajustes de formularios</h1></header>
+		<div class="tabs" role="tablist" style="padding-inline:12px">
+			<button type="button" role="tab" aria-selected="false">General</button>
+			<button type="button" role="tab" aria-selected="true">Correo electrónico</button>
+			<button type="button" role="tab" aria-selected="false">Captcha</button>
+		</div>
+		<div class="set">
+			<div class="set-row">
+				<div><h2>Cómo se envían los correos</h2><p>Los avisos y las confirmaciones de todos los formularios salen por aquí.</p></div>
+				<div class="set-ctl">
+					<label class="choice is-on"><div><strong>El servidor de la web</strong><span>No necesita configuración. Puede acabar en la carpeta de spam.</span></div></label>
+					<label class="choice"><div><strong>Una cuenta de correo (SMTP)</strong><span>Con los datos de tu proveedor de correo.</span></div></label>
+					<label class="choice"><div><strong>Resend</strong><span>Servicio de envío con clave de API.</span></div></label>
+				</div>
+			</div>
+			<div class="set-row">
+				<div><h2>Remitente</h2><p>Lo que ve quien recibe el correo.</p></div>
+				<div class="set-ctl">
+					<div class="pair">
+						<div><label class="lbl" for="a-from-n">Nombre</label><input class="in" id="a-from-n" value="Clínica Dental Ribera"></div>
+						<div><label class="lbl" for="a-from-e">Dirección</label><input class="in" id="a-from-e" value="web@clinicaribera.example"></div>
+					</div>
+				</div>
+			</div>
+			<div class="set-row">
+				<div><h2>Comprobar que funciona</h2><p>Envía un correo de prueba con la configuración de arriba.</p></div>
+				<div class="set-ctl">
+					<div class="pair"><div><label class="lbl" for="a-test">Enviar a</label><input class="in" id="a-test" value="lucia@clinicaribera.example"></div><div style="align-self:end"><button class="b sec" type="button"><i data-i="send" data-s="18"></i>Enviar prueba</button></div></div>
+					<div class="notice"><i data-i="check"></i><span>El último correo de prueba salió correctamente hoy a las 9:10.</span></div>
+				</div>
+			</div>
+			<div class="set-save"><button class="b pri" type="button">Guardar cambios</button><span class="help" style="margin:0">Sin cambios pendientes</span></div>
+		</div>
+	</section>
+</main>
+
+<script src="shared.js"></script>
+<script>
+wpChrome( [ [ 'Todos los formularios', 'formularios' ], [ 'Envíos', 'envios', 1 ], [ 'Ajustes', 'ajustes' ] ] );
+
+/* Formularios */
+document.getElementById( 'a-forms' ).innerHTML = DATA.forms.map( ( f ) => `
+	<div class="dv-row">
+		<div class="cell-main">
+			<a class="dv-title" href="#constructor">${ f.name }</a>
+			${ f.note ? `<span class="dv-sub only-wide">${ f.note }</span>` : '' }
+			<span class="dv-sub only-narrow">${ f.month ? `${ f.month } envíos · último ${ f.last }` : 'Sin envíos todavía' }${ f.failed ? ' · <b style="color:var(--bad)">1 entrega fallida</b>' : '' }</span>
+		</div>
+		<span class="col-fields">${ f.fields } campos</span>
+		<span>${ f.month ? `<a class="dv-title" href="#envios">${ f.month }</a>` : '0' }</span>
+		<span>${ f.last || '—' }</span>
+		<span>${ f.failed ? '<span class="badge bad">1 fallida</span>' : ( f.month ? '<span class="badge ok">Sin fallos</span>' : '—' ) }</span>
+		<div class="dv-acts"><button class="b btn-insert" type="button">Insertar</button><button class="ib quiet" type="button" aria-label="Más acciones de ${ f.name }"><i data-i="more"></i></button></div>
+	</div>` ).join( '' );
+
+/* Constructor */
+const preview = document.getElementById( 'a-preview' );
+const list = document.getElementById( 'a-fl' );
+const editor = document.querySelector( '.ed' );
+
+function selectField( id ) {
+	const f = field( id );
+
+	preview.innerHTML = formPreview( id );
+	preview.querySelector( '.is-selected' ).insertAdjacentHTML( 'beforeend', `<div class="fld-tools" role="toolbar" aria-label="Acciones del campo">
+		<button class="ib" type="button" aria-label="Subir"><i data-i="chevU" data-s="18"></i></button><button class="ib" type="button" aria-label="Bajar"><i data-i="chevD" data-s="18"></i></button>
+		<button class="ib" type="button" aria-label="Duplicar"><i data-i="copy" data-s="18"></i></button><button class="ib" type="button" aria-label="Eliminar"><i data-i="trash" data-s="18"></i></button></div>` );
+	list.innerHTML = DATA.fields.map( ( item ) => `<li class="${ item.id === id ? 'is-selected' : '' }" data-field="${ item.id }"><i data-i="grip" data-s="18"></i><i data-i="${ item.ico }" data-s="18"></i><span class="dv-ellipsis">${ item.label.replace( /<[^>]+>/g, '' ) }</span>${ item.req ? '<span class="req">Obligatorio</span>' : '' }</li>` ).join( '' );
+	document.getElementById( 'a-f-type' ).textContent = f.type;
+	document.getElementById( 'a-f-label' ).value = f.label.replace( /<[^>]+>/g, '' );
+	document.getElementById( 'a-f-opts' ).hidden = ! f.options;
+	document.getElementById( 'a-f-ico' ).innerHTML = icon( f.ico, 24 );
+	editor.classList.remove( 'list-open' );
+	hydrateIcons();
+	preview.querySelector( '.is-selected' ).scrollIntoView( { block: 'start' } );
+}
+
+editor.addEventListener( 'click', ( event ) => {
+	const target = event.target.closest( '[data-field]' );
+
+	if ( target && ! event.target.closest( '.fld-tools' ) ) {
+		selectField( target.dataset.field );
+	}
+} );
+document.getElementById( 'a-list-toggle' ).addEventListener( 'click', ( event ) => {
+	event.currentTarget.setAttribute( 'aria-pressed', String( editor.classList.toggle( 'list-open' ) ) );
+} );
+document.querySelectorAll( '.ed-insp [data-tab]' ).forEach( ( tab ) => tab.addEventListener( 'click', () => {
+	document.querySelectorAll( '.ed-insp [data-tab]' ).forEach( ( t ) => t.setAttribute( 'aria-selected', String( t === tab ) ) );
+	document.querySelectorAll( '.ed-insp [data-pane]' ).forEach( ( p ) => { p.hidden = p.dataset.pane !== tab.dataset.tab; } );
+} ) );
+selectField( 'motivo' );
+
+/* Envíos */
+const subs = document.querySelector( '.subs' );
+const detail = document.getElementById( 'a-detail' );
+const stateIcon = { ok: 'check', fail: 'alert' };
+
+document.getElementById( 'a-subs' ).innerHTML = DATA.messages.map( ( m, index ) => `
+	<div class="dv-row${ index === 0 ? ' is-selected' : '' }" data-open tabindex="0">
+		<div class="cell-who dv-ellipsis"><span class="dv-title">${ m.name }</span><span class="dv-sub dv-ellipsis only-wide">${ m.email }</span></div>
+		<div class="cell-text" style="min-width:0"><span class="dv-ellipsis" style="display:block">${ m.excerpt }</span><span class="dv-sub">${ m.form }${ m.file ? ' · 1 fichero' : '' }</span></div>
+		<div class="cell-state">${ m.copies ? '<span class="badge bad">1 fallida</span>' : '<span class="badge ok">Entregado</span>' }</div>
+		<div class="cell-date">${ m.day === 'Hoy' ? m.time : m.day.replace( / de octubre/, ' oct' ).replace( /^\S+ /, '' ) }</div>
+	</div>` ).join( '' );
+
+const m = DATA.messages[ 0 ];
+
+detail.innerHTML = `
+	<div class="detail-h"><div><h2>${ m.name }</h2><span class="dv-sub">${ m.form } · hoy a las ${ m.time } · ${ m.ref }</span></div><button class="ib quiet" type="button" id="a-close" aria-label="Cerrar"><i data-i="x"></i></button></div>
+	<div class="detail-body">
+		<dl class="answers">${ m.answers.map( ( [ q, a ] ) => `<div><dt>${ q }</dt><dd>${ a }</dd></div>` ).join( '' ) }</dl>
+		<h3>Entregas</h3>
+		<ul class="deliv">${ m.copies.map( ( c ) => `<li class="is-${ c.state }"><i data-i="${ stateIcon[ c.state ] }" data-s="18"></i><div>${ c.label }<small>${ c.to ? `${ c.to } · ` : '' }${ c.state === 'ok' ? 'Entregado' : 'Fallida' } a las ${ c.when }</small></div>${ c.state === 'fail' ? '<button class="b sec" type="button">Reintentar</button>' : '<span></span>' }${ c.detail ? `<div class="why">${ c.detail }</div>` : '' }</li>` ).join( '' ) }</ul>
+		<div class="detail-foot"><button class="b danger" type="button">Eliminar envío</button></div>
+	</div>`;
+
+subs.classList.toggle( 'is-open', window.matchMedia( '(min-width: 1280px)' ).matches );
+subs.addEventListener( 'click', ( event ) => {
+	if ( event.target.closest( '#a-close' ) ) {
+		subs.classList.remove( 'is-open' );
+	} else if ( event.target.closest( '[data-open]' ) ) {
+		subs.classList.add( 'is-open' );
+	}
+} );
+
+hydrateIcons();
+router( 'formularios', ( screen, extra ) => {
+	if ( screen === 'envios' && extra === 'abrir' ) {
+		subs.classList.add( 'is-open' );
+	}
+	if ( screen === 'constructor' && extra === 'formulario' ) {
+		document.querySelector( '.ed-insp [data-tab="formulario"]' ).click();
+	}
+} );
+</script>
+</body>
+</html>

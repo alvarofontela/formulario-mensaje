@@ -120,8 +120,8 @@ final class Failure_Alert {
 			sprintf(
 				/* translators: 1: number of failed actions, 2: name of the site, 3: address of the screen with the failed actions. */
 				_n(
-					"%1\$d action of the forms of %2\$s (a notification or a webhook) could not be completed.\n\nReview it and retry it here:\n%3\$s",
-					"%1\$d actions of the forms of %2\$s (notifications or webhooks) could not be completed.\n\nReview them and retry them here:\n%3\$s",
+					"%1\$d form action on %2\$s (a notification or a webhook) could not be completed.\n\nReview it and retry it here:\n%3\$s",
+					"%1\$d form actions on %2\$s (notifications or webhooks) could not be completed.\n\nReview them and retry them here:\n%3\$s",
 					$state['pending'],
 					'formulario-mensaje'
 				),
