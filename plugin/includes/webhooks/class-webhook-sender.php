@@ -27,9 +27,13 @@ defined( 'ABSPATH' ) || exit;
  * núcleo valida resolviendo el nombre una vez y la conexión lo resuelve otra, y entre las dos un
  * DNS malintencionado podría cambiar la respuesta. Eso solo se puede hacer con cURL: sin él, la
  * petición a un destino con nombre no se envía, y si después no consta que la conexión fue a esa
- * dirección, la respuesta se descarta con un error. La única salvedad es un proxy de salida, donde
- * quien resuelve y se conecta es el proxy: la petición se hace, pero del destino solo se cuenta el
- * código, nunca el cuerpo, que es lo que convertiría una petición a ciegas en una lectura.
+ * dirección, la respuesta se descarta con un error.
+ *
+ * Con un proxy de salida la conexión se obliga igual: cURL le pide al proxy un túnel hacia la
+ * dirección comprobada, no hacia el nombre, así que el proxy tampoco lo resuelve por su cuenta. Lo
+ * que no se puede es confirmar después adónde se conectó el proxy, y por eso en ese caso del destino
+ * solo se cuenta el código, nunca el cuerpo, que es lo que convertiría una petición a ciegas en una
+ * lectura.
  */
 final class Webhook_Sender {
 
@@ -132,12 +136,10 @@ final class Webhook_Sender {
 		 * de pruebas), no va a haber conexión que proteger. Si la va a haber, se decide aquí a qué
 		 * dirección, y una interna corta la petición con su error.
 		 *
-		 * Con un proxy de salida es el proxy quien resuelve el nombre y se conecta, no este servidor:
-		 * no hay conexión propia que obligar, y a qué redes llega es cosa de la configuración del proxy.
-		 * La dirección se comprueba igual desde aquí, y si pasa, la petición se hace, pero de la
-		 * respuesta solo se cuenta el código (ver más abajo).
+		 * Con o sin proxy de salida: la dirección se resuelve y se comprueba aquí una sola vez, y es a
+		 * la que se obliga a ir a la conexión.
 		 */
-		$guard = function ( mixed $preempt ) use ( $url, $proxied, &$address ): mixed {
+		$guard = function ( mixed $preempt ) use ( $url, &$address ): mixed {
 			if ( false !== $preempt ) {
 				return $preempt;
 			}
@@ -146,10 +148,6 @@ final class Webhook_Sender {
 
 			if ( is_wp_error( $destination ) ) {
 				return $destination;
-			}
-
-			if ( $proxied ) {
-				return $preempt;
 			}
 
 			// Si la conexión no se puede obligar a ir a la dirección comprobada, volvería a resolver el
@@ -165,8 +163,9 @@ final class Webhook_Sender {
 
 		/*
 		 * La conexión va a la dirección comprobada sea cual sea el nombre de la petición: no depende de
-		 * que cURL lo escriba igual que aquí. El puerto es el de la dirección del webhook. Si la opción
-		 * no se puede poner, la petición se deja sin dirección para que falle antes de conectarse.
+		 * que cURL lo escriba igual que aquí. El puerto es el de la dirección del webhook. Con un proxy,
+		 * esa dirección es la que cURL le pide alcanzar por un túnel. Si la opción no se puede poner, la
+		 * petición se deja sin dirección para que falle antes de conectarse.
 		 */
 		$connect = static function ( mixed $curl ) use ( &$address, &$handle ): void {
 			if ( '' === $address ) {
@@ -211,13 +210,19 @@ final class Webhook_Sender {
 		/*
 		 * Había una dirección a la que obligar la conexión: si no consta que la petición fue a ella
 		 * (no pasó por cURL, o se conectó a otra), no se da por buena ni se cuenta nada de la respuesta.
+		 * Con un proxy, la dirección a la que se conecta este servidor es la del proxy: ahí solo se puede
+		 * exigir que la opción se haya puesto.
 		 */
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_getinfo -- Solo se lee a qué dirección se conectó la petición que ha hecho la HTTP API.
-		if ( '' !== $address && ( null === $handle || curl_getinfo( $handle, CURLINFO_PRIMARY_IP ) !== $address ) ) {
-			return new WP_Error( 'formulario_mensaje_webhook_unpinned', __( 'The webhook connection could not be kept on the address that was checked, so its response was discarded.', 'formulario-mensaje' ) );
+		if ( '' !== $address ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_getinfo -- Solo se lee a qué dirección se conectó la petición que ha hecho la HTTP API.
+			$reached = null !== $handle && ( $proxied || curl_getinfo( $handle, CURLINFO_PRIMARY_IP ) === $address );
+
+			if ( ! $reached ) {
+				return new WP_Error( 'formulario_mensaje_webhook_unpinned', __( 'The webhook connection could not be kept on the address that was checked, so its response was discarded.', 'formulario-mensaje' ) );
+			}
 		}
 
-		// A través de un proxy no se sabe a qué dirección llegó la petición: solo se cuenta el código.
+		// A través de un proxy no se puede confirmar a qué dirección llegó la petición: solo se cuenta el código.
 		$body = $proxied ? '' : wp_remote_retrieve_body( $response );
 
 		return new Webhook_Response(
