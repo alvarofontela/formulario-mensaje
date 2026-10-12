@@ -23,14 +23,11 @@ final class Csv_Exporter {
 	private const PAGE_SIZE = 200;
 
 	/**
-	 * Caracteres con los que una hoja de cálculo interpreta una celda como fórmula.
+	 * Signo de fórmula en cualquier sitio donde una hoja de cálculo puede empezar una celda: al
+	 * principio, o detrás de un punto y coma, una barra vertical, un tabulador o un salto de línea,
+	 * aunque entre medias haya comillas o espacios (que al partir la celda se descartan).
 	 */
-	private const FORMULA_TRIGGERS = array( '=', '+', '-', '@', "\t", "\r" );
-
-	/**
-	 * Signo de fórmula justo detrás de un carácter que otra hoja de cálculo puede usar de separador.
-	 */
-	private const TRIGGER_AFTER_SEPARATOR = '/([;|\t])(?=[=+\-@])/';
+	private const TRIGGER_AT_CELL_START = '/(^|[;|\t\r\n])(["\' \t]*)(?=[=+\-@])/';
 
 	/**
 	 * Constructor.
@@ -111,20 +108,23 @@ final class Csv_Exporter {
 	 *
 	 * No basta con mirar el principio: el fichero se separa por comas, pero una hoja de cálculo
 	 * configurada con otro separador (el punto y coma, en los idiomas que usan la coma decimal) parte
-	 * la celda por él, y lo que viene detrás pasa a ser el principio de otra.
+	 * la celda por él, y entonces tampoco reconoce las comillas que la envuelven: un salto de línea
+	 * dentro de la celda le parece una fila nueva. Lo que viene detrás pasa a ser el principio de otra
+	 * celda. Por eso un texto de varias líneas escrito como lista («- uno») sale con su apóstrofo.
 	 *
 	 * @param string $cell Contenido de la celda.
 	 * @return string El mismo contenido, con un apóstrofo delante de cada signo de fórmula que esté al
-	 *                principio o justo detrás de un separador.
+	 *                principio de la celda o de lo que otra hoja de cálculo tomaría por una celda.
 	 */
 	public function neutralize( string $cell ): string {
 		if ( '' === $cell ) {
 			return $cell;
 		}
 
-		$cell = (string) preg_replace( self::TRIGGER_AFTER_SEPARATOR, "$1'", $cell );
+		$cell = (string) preg_replace( self::TRIGGER_AT_CELL_START, "$1$2'", $cell );
 
-		return in_array( $cell[0], self::FORMULA_TRIGGERS, true ) ? "'" . $cell : $cell;
+		// Un tabulador o un retorno de carro al principio también hacen que la celda se lea como fórmula.
+		return "\t" === $cell[0] || "\r" === $cell[0] ? "'" . $cell : $cell;
 	}
 
 	/**

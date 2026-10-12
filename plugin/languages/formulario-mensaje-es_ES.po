@@ -606,7 +606,7 @@ msgid "Accepted: %s"
 msgstr "Aceptado: %s"
 
 #: includes/fields/types/class-date-field-type.php:30
-#: includes/storage/class-csv-exporter.php:68
+#: includes/storage/class-csv-exporter.php:65
 msgid "Date"
 msgstr "Fecha"
 
@@ -1320,23 +1320,23 @@ msgstr "es menor que"
 msgid "This delivery cannot be retried."
 msgstr "Esta entrega no se puede reintentar."
 
-#: includes/storage/class-csv-exporter.php:68
+#: includes/storage/class-csv-exporter.php:65
 #: build/admin/index.js:37
 msgid "Reference"
 msgstr "Referencia"
 
-#: includes/storage/class-csv-exporter.php:68
+#: includes/storage/class-csv-exporter.php:65
 #: build/admin/index.js:37
 msgid "Page"
 msgstr "Página"
 
-#: includes/storage/class-csv-exporter.php:71
+#: includes/storage/class-csv-exporter.php:68
 #: build/admin/index.js:11
 #: build/admin/index.js:37
 msgid "IP address"
 msgstr "Dirección IP"
 
-#: includes/storage/class-csv-exporter.php:75
+#: includes/storage/class-csv-exporter.php:72
 #: build/admin/index.js:37
 msgid "Browser"
 msgstr "Navegador"
@@ -1401,11 +1401,11 @@ msgstr "Webhook"
 msgid "The destination responded with HTTP status %d."
 msgstr "El destino ha respondido con el código HTTP %d."
 
-#: includes/webhooks/class-webhook-sender.php:83
+#: includes/webhooks/class-webhook-sender.php:84
 msgid "The webhook has no destination address."
 msgstr "El webhook no tiene dirección de destino."
 
-#: includes/webhooks/class-webhook-sender.php:89
+#: includes/webhooks/class-webhook-sender.php:90
 msgid "The submission data could not be converted to JSON."
 msgstr "Los datos del envío no se han podido convertir a JSON."
 
@@ -3281,3 +3281,7 @@ msgstr "Solo puede cambiarlo quien tiene permiso para borrar mensajes: los borra
 #: build/admin/index.js:52
 msgid "The SMTP connection has not been changed: the stored password could not be deleted first. Try again."
 msgstr "La conexión SMTP no se ha cambiado: antes no se ha podido borrar la contraseña guardada. Inténtalo de nuevo."
+
+#: includes/webhooks/class-webhook-sender.php:145
+msgid "This server cannot send webhooks safely: PHP has no cURL to keep the connection on the address that was checked."
+msgstr "Este servidor no puede enviar webhooks con seguridad: PHP no tiene cURL para mantener la conexión en la dirección que se ha comprobado."

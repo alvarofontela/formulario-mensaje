@@ -406,6 +406,23 @@ class AlmacenTest extends Caso_Formulario {
 		$this->assertSame( "a\t'=1|'=2", $exportador->neutralize( "a\t=1|=2" ) );
 		$this->assertSame( 'uno; dos; a=b', $exportador->neutralize( 'uno; dos; a=b' ), 'Un texto normal con punto y coma no se toca.' );
 		$this->assertSame( 'Añadir; más', $exportador->neutralize( 'Añadir; más' ) );
+
+		// Al partir por otro separador se pierden también las comillas que envuelven la celda: las que
+		// queden delante del signo, y los espacios, no lo esconden.
+		$this->assertSame( 'x;"\'=1+1";y', $exportador->neutralize( 'x;"=1+1";y' ) );
+		$this->assertSame( "a; \t'=1+1", $exportador->neutralize( "a; \t=1+1" ) );
+		$this->assertSame( '"\'=1+1', $exportador->neutralize( '"=1+1' ) );
+		$this->assertSame( " '=1+1", $exportador->neutralize( ' =1+1' ) );
+
+		// Y un salto de línea dentro de la celda pasa a ser una fila nueva. Una lista escrita con guiones
+		// sale con su apóstrofo: es el precio de que no pueda empezar una fórmula.
+		$this->assertSame( "Hola\n'=1+1", $exportador->neutralize( "Hola\n=1+1" ) );
+		$this->assertSame( "Hola\r\n'@x", $exportador->neutralize( "Hola\r\n@x" ) );
+		$this->assertSame( "Lista:\n'- uno\n'- dos", $exportador->neutralize( "Lista:\n- uno\n- dos" ) );
+
+		// La coma no hace falta: quien separa por comas respeta las comillas, y para los demás no separa.
+		$this->assertSame( 'Madrid, +34 600 111 222', $exportador->neutralize( 'Madrid, +34 600 111 222' ) );
+		$this->assertSame( 'de 9-14 y 16-19', $exportador->neutralize( 'de 9-14 y 16-19' ) );
 	}
 
 	public function test_la_exportacion_filtra_por_fechas() {

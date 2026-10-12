@@ -22,11 +22,12 @@ defined( 'ABSPATH' ) || exit;
  * segura de la HTTP API, que rechaza las direcciones internas (SSRF), y no sigue redirecciones: un
  * destino que redirige podría llevar los datos a otro sitio.
  *
- * Además, la conexión queda fijada a la dirección que se ha comprobado (ver Destination_Guard): el
+ * Además, la conexión se obliga a ir a la dirección que se ha comprobado (ver Destination_Guard): el
  * núcleo valida resolviendo el nombre una vez y la conexión lo resuelve otra, y entre las dos un
- * DNS malintencionado podría cambiar la respuesta. Fijarla solo es posible con cURL; con otro
- * transporte la petición se hace igual, pero no se devuelve nada del cuerpo de la respuesta, que es
- * lo que convertiría una petición a ciegas en una lectura.
+ * DNS malintencionado podría cambiar la respuesta. Eso solo se puede hacer con cURL: sin él, la
+ * petición a un destino con nombre no se envía. Y del cuerpo de la respuesta solo se devuelve algo
+ * si la conexión ha llegado de verdad a esa dirección, que es lo que convertiría una petición a
+ * ciegas en una lectura; detrás de un proxy de salida, por ejemplo, no se puede saber.
  */
 final class Webhook_Sender {
 
@@ -120,34 +121,43 @@ final class Webhook_Sender {
 		 */
 		$timeout = max( 1, min( 30, (int) apply_filters( 'formulario_mensaje_webhook_timeout', self::TIMEOUT ) ) );
 		$started = microtime( true );
-		$pin     = '';
-		$pinned  = false;
+		$address = '';
+		$handle  = null;
 
 		/*
 		 * Va el último de su filtro: si otro código ya ha respondido a la petición (una caché, un doble
 		 * de pruebas), no va a haber conexión que proteger. Si la va a haber, se decide aquí a qué
 		 * dirección, y una interna corta la petición con su error.
 		 */
-		$guard = function ( mixed $preempt ) use ( $url, &$pin ): mixed {
+		$guard = function ( mixed $preempt ) use ( $url, &$address ): mixed {
 			if ( false !== $preempt ) {
 				return $preempt;
 			}
 
-			$destination = $this->destinations->pin( $url );
+			$destination = $this->destinations->address( $url );
 
 			if ( is_wp_error( $destination ) ) {
 				return $destination;
 			}
 
-			$pin = $destination;
+			// Sin cURL la conexión volvería a resolver el nombre por su cuenta: no se envía.
+			if ( '' !== $destination && ! function_exists( 'curl_init' ) ) {
+				return new WP_Error( 'formulario_mensaje_webhook_unpinned', __( 'This server cannot send webhooks safely: PHP has no cURL to keep the connection on the address that was checked.', 'formulario-mensaje' ) );
+			}
+
+			$address = $destination;
 
 			return $preempt;
 		};
 
-		$connect = static function ( mixed $handle ) use ( &$pin, &$pinned ): void {
-			if ( '' !== $pin ) {
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt -- La petición la hace la HTTP API; aquí solo se le fija la dirección ya comprobada, que no tiene otra vía.
-				$pinned = curl_setopt( $handle, CURLOPT_RESOLVE, array( $pin ) );
+		/*
+		 * La conexión va a la dirección comprobada sea cual sea el nombre de la petición: no depende de
+		 * que cURL lo escriba igual que aquí. El puerto es el de la dirección del webhook.
+		 */
+		$connect = static function ( mixed $curl ) use ( &$address, &$handle ): void {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt -- La petición la hace la HTTP API; aquí solo se la obliga a ir a la dirección ya comprobada, que no tiene otra vía.
+			if ( '' !== $address && curl_setopt( $curl, CURLOPT_CONNECT_TO, array( '::' . $address . ':' ) ) ) {
+				$handle = $curl;
 			}
 		};
 
@@ -177,9 +187,14 @@ final class Webhook_Sender {
 			return new WP_Error( 'formulario_mensaje_webhook_failed', mb_substr( sanitize_text_field( $response->get_error_message() ), 0, 200 ) );
 		}
 
-		// Había una dirección que fijar y la conexión no ha pasado por cURL: no se ha podido fijar, así que
-		// del destino solo se cuenta el código con el que respondió.
-		$body = '' !== $pin && ! $pinned ? '' : wp_remote_retrieve_body( $response );
+		/*
+		 * El cuerpo solo se cuenta si no había nombre que resolver o si la conexión ha llegado a la
+		 * dirección comprobada. Si no se puede asegurar (otro transporte, un proxy de salida), del
+		 * destino solo se dice el código con el que respondió.
+		 */
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_getinfo -- Solo se lee a qué dirección se conectó la petición que ha hecho la HTTP API.
+		$verified = '' === $address || ( null !== $handle && curl_getinfo( $handle, CURLINFO_PRIMARY_IP ) === $address );
+		$body     = $verified ? wp_remote_retrieve_body( $response ) : '';
 
 		return new Webhook_Response(
 			(int) wp_remote_retrieve_response_code( $response ),

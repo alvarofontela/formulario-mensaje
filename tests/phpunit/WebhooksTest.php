@@ -462,19 +462,18 @@ class WebhooksTest extends Caso_Formulario {
 		$this->assertFalse( wp_next_scheduled( Queue_Schedule::HOOK ) );
 	}
 
-	public function test_el_destino_de_un_webhook_se_resuelve_una_vez_y_la_conexion_queda_fijada_a_esa_direccion() {
+	public function test_el_destino_de_un_webhook_se_resuelve_una_vez_y_la_conexion_va_a_esa_direccion() {
 		$dns     = new Resolutor_Fijo( array( 'hooks.example.org' => '93.184.216.34' ) );
 		$destino = new Destination_Guard( $dns );
 
-		// El formato es el de una entrada de CURLOPT_RESOLVE: servidor, puerto y la dirección ya comprobada.
-		$this->assertSame( 'hooks.example.org:443:93.184.216.34', $destino->pin( 'https://hooks.example.org/entrada' ) );
-		$this->assertSame( 'hooks.example.org:80:93.184.216.34', $destino->pin( 'http://HOOKS.example.org/entrada?a=1' ) );
-		$this->assertSame( 'hooks.example.org:8080:93.184.216.34', $destino->pin( 'https://hooks.example.org:8080/' ) );
+		// La dirección ya comprobada es a la que se obliga a ir a la conexión, se escriba como se escriba el nombre.
+		$this->assertSame( '93.184.216.34', $destino->address( 'https://hooks.example.org/entrada' ) );
+		$this->assertSame( '93.184.216.34', $destino->address( 'http://HOOKS.example.org:8080/entrada?a=1' ) );
+		$this->assertSame( 2, $dns->consultas );
 
 		// Una dirección escrita como IP no tiene nombre que resolver: la valida el núcleo tal cual.
-		$consultas = $dns->consultas;
-		$this->assertSame( '', $destino->pin( 'https://203.0.114.7/entrada' ) );
-		$this->assertSame( $consultas, $dns->consultas );
+		$this->assertSame( '', $destino->address( 'https://203.0.114.7/entrada' ) );
+		$this->assertSame( 2, $dns->consultas );
 	}
 
 	public function test_un_nombre_que_apunta_a_una_direccion_interna_o_que_no_se_resuelve_no_es_un_destino() {
@@ -483,13 +482,13 @@ class WebhooksTest extends Caso_Formulario {
 
 		foreach ( array( '127.0.0.1', '10.0.0.5', '172.16.4.4', '192.168.1.20', '169.254.169.254', '0.0.0.0' ) as $interna ) {
 			$dns->direcciones = array( 'rebote.example.org' => $interna );
-			$error            = $destino->pin( 'https://rebote.example.org/' );
+			$error            = $destino->address( 'https://rebote.example.org/' );
 
 			$this->assertWPError( $error, $interna );
 			$this->assertSame( 'formulario_mensaje_webhook_internal', $error->get_error_code() );
 		}
 
-		$this->assertSame( 'formulario_mensaje_webhook_unresolved', $destino->pin( 'https://no-existe.example.org/' )->get_error_code() );
+		$this->assertSame( 'formulario_mensaje_webhook_unresolved', $destino->address( 'https://no-existe.example.org/' )->get_error_code() );
 
 		// Un sitio puede permitir un servidor de su red por su nombre con el filtro del núcleo: se
 		// respeta, y la conexión queda fijada igualmente a la dirección comprobada.
@@ -498,8 +497,8 @@ class WebhooksTest extends Caso_Formulario {
 
 		$dns->direcciones = array( 'n8n.interno.example' => '10.0.0.5', 'rebote.example.org' => '10.0.0.6' );
 
-		$this->assertSame( 'n8n.interno.example:443:10.0.0.5', $destino->pin( 'https://n8n.interno.example/webhook' ) );
-		$this->assertWPError( $destino->pin( 'https://rebote.example.org/' ) );
+		$this->assertSame( '10.0.0.5', $destino->address( 'https://n8n.interno.example/webhook' ) );
+		$this->assertWPError( $destino->address( 'https://rebote.example.org/' ) );
 
 		remove_filter( 'http_request_host_is_external', $permitir, 10 );
 
@@ -507,10 +506,10 @@ class WebhooksTest extends Caso_Formulario {
 		$propio           = (string) wp_parse_url( home_url(), PHP_URL_HOST );
 		$dns->direcciones = array( $propio => '127.0.0.1' );
 
-		$this->assertSame( $propio . ':80:127.0.0.1', $destino->pin( 'http://' . $propio . '/wp-json/' ) );
+		$this->assertSame( '127.0.0.1', $destino->address( 'http://' . $propio . '/wp-json/' ) );
 
 		$dns->direcciones = array();
-		$this->assertSame( '', $destino->pin( 'http://' . $propio . '/wp-json/' ), 'Si no se resuelve, se deja al servidor llegar como pueda.' );
+		$this->assertSame( '', $destino->address( 'http://' . $propio . '/wp-json/' ), 'Si no se resuelve, se deja al servidor llegar como pueda.' );
 	}
 
 	public function test_el_envio_de_un_webhook_se_corta_si_su_nombre_apunta_a_la_red_interna() {

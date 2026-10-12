@@ -17,8 +17,8 @@ defined( 'ABSPATH' ) || exit;
  * La variante segura de la HTTP API valida la dirección resolviendo el nombre una vez, pero la
  * conexión lo resuelve otra vez por su cuenta: quien controle el DNS del destino podría responder con
  * una dirección pública a la primera consulta y con una interna a la segunda. Aquí el nombre se
- * resuelve una sola vez, se comprueba esa dirección y se le entrega a la conexión para que no vuelva
- * a preguntar.
+ * resuelve una sola vez y se comprueba esa dirección; quien hace la petición obliga a la conexión a
+ * ir a ella, sin volver a preguntar.
  */
 final class Destination_Guard {
 
@@ -30,14 +30,14 @@ final class Destination_Guard {
 	public function __construct( private readonly Host_Resolver $resolver ) {}
 
 	/**
-	 * Dirección a la que hay que fijar la conexión de una petición.
+	 * Dirección IP a la que tiene que ir la conexión de una petición.
 	 *
 	 * @param string $url Dirección del webhook.
-	 * @return string|WP_Error Entrada `servidor:puerto:ip` para la conexión; cadena vacía si no hay nombre
-	 *                         que resolver (la dirección ya es una IP, que valida el núcleo); un error
-	 *                         si el nombre no se resuelve o apunta a una dirección interna.
+	 * @return string|WP_Error Dirección IPv4 ya comprobada; cadena vacía si no hay nombre que resolver
+	 *                         (la dirección ya es una IP, que valida el núcleo); un error si el nombre
+	 *                         no se resuelve o apunta a una dirección interna.
 	 */
-	public function pin( string $url ): string|WP_Error {
+	public function address( string $url ): string|WP_Error {
 		$parts = wp_parse_url( $url );
 		$host  = is_array( $parts ) && is_string( $parts['host'] ?? null ) ? strtolower( $parts['host'] ) : '';
 
@@ -57,9 +57,7 @@ final class Destination_Guard {
 			return new WP_Error( 'formulario_mensaje_webhook_internal', __( 'The webhook address points to an internal network address.', 'formulario-mensaje' ) );
 		}
 
-		$port = (int) ( $parts['port'] ?? ( 'https' === strtolower( (string) ( $parts['scheme'] ?? '' ) ) ? 443 : 80 ) );
-
-		return $host . ':' . $port . ':' . $ip;
+		return $ip;
 	}
 
 	/**
