@@ -124,7 +124,8 @@ final class Submission_Uploads {
 	 *
 	 * Si alguna acción ha fallado y el envío está guardado, se esperan: la entrega fallida se puede
 	 * reintentar desde la administración, y sin el fichero el correo saldría sin su adjunto. Se
-	 * borran cuando el envío deja de tener entregas fallidas (ver settle()) o con el propio envío.
+	 * borran cuando el envío deja de tener entregas fallidas (ver settle()), lo que ocurre como muy
+	 * tarde al caducar el registro de entregas, o con el propio envío.
 	 *
 	 * @param Form   $form          Formulario.
 	 * @param string $reference     Número de referencia del envío.

@@ -71,11 +71,22 @@ final class Retention_Service {
 
 		// Las entregas en cola no se tocan: todavía tienen trabajo pendiente.
 		$log_days = $this->settings->get()->delivery_log_days;
+		$before   = gmdate( 'Y-m-d H:i:s', $now - $log_days * DAY_IN_SECONDS );
 
-		if ( $this->deliveries->delete_finished_before( gmdate( 'Y-m-d H:i:s', $now - $log_days * DAY_IN_SECONDS ) ) > 0 ) {
+		// Se anotan antes de borrar: después ya no hay forma de saber qué envíos tenían un fallo sin resolver.
+		$unresolved = $this->deliveries->submissions_failed_before( $before );
+
+		if ( $this->deliveries->delete_finished_before( $before ) > 0 ) {
 			// Entre lo borrado puede haber fallos que nadie llegó a revisar: los recuentos se rehacen.
 			$this->stored->recount_failed_actions();
 			$this->failures->refresh();
+
+			// Un fallo que sale del registro ya no se puede reintentar. Si al envío no le queda ningún otro,
+			// se da por resuelto, y con eso se borra lo que se guardaba solo para ese reintento: sin esto,
+			// un fichero que el formulario mandaba no conservar se quedaría con el envío para siempre.
+			foreach ( $unresolved as $submission_id ) {
+				$this->failures->refresh( $submission_id );
+			}
 		}
 
 		return $deleted;

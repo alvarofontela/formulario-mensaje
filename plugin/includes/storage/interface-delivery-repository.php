@@ -72,6 +72,14 @@ interface Delivery_Repository {
 	public function delete_for_submissions( array $submission_ids ): void;
 
 	/**
+	 * Envíos guardados que tienen alguna entrega fallida cuyo último cambio es anterior a una fecha.
+	 *
+	 * @param string $before_gmt Fecha límite en GMT (formato MySQL).
+	 * @return int[] Identificadores de los envíos.
+	 */
+	public function submissions_failed_before( string $before_gmt ): array;
+
+	/**
 	 * Borra las entregas terminadas (completadas, fallidas o descartadas) cuyo último cambio es
 	 * anterior a una fecha. Las que están en la cola no se tocan.
 	 *

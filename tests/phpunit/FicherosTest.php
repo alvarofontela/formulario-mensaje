@@ -12,6 +12,7 @@ use Formulario_Mensaje\Fields\Field_Type_Registry;
 use Formulario_Mensaje\Forms\Field;
 use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Lifecycle\Capabilities;
+use Formulario_Mensaje\Lifecycle\Maintenance_Schedule;
 use Formulario_Mensaje\Mail\Email_Message;
 use Formulario_Mensaje\Mail\Mail_Settings;
 use Formulario_Mensaje\Mail\Resend_Transport;
@@ -413,6 +414,49 @@ class FicherosTest extends Caso_Formulario {
 		$this->assertSame( 200, $this->rest( 'POST', '/deliveries/' . $fallidas[ $fichero_segundo[0]->submission_id ] . '/dismiss' )->get_status() );
 		$this->assertSame( array(), $this->guardados( $formulario, $segundo->to_array()['reference'] ) );
 		$this->assertFileDoesNotExist( $this->directorio->base() . '/' . $fichero_segundo[0]->path );
+	}
+
+	public function test_un_fichero_que_esperaba_al_reintento_se_borra_cuando_caduca_el_registro_de_entregas() {
+		global $wpdb;
+
+		$campos = array(
+			array( 'id' => 'nombre', 'type' => 'text', 'settings' => array( 'label' => 'Nombre', 'required' => true ) ),
+			array( 'id' => 'adjunto', 'type' => 'file', 'settings' => array( 'label' => 'Adjunto', 'keep' => false ) ),
+			array( 'id' => 'contrato', 'type' => 'file', 'settings' => array( 'label' => 'Contrato', 'keep' => true ) ),
+		);
+		$rota   = $this->definicion()['actions'][0];
+
+		$rota['settings']['to'] = array();
+
+		$formulario = $this->crear_formulario( array( 'fields' => $campos, 'actions' => array( $rota ) ) );
+		$resultado  = $this->enviar_con_ficheros(
+			$formulario,
+			array( 'nombre' => 'Ana' ),
+			array(
+				'adjunto'  => array( array( 'informe.pdf', $this->pdf() ) ),
+				'contrato' => array( array( 'contrato.pdf', $this->pdf() ) ),
+			)
+		);
+
+		$this->assertInstanceOf( Submission_Result::class, $resultado );
+
+		$referencia = $resultado->to_array()['reference'];
+		$ficheros   = array_column( $this->guardados( $formulario, $referencia ), null, 'field_id' );
+
+		// La notificación ha fallado: el fichero que solo se adjuntaba espera a que alguien la reintente.
+		$this->assertSame( array( 'adjunto', 'contrato' ), array_keys( $ficheros ) );
+
+		// Nadie la reintenta ni la descarta, y pasa el plazo del registro de entregas: la limpieza diaria la borra.
+		$wpdb->query( $wpdb->prepare( 'UPDATE %i SET updated_at = %s', $this->esquema()->deliveries_table(), '2020-01-01 00:00:00' ) );
+		do_action( Maintenance_Schedule::HOOK );
+
+		$this->como_administrador();
+		$this->assertSame( array(), $this->rest( 'GET', '/deliveries' )->get_data(), 'La entrega fallida ya no está en el registro.' );
+
+		// Sin entrega que reintentar, ese fichero ya no tiene para qué quedarse; el que el campo manda conservar, sí.
+		$this->assertSame( array( 'contrato' ), array_column( $this->guardados( $formulario, $referencia ), 'field_id' ) );
+		$this->assertFileDoesNotExist( $this->directorio->base() . '/' . $ficheros['adjunto']->path );
+		$this->assertFileExists( $this->directorio->base() . '/' . $ficheros['contrato']->path );
 	}
 
 	public function test_un_fichero_que_se_conserva_no_se_borra_al_resolverse_una_entrega_fallida() {

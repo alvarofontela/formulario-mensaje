@@ -185,6 +185,27 @@ final class Wpdb_Delivery_Repository implements Delivery_Repository {
 	}
 
 	/**
+	 * Envíos guardados que tienen alguna entrega fallida cuyo último cambio es anterior a una fecha.
+	 *
+	 * @param string $before_gmt Fecha límite en GMT (formato MySQL).
+	 * @return int[] Identificadores de los envíos.
+	 */
+	public function submissions_failed_before( string $before_gmt ): array {
+		$wpdb = $this->wpdb;
+
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				'SELECT DISTINCT submission_id FROM %i WHERE status = %s AND submission_id > 0 AND updated_at < %s',
+				$this->schema->deliveries_table(),
+				Delivery_Status::Failed->value,
+				$before_gmt
+			)
+		);
+
+		return array_map( 'intval', is_array( $ids ) ? $ids : array() );
+	}
+
+	/**
 	 * Borra las entregas terminadas cuyo último cambio es anterior a una fecha.
 	 *
 	 * @param string $before_gmt Fecha límite en GMT (formato MySQL).

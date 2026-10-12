@@ -54,8 +54,9 @@ final class Failure_Counter {
 			if ( 0 === $failed ) {
 				/**
 				 * Se dispara cuando, tras un cambio en sus entregas, un envío guardado no tiene ninguna
-				 * fallida: porque el reintento ha salido bien, porque se ha descartado o porque la cola
-				 * ha terminado con ellas. Lo que se guardaba solo para poder reintentar ya no hace falta.
+				 * fallida: porque el reintento ha salido bien, porque se ha descartado, porque la cola ha
+				 * terminado con ellas o porque han caducado en el registro de entregas sin que nadie las
+				 * resolviera. Lo que se guardaba solo para poder reintentar ya no hace falta.
 				 *
 				 * @since 0.12.0
 				 *

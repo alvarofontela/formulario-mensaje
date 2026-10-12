@@ -64,7 +64,7 @@ Se dispara cuando una acción de un envío falla y ya no se va a reintentar sola
 
 ### `formulario_mensaje_submission_settled` (acción)
 
-Se dispara cuando, tras un cambio en sus entregas, un envío guardado no tiene ninguna fallida: porque el reintento ha salido bien, porque se ha descartado o porque la cola ha terminado con ellas. El plugin la usa para borrar los ficheros que guardaba solo para poder reintentar una notificación.
+Se dispara cuando, tras un cambio en sus entregas, un envío guardado no tiene ninguna fallida: porque el reintento ha salido bien, porque se ha descartado, porque la cola ha terminado con ellas o porque han caducado en el registro de entregas sin que nadie las resolviera (pasado ese plazo ya no se pueden reintentar). El plugin la usa para borrar los ficheros que guardaba solo para poder reintentar una notificación.
 
 | Parámetro | Tipo | |
 | --- | --- | --- |
