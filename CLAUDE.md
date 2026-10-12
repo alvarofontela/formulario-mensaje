@@ -1,6 +1,6 @@
 # formulario-mensaje
 
-Plugin de formularios para WordPress, pensado para webs propias y de clientes y preparado para publicarse en el directorio de WordPress.org (ver «Directorio de WordPress.org»). El código del plugin vive en `plugin/` (fichero principal: `plugin/formulario-mensaje.php`). El resto del repositorio es el entorno para desarrollarlo y probarlo de forma agéntica.
+Plugin de formularios para WordPress, pensado para webs propias y de clientes. Se distribuye por las releases de GitHub y las webs lo actualizan desde el escritorio de WordPress (ver «Distribución y actualizaciones»). El código del plugin vive en `plugin/` (fichero principal: `plugin/formulario-mensaje.php`). El resto del repositorio es el entorno para desarrollarlo y probarlo de forma agéntica.
 
 ## Reglas de trabajo
 
@@ -35,6 +35,9 @@ Para que la consulta sea eficiente:
 | Resend | `/websites/resend` |
 | PHPMailer | `/phpmailer/phpmailer` |
 | Gutenberg: `@wordpress/components`, `api-fetch`, `scripts`, bloques | `/wordpress/gutenberg` |
+| GitHub Actions (flujos, permisos del `GITHUB_TOKEN`) | `/websites/github_en_actions` |
+| GitHub CLI (`gh release`) | `/websites/cli_github_manual` |
+| GitHub: releases, enlaces a la última release, API REST | `/websites/github_en` |
 
 ### 2. Skills de WordPress para desarrollar el plugin
 
@@ -154,9 +157,10 @@ SOLID no justifica la sobreingeniería, que va contra la ligereza del plugin: un
 | Carga de clases | Autoloader propio registrado en el fichero principal; sin PSR-4 y sin Composer en producción |
 | PHP mínimo | 8.1 |
 | WordPress mínimo | 7.0 |
-| Distribución | Directorio de WordPress.org; lo que se sube es el zip de `rt package` |
+| Distribución | Releases de GitHub (`alvarofontela/formulario-mensaje`), una por tag de versión; el zip es el de `scripts/package.py` |
+| Versiones y tags | SemVer sin «v» delante: `1.0.0`, `1.2.3`; las preliminares, con sufijo (`1.3.0-beta.1`) |
 
-El slug está definido en `scripts/runtime.config.psd1` y los prefijos y el text domain en `phpcs.xml.dist`; si cambia uno, hay que cambiarlo en los dos sitios y aquí.
+El slug está definido en `scripts/runtime.config.psd1` y los prefijos y el text domain en `phpcs.xml.dist`; si cambia uno, hay que cambiarlo en los dos sitios y aquí. El slug está además en `.github/workflows/release.yml` y en `Updates_Provider`, junto al repositorio de GitHub, que también va en la cabecera `Update URI`.
 
 ## Puesta en marcha desde un clon
 
@@ -188,7 +192,7 @@ Hace falta Windows con PowerShell 7, Node.js, git y Python 3.10 o posterior (el 
 
 Límites que conviene conocer al tocar esos ficheros:
 
-- Las reglas comparten un máximo de 8192 caracteres con las de usuario (`~/.claude/claude-security-guidance.md`), que van delante: lo que sobra se corta por el final. El plugin añade unos 30 caracteres de envoltorio, así que el fichero no puede pasar de 8160 (`len()` en Python, no bytes). Hoy ocupa 8146: al añadir texto hay que recortar otro, medirlo y comprobar en `~/.claude/security/log.txt` que no aparece «truncating». Se envían al modelo en cada revisión, así que no llevan secretos.
+- Las reglas comparten un máximo de 8192 caracteres con las de usuario (`~/.claude/claude-security-guidance.md`), que van delante: lo que sobra se corta por el final. El plugin añade unos 30 caracteres de envoltorio, así que el fichero no puede pasar de 8160 (`len()` en Python, no bytes). Hoy ocupa 8155: al añadir texto hay que recortar otro, medirlo y comprobar en `~/.claude/security/log.txt` que no aparece «truncating». Se envían al modelo en cada revisión, así que no llevan secretos.
 - Como mucho 50 patrones, con avisos de hasta 1024 caracteres. Un patrón mal formado o con una expresión regular que el plugin considere lenta se descarta sin avisar: tras cambiarlos, mira `~/.claude/security/log.txt`. Cada aviso sale una vez por fichero y sesión, y solo mira el texto que se escribe en esa edición.
 - La revisión de commits no lee las reglas del proyecto; tiene las suyas y puede leer otros ficheros del repositorio para seguir el flujo de los datos.
 - Las revisiones con modelo no miran nada dentro de `vendor/`, `node_modules/`, `build/` ni `dist/`, ni los ficheros `.min.js`: se revisan los fuentes, no lo compilado. Tampoco miran los ficheros que git ignora.
@@ -223,7 +227,7 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 | `rt build` | Compila `src/` (constructor en React y bloque) a `plugin/build/` con `@wordpress/scripts` |
 | `rt i18n` | Regenera el `.pot` desde el código, lo fusiona en cada `.po` de `plugin/languages/` y compila sus `.mo`, `.l10n.php` y `.json`. Falla si a un idioma le queda un texto sin traducir, dudoso («fuzzy») o con marcadores (`%s`, `{reference}`) distintos de los del original |
 | `rt package` | Crea en `dist/` el zip instalable del plugin (`formulario-mensaje-<versión>.zip`), con la carpeta del plugin dentro. Lo genera `scripts/package.py` con Python para que sea como uno hecho en Linux: rutas con `/`, permisos Unix y nombres en UTF-8. Empaqueta `plugin/` tal como está (antes, `rt build` e `rt i18n` si procede) y le añade `src/` y `webpack.config.js`, el código legible de lo que va compilado en `build/` |
-| `rt check [args]` | Pasa Plugin Check, la herramienta con la que WordPress.org revisa lo que recibe, al plugin instalado (con las comprobaciones que necesitan ejecutarlo) y al contenido del zip, que regenera antes. Falla si encuentra algo. Instala Plugin Check en el entorno si falta |
+| `rt check [args]` | Pasa Plugin Check, la herramienta con la que WordPress.org revisa lo que recibe, al plugin instalado (con las comprobaciones que necesitan ejecutarlo) y al contenido del zip, que regenera antes. Falla si encuentra algo, salvo el aviso de la cabecera `Update URI`, que se ignora a propósito. Instala Plugin Check en el entorno si falta |
 | `rt shot <ruta> <png> [opciones]` | Captura de pantalla con el Chromium del entorno; imprime los errores de consola. Opciones en `scripts/shot.mjs` (`--admin`, `--full`, `--no-js`, `--click=`, `--wait=`) |
 | `npm run lint:js` | ESLint con las reglas de WordPress sobre `src/` y `plugin/assets/js/` (`-- --fix` corrige el formato) |
 | `rt mail [--json]` / `rt mail clear` | Correos que ha enviado WordPress |
@@ -248,7 +252,8 @@ El CLI es `scripts/rt.ps1`. Desde Bash: `./rt.sh <comando>`. Desde PowerShell: `
 | `plugin/includes/` | Clases PHP, una carpeta por módulo (subnamespace): cada una tiene su proveedor (`class-…-provider.php`), que declara sus servicios y registra sus hooks |
 | `plugin/assets/` | CSS y JavaScript del formulario en el frontend. No se compilan: el script es un módulo sin dependencias |
 | `src/` | Fuentes de lo que sí se compila: la aplicación de administración (`src/admin/`) y el bloque (`src/blocks/form/`) |
-| `plugin/readme.txt` | Ficha del plugin en el directorio de WordPress.org, en inglés (ver «Directorio de WordPress.org») |
+| `plugin/readme.txt` | Ficha del plugin, en inglés y con el formato de WordPress.org: de su registro de cambios salen las notas de cada release (ver «Distribución y actualizaciones») |
+| `.github/workflows/release.yml`, `scripts/release.py` | Publicación de una release al subir un tag de versión |
 | `PRODUCT.md`, `design/propuestas-backend/` | Para quién es el panel y las maquetas de las que salió su diseño (la D es la elegida). No forman parte del plugin |
 | `plugin/build/` | Generado (ver «Qué no se edita a mano») |
 | `plugin/languages/` | Traducciones: un `.po` por idioma, que es lo que se edita, y la plantilla y los compilados que genera `rt i18n` |
@@ -306,24 +311,32 @@ Para añadir un tipo de campo: una clase en `plugin/includes/fields/types/` que 
 - Las abilities se prueban en PHPUnit con `wp_get_ability( … )->execute()`, que valida la entrada y comprueba el permiso como cualquier cliente, y por la REST API del núcleo (`/wp-abilities/v1/abilities/<nombre>/run`, con `GET` por ser de solo lectura).
 - En el panel, un aviso de `@wordpress/components` se repite en una región oculta para lectores de pantalla: `getByText()` encuentra dos elementos. Se localiza por `.components-notice__content` (con `.is-success` si puede haber otro aviso a la vez).
 - Los tests de tableta y móvil del panel fijan el tamaño con `test.use({ viewport })` y comprueban que ninguna pantalla se pueda desplazar de lado (`scrollWidth` frente a `innerWidth`) y que los botones de la barra miden al menos 44 px.
+- Las actualizaciones se prueban sin salir del equipo. En PHPUnit, `ActualizacionesTest` lanza los dos filtros del núcleo con la respuesta de GitHub simulada por `pre_http_request`. En Playwright, `tests/e2e/support/releases.ts` le dice al entorno qué `release.json` responder (`rt/v1/release`) y el test mira el aviso en «Actualizaciones», en el listado de plugins y en «Ver detalles»; al terminar deja de simular, y sin simulación la consulta va a GitHub de verdad. El entorno tiene desactivadas las actualizaciones automáticas (`AUTOMATIC_UPDATER_DISABLED`), así que su conmutador no aparece y no se comprueba.
 - `tests/phpunit/EntornoTest.php` y `tests/e2e/entorno.spec.ts` solo comprueban el entorno; sirven de plantilla.
 
-## Directorio de WordPress.org
+## Distribución y actualizaciones
 
-El plugin se mantiene listo para enviarse al directorio oficial. Lo comprueba `rt check`, pero Plugin Check no ve todo lo que mira la revisión manual: al tocar algo de esta lista se carga además la skill `wp-plugin-directory-guidelines`.
+El plugin se distribuye por las releases de GitHub y las webs lo actualizan desde el escritorio de WordPress, por la vía nativa: el aviso en el listado de plugins y en «Actualizaciones», «Ver detalles» y las actualizaciones automáticas. No se envía al directorio de WordPress.org, que prohíbe la cabecera `Update URI` y cualquier actualizador propio (decisión del usuario del 2026-10-12, en `PLAN.md`).
 
-- **`plugin/readme.txt`** es la ficha del directorio y va en inglés. Su `Stable tag`, sus requisitos y su licencia tienen que coincidir con la cabecera del plugin, y cada versión lleva su entrada en `== Changelog ==`: subir la versión es cambiarla en la cabecera, en `FORMULARIO_MENSAJE_VERSION`, en `Stable tag` y añadir esa entrada. `tests/phpunit/DirectorioTest.php` falla si no coinciden.
-- **Servicios externos.** El plugin no se conecta a nada que el administrador no haya configurado, y cada servicio con el que puede hablar (captchas, Resend) tiene su apartado en `== External services ==`, con qué datos se envían, cuándo y los enlaces a sus condiciones y a su política de privacidad. Un dominio nuevo en el código sin su apartado hace fallar `DirectorioTest`. Nada de telemetría, de avisos fuera de las pantallas del plugin ni de enlaces de crédito en el formulario.
+- **Cómo llega una actualización.** El plugin declara `Update URI` y el módulo `plugin/includes/updates/` responde a dos filtros del núcleo: `update_plugins_github.com` (`Update_Checker`) y `plugins_api` (`Plugin_Information`). `Release_Feed` lee `release.json` de la última release estable (`…/releases/latest/download/release.json`, no la API de GitHub, que tiene límite por IP) y lo recuerda en un transient. Todo lo demás lo hace WordPress: no se añaden pantallas, botones ni tareas programadas propias.
+- **El paquete no sale de la respuesta.** `Github_Project` compone todas las direcciones con el repositorio fijado en el código y una versión que `Release_Manifest` solo admite como `X.Y.Z`. No se añade a `release.json` ninguna dirección que el plugin vaya a usar, ni un filtro que cambie el origen.
+- **Publicar una versión.** Subir la versión (cabecera, `FORMULARIO_MENSAJE_VERSION` y `Stable tag`), añadir su entrada a `== Changelog ==`, verificar según la regla 3, confirmar en `main` y, cuando el usuario lo pida, `git tag <versión>` y `git push origin main <versión>`. El flujo `release.yml` llama a `scripts/release.py`, que rechaza el tag si no es SemVer, si no coincide con esos tres sitios o si falta la entrada, y publica la release con el zip y `release.json`. No compila ni pasa tests: empaqueta `plugin/` tal como está. Un tag con sufijo se publica como «pre-release» y las webs no lo reciben. Crear un tag publica código en todas las webs: es un push, y sigue la regla 6.
+- **`release.json` tiene dos lados.** Lo escribe `scripts/release.py` y lo lee `Release_Manifest`: un campo nuevo se añade en los dos, con su validación y su test en `tests/phpunit/ActualizacionesTest.php`.
+
+Los requisitos del directorio se mantienen como listón de calidad. Los comprueba `rt check`, pero Plugin Check no ve todo lo que mira una revisión manual: al tocar algo de esta lista se carga además la skill `wp-plugin-directory-guidelines`.
+
+- **`plugin/readme.txt`** es la ficha del plugin, con el formato del directorio, y va en inglés. Su `Stable tag`, sus requisitos y su licencia tienen que coincidir con la cabecera del plugin, y cada versión lleva su entrada en `== Changelog ==`: subir la versión es cambiarla en la cabecera, en `FORMULARIO_MENSAJE_VERSION`, en `Stable tag` y añadir esa entrada. `tests/phpunit/DirectorioTest.php` falla si no coinciden.
+- **Servicios externos.** Salvo la consulta de actualizaciones a GitHub, que no lleva datos del sitio, el plugin no se conecta a nada que el administrador no haya configurado, y cada servicio con el que puede hablar (GitHub, captchas, Resend) tiene su apartado en `== External services ==`, con qué datos se envían, cuándo y los enlaces a sus condiciones y a su política de privacidad. Un dominio nuevo en el código sin su apartado hace fallar `DirectorioTest`. Nada de telemetría, de avisos fuera de las pantallas del plugin ni de enlaces de crédito en el formulario.
 - **Código legible.** Lo que va compilado en `build/` tiene que ir acompañado de sus fuentes: por eso el zip lleva `src/` y `webpack.config.js`, y el readme dice cómo compilarlas. Lo que se añada a `src/` viaja solo; una herramienta de compilación nueva hay que añadirla a `rt package` y a ese apartado.
 - **Falsos positivos de Plugin Check.** Se anotan en la línea con `// phpcs:ignore <código> -- motivo`, como los demás avisos de PHPCS, y solo cuando de verdad lo son. Hoy hay dos: la dirección de verificación de Turnstile (la regla toma por un recurso externo cualquier texto con «cloudflare.com») y `load_plugin_textdomain()`, que hace falta porque el plugin trae traducciones propias.
 - **Rutas.** Las del plugin salen de `plugin_dir_path()`, `plugins_url()` y `plugin_basename()` sobre `FORMULARIO_MENSAJE_FILE`, nunca de `WP_PLUGIN_DIR` ni de `WP_CONTENT_DIR`. Lo que el plugin escribe va a la carpeta de subidas (`Upload_Directory`), no a la suya.
 - **Consultas.** `get_results()`, `get_row()` y compañía reciben el `prepare()` directamente, no una variable con la consulta ya preparada: Plugin Check no puede seguirla y la da por insegura.
-- Lo que no está en el repositorio y hay que hacer al enviarlo: poner en `Contributors` el usuario de WordPress.org (hoy es el marcador `tu-usuario`, y `rt check` lo recuerda), y subir al SVN del directorio el icono, la cabecera y las capturas (`assets/`), que no forman parte del plugin.
+- `Contributors` lleva el marcador `tu-usuario`: es un campo del directorio, donde iría el usuario de WordPress.org, y sin él no significa nada.
 
 ## A tener en cuenta
 
 - La máquina es Windows ARM64 y los binarios son x64 emulados: la primera petición tras arrancar tarda un par de segundos, y la primera ejecución de `rt lint` unos 20.
-- Ningún correo sale del equipo: un mu-plugin (`scripts/templates/rt-environment.php`) fuerza el envío a Mailpit y además impide borrar desde WordPress el plugin enlazado, porque el borrado seguiría el enlace y eliminaría `plugin/`.
+- Ningún correo sale del equipo: un mu-plugin (`scripts/templates/rt-environment.php`) fuerza el envío a Mailpit y además impide borrar, actualizar o reinstalar desde WordPress el plugin enlazado, porque WordPress seguiría el enlace y vaciaría `plugin/`. Por eso en el entorno no se puede pulsar «Actualizar» sobre el plugin: una actualización real se prueba con una copia (una carpeta de verdad en lugar del enlace), y después se restaura el enlace con `rt setup`.
 - WP-CLI no puede descomprimir paquetes con rutas muy largas (límite de 260 caracteres de Windows); por eso WordPress se descarga con `rt setup` y no con `wp core download`.
 - Windows Defender pone en cuarentena los ficheros que parecen una webshell (un `eval` sobre `$_POST` lo detecta como `Backdoor:PHP/Remoteshell.B`): un caso de prueba escrito así en disco desaparece o da «permiso denegado». Para probar código vulnerable, usa otro tipo de fallo (SQL sin preparar, salida sin escapar).
 - PHPCompatibility está fijado a la versión 10 en fase alfa: la estable (9.3) no reconoce la sintaxis de PHP 8.2 y 8.3, que es justo lo que hay que detectar.

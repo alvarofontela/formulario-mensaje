@@ -17,6 +17,7 @@ use Formulario_Mensaje\Queue\Queue_Schedule;
 use Formulario_Mensaje\Secrets\Secret_Vault;
 use Formulario_Mensaje\Settings\Option_Settings_Repository;
 use Formulario_Mensaje\Storage\Failure_Counter;
+use Formulario_Mensaje\Updates\Release_Feed;
 use Formulario_Mensaje\Uploads\Upload_Directory;
 
 defined( 'ABSPATH' ) || exit;
@@ -91,6 +92,8 @@ final class Uninstaller {
 		delete_option( Failure_Alert::OPTION );
 		// Lo averiguado sobre dónde está cada formulario: sin el plugin no significa nada.
 		delete_transient( Form_Placements::CACHE_KEY );
+		// La última versión conocida del plugin. Es de toda la red: borrarla en cada sitio no hace daño.
+		delete_site_transient( Release_Feed::CACHE_KEY );
 
 		$settings = get_option( Option_Settings_Repository::OPTION, array() );
 

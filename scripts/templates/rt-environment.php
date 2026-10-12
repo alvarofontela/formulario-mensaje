@@ -20,16 +20,67 @@ add_action(
 	PHP_INT_MAX
 );
 
+/**
+ * Indica si la carpeta de un plugin es un enlace al código fuente del proyecto y no una carpeta real.
+ *
+ * @param string $folder Nombre de la carpeta dentro de wp-content/plugins.
+ */
+function rt_is_linked_plugin_folder( $folder ) {
+	$folder = (string) $folder;
+
+	if ( '' === $folder || '.' === $folder ) {
+		return false;
+	}
+
+	$dir = wp_normalize_path( WP_PLUGIN_DIR . '/' . $folder );
+
+	return file_exists( $dir ) && wp_normalize_path( (string) realpath( $dir ) ) !== $dir;
+}
+
 // El plugin en desarrollo es un enlace al código fuente del proyecto: borrarlo desde WordPress
 // recorrería el enlace y eliminaría ese código.
 add_action(
 	'delete_plugin',
 	static function ( $plugin_file ) {
-		$dir = wp_normalize_path( WP_PLUGIN_DIR . '/' . dirname( $plugin_file ) );
-		if ( '.' !== dirname( $plugin_file ) && wp_normalize_path( (string) realpath( $dir ) ) !== $dir ) {
+		if ( rt_is_linked_plugin_folder( dirname( $plugin_file ) ) ) {
 			wp_die( 'Este plugin es un enlace al código fuente del proyecto y no se puede borrar desde WordPress.' );
 		}
 	}
+);
+
+/*
+ * Tampoco se puede actualizar ni reinstalar desde WordPress: antes de copiar la versión nueva,
+ * WordPress vacía la carpeta del plugin, y al ser un enlace vaciaría el código fuente del proyecto.
+ * Los dos filtros se disparan antes de ese borrado: el primero corta la actualización del plugin
+ * enlazado, y el segundo, cualquier paquete que fuera a instalarse sobre su carpeta (un zip subido
+ * a mano con «Reemplazar el actual»).
+ */
+add_filter(
+	'upgrader_pre_install',
+	static function ( $response, $hook_extra ) {
+		$plugin_file = is_array( $hook_extra ) ? (string) ( $hook_extra['plugin'] ?? '' ) : '';
+
+		if ( '' !== $plugin_file && rt_is_linked_plugin_folder( dirname( $plugin_file ) ) ) {
+			return new WP_Error( 'rt_linked_plugin', 'Este plugin es un enlace al código fuente del proyecto y no se puede actualizar desde WordPress.' );
+		}
+
+		return $response;
+	},
+	1,
+	2
+);
+
+add_filter(
+	'upgrader_source_selection',
+	static function ( $source, $remote_source, $upgrader ) {
+		if ( ! is_wp_error( $source ) && $upgrader instanceof Plugin_Upgrader && rt_is_linked_plugin_folder( basename( (string) $source ) ) ) {
+			return new WP_Error( 'rt_linked_plugin', 'Este paquete se instalaría sobre un enlace al código fuente del proyecto.' );
+		}
+
+		return $source;
+	},
+	1,
+	3
 );
 
 // El remitente por defecto es wordpress@localhost, que PHPMailer rechaza por no tener TLD.
@@ -227,4 +278,79 @@ add_action(
 			)
 		);
 	}
+);
+
+/*
+ * Doble de GitHub para los tests de las actualizaciones del plugin: mientras haya una versión
+ * simulada, la consulta de «la última versión publicada» se responde aquí y no sale del equipo.
+ * Sin ella, la consulta va a GitHub de verdad. Público a propósito: solo existe en este entorno.
+ *
+ *   POST   /wp-json/rt/v1/release   el cuerpo es el release.json que se quiere simular
+ *   DELETE /wp-json/rt/v1/release   deja de simular
+ *
+ * Las dos olvidan lo que WordPress y el plugin sabían de las actualizaciones, para que la siguiente
+ * visita a la pantalla de plugins vuelva a preguntar.
+ */
+add_action(
+	'rest_api_init',
+	static function () {
+		$forget = static function () {
+			delete_site_transient( 'update_plugins' );
+			delete_site_transient( 'formulario_mensaje_latest_release' );
+		};
+
+		register_rest_route(
+			'rt/v1',
+			'/release',
+			array(
+				array(
+					'methods'             => 'POST',
+					'permission_callback' => '__return_true',
+					'callback'            => static function ( WP_REST_Request $request ) use ( $forget ) {
+						update_option( 'rt_release_manifest', $request->get_body(), false );
+						$forget();
+
+						return array( 'simulated' => true );
+					},
+				),
+				array(
+					'methods'             => 'DELETE',
+					'permission_callback' => '__return_true',
+					'callback'            => static function () use ( $forget ) {
+						delete_option( 'rt_release_manifest' );
+						$forget();
+
+						return array( 'simulated' => false );
+					},
+				),
+			)
+		);
+	}
+);
+
+add_filter(
+	'pre_http_request',
+	static function ( $response, $args, $url ) {
+		if ( ! str_ends_with( (string) $url, '/releases/latest/download/release.json' ) ) {
+			return $response;
+		}
+
+		$manifest = get_option( 'rt_release_manifest', '' );
+
+		if ( ! is_string( $manifest ) || '' === $manifest ) {
+			return $response;
+		}
+
+		return array(
+			'response' => array(
+				'code'    => 200,
+				'message' => 'OK',
+			),
+			'body'     => $manifest,
+			'headers'  => array(),
+			'cookies'  => array(),
+		);
+	},
+	10,
+	3
 );

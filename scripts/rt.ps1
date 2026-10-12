@@ -637,8 +637,12 @@ switch ($Command) {
     'check' {
         # Plugin Check, la herramienta con la que WordPress.org revisa lo que se le envía. Se pasa dos veces:
         # al plugin instalado, con las comprobaciones que necesitan ejecutarlo, y al contenido del zip de
-        # `rt package`, que es lo que se sube (lleva además src/). Falla si alguna de las dos encuentra algo:
+        # `rt package`, que es lo que se publica (lleva además src/). Falla si alguna de las dos encuentra algo:
         # el comando de Plugin Check termina siempre con código 0, así que se mira su salida.
+        #
+        # El plugin se distribuye por releases de GitHub y no por el directorio, así que lleva la cabecera
+        # `Update URI`, que el directorio prohíbe: ese aviso, y solo ese, se ignora. Todo lo demás se sigue
+        # exigiendo como si fuera a enviarse.
         Start-All
         $checker = Join-Path $Dir.Www 'wp-content\plugins\plugin-check'
         if (-not (Test-Path $checker)) { Wp plugin install plugin-check }
@@ -653,7 +657,7 @@ switch ($Command) {
         $zip = Get-ChildItem (Join-Path $Root 'dist') -Filter "$($Cfg.Slug)-*.zip" | Sort-Object LastWriteTime | Select-Object -Last 1
         Expand-Archive $zip.FullName $unpacked
 
-        $options = '--include-experimental', '--include-low-severity-errors', '--include-low-severity-warnings'
+        $options = '--include-experimental', '--include-low-severity-errors', '--include-low-severity-warnings', '--ignore-codes=plugin_updater_detected'
         $targets = [ordered]@{
             'Plugin instalado'          = @($Cfg.Slug, "--require=$checker\cli.php")
             "Contenido de $($zip.Name)" = @((Join-Path $unpacked $Cfg.Slug))
@@ -668,10 +672,6 @@ switch ($Command) {
 
         Remove-Item $unpacked -Recurse -Force
         if (-not $wasActive) { Wp plugin deactivate plugin-check }
-        # Plugin Check no puede saber si un usuario de WordPress.org existe: el marcador hay que cambiarlo a mano.
-        if ((Get-Content (Join-Path $Dir.Plugin 'readme.txt') -Raw) -match '(?m)^Contributors:\s*tu-usuario\s*$') {
-            Write-Warning 'readme.txt: «Contributors» lleva el marcador tu-usuario. Pon tu usuario de WordPress.org antes de enviar el plugin.'
-        }
         exit ($failed ? 1 : 0)
     }
     'shot' {

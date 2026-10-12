@@ -188,7 +188,7 @@ Corrígelos si no encajan:
 
 ## Puntos abiertos
 
-1. **Actualizaciones** en las webs instaladas: estuvo aplazado (preguntado dos veces el 2026-10-08, con un servidor propio o releases de un GitHub privado como opciones). El 2026-10-12 el usuario decidió preparar el plugin para el directorio de WordPress.org, que las resuelve cuando esté aprobado; el plugin no lleva ni debe llevar actualizador propio (el directorio lo prohíbe).
+1. **Actualizaciones** en las webs instaladas: resuelto el 2026-10-12 con releases de GitHub (ver «Actualizaciones desde GitHub»). Estuvo aplazado (preguntado dos veces el 2026-10-08) y ese mismo 12 de octubre se había decidido antes prepararlo para el directorio de WordPress.org; al pedir las actualizaciones desde GitHub, el usuario eligió GitHub como único canal y dejar el envío al directorio, que prohíbe que un plugin traiga su propio actualizador.
 2. **Versión mínima de Elementor 3**: se fija en la fase 7, según la API que use el widget.
 
 ## Fases
@@ -311,7 +311,23 @@ La auditoría con la skill `security-audit` (informes en `~/security-audit-skill
 
 Quedan sin revisar las seis unidades que esa auditoría aplazó (validación con campos condicionales, coste del saneado en la ruta de validación, trabajo previo a la devolución del cupo, multisitio, envíos de formularios borrados y prellenado frente a cachés de página).
 
+### Actualizaciones desde GitHub (2026-10-12, versión 1.0.0)
+
+El usuario pidió que las webs reciban las versiones nuevas en el escritorio de WordPress cada vez que se publique una release en GitHub, con tags SemVer y empezando por la 1.0.0. Preguntado por el choque con el directorio de WordPress.org, eligió **solo GitHub**: se abandona el envío al directorio. Lo preparado para él se conserva como listón de calidad (`rt check` sigue pasando todo Plugin Check salvo el aviso de la cabecera `Update URI`).
+
+- **Por la vía nativa de WordPress.** El plugin declara `Update URI: https://github.com/alvarofontela/formulario-mensaje` y responde al filtro `update_plugins_github.com` (WordPress 5.8). WordPress compara versiones, comprueba requisitos, muestra el aviso en el listado de plugins y en «Actualizaciones», y hace la actualización, también la automática. El filtro `plugins_api` da la ficha de «Ver detalles». No hay pantalla, botón ni tarea programada propios.
+- **Un fichero por release, no la API de GitHub.** Cada release lleva `release.json` (versión, requisitos, fecha y registro de cambios) junto al zip. El plugin lo lee de `…/releases/latest/download/release.json`, que GitHub redirige a la última release estable. La API sin credenciales admite 60 consultas por hora y por IP, y en un alojamiento compartido muchas webs salen por la misma.
+- **El paquete no lo decide la respuesta.** La dirección del zip se compone en el plugin con el repositorio fijado en el código y una versión que solo se admite si es `X.Y.Z` exacto (`Release_Manifest`); lo que diga `release.json` sobre direcciones se ignora, y lo guardado en la caché se valida igual. Quien pudiera alterar la respuesta no puede llevar la descarga a otro sitio.
+- **Sin datos del sitio.** La petición no lleva nada del sitio y se identifica con el nombre y la versión del plugin, no con el agente de usuario de WordPress, que incluye la dirección de la web. El filtro `formulario_mensaje_updates_enabled` la desactiva. El readme la documenta en «External services» y ya no dice que el plugin no se conecta a nada por su cuenta.
+- **Versiones preliminares.** Un tag con sufijo (`1.1.0-beta.1`) se publica marcado como «pre-release»; `releases/latest` no las sirve y el plugin, además, rechaza cualquier versión que no sea `X.Y.Z`.
+- **La release la hace GitHub Actions** (`.github/workflows/release.yml`) al subir un tag: `scripts/release.py` comprueba que el tag es SemVer y coincide con la cabecera, la constante y `Stable tag`, y que tiene entrada en el registro de cambios; después se empaqueta con `scripts/package.py` y se publica con `gh release create`. Una versión estable tiene que salir de un commit de `main`. El flujo no compila ni pasa los tests (el entorno es de Windows): empaqueta `plugin/` tal como está en el repositorio.
+- **El entorno se protege.** El plugin instalado en `.runtime` es un enlace a `plugin/`, y una actualización desde WordPress vaciaría esa carpeta: el mu-plugin la impide. Para los tests simula la última versión publicada (`rt/v1/release`).
+
+Sin resolver, por decisión: no se comprueba una firma ni un resumen del paquete (saldría del mismo GitHub que el paquete, así que no añade nada frente a una cuenta comprometida), y la seguridad de las webs pasa a depender de la de la cuenta de GitHub: conviene tenerla con segundo factor y proteger los tags.
+
 ### Preparación para el directorio de WordPress.org (2026-10-12, versión 0.14.0)
+
+> Desde la versión 1.0.0 el plugin no se envía al directorio (ver «Actualizaciones desde GitHub»). Lo que sigue se mantiene como criterio de calidad.
 
 El usuario pidió pasar Plugin Check y dejar el plugin listo para el directorio oficial, lo que cambia la decisión inicial de distribuirlo solo por zip. De paso resuelve el punto abierto de las actualizaciones: las webs instaladas se actualizarán desde el directorio.
 

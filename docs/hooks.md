@@ -202,6 +202,18 @@ add_filter(
 );
 ```
 
+## Actualizaciones
+
+### `formulario_mensaje_updates_enabled` (filtro)
+
+Si el plugin busca sus versiones nuevas en GitHub. Por defecto, sí. Con `false` no hace ninguna petición a GitHub y WordPress deja de ofrecerle actualizaciones: sirve para un sitio que no deba conectarse fuera o que se actualice por otra vía (un despliegue, Composer).
+
+```php
+add_filter( 'formulario_mensaje_updates_enabled', '__return_false' );
+```
+
+No hay un filtro para cambiar de dónde se descargan las versiones: el repositorio va fijado en el código (`Updates_Provider::REPOSITORY` y la cabecera `Update URI`), y una copia con otro origen lo cambia ahí.
+
 ## Abilities
 
 ### `formulario_mensaje_ability_mcp_public` (filtro)

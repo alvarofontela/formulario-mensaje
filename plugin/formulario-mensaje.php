@@ -2,12 +2,13 @@
 /**
  * Plugin Name:       Formulario Mensaje
  * Description:       Lightweight, auditable form builder: forms with their own fields, email notifications, webhooks and built-in spam protection.
- * Version:           0.14.0
+ * Version:           1.0.0
  * Requires at least: 7.0
  * Requires PHP:      8.1
  * Author:            Álvaro Fontela
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Update URI:        https://github.com/alvarofontela/formulario-mensaje
  * Text Domain:       formulario-mensaje
  * Domain Path:       /languages
  *
@@ -16,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FORMULARIO_MENSAJE_VERSION', '0.14.0' );
+define( 'FORMULARIO_MENSAJE_VERSION', '1.0.0' );
 define( 'FORMULARIO_MENSAJE_FILE', __FILE__ );
 define( 'FORMULARIO_MENSAJE_DIR', __DIR__ );
 

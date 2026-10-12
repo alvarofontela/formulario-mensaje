@@ -1,0 +1,75 @@
+# Publica una release de GitHub cada vez que se sube un tag de versión.
+#
+# El tag es la versión en SemVer, sin «v» delante: 1.0.0, 1.2.3 o, para una versión preliminar,
+# 1.3.0-beta.1. Tiene que coincidir con la versión que declara el plugin (cabecera, constante y
+# «Stable tag» del readme.txt) y tener su entrada en el registro de cambios: si no, el flujo falla
+# y no se publica nada.
+#
+# La release lleva dos ficheros: el zip instalable y release.json, que es lo que consulta el plugin
+# instalado en cada web para ofrecer la actualización en el escritorio de WordPress. Una versión
+# preliminar se publica marcada como tal y las webs no la reciben: solo ven la última estable.
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Publicar la release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      # Crear la release y subir sus ficheros.
+      contents: write
+    env:
+      # El nombre del tag llega por el entorno, nunca interpolado en un comando.
+      TAG: ${{ github.ref_name }}
+      SLUG: formulario-mensaje
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Comprobar que una versión estable sale de main
+        if: ${{ !contains(github.ref_name, '-') }}
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::El tag $TAG no apunta a un commit de main."
+            exit 1
+          fi
+
+      - name: Comprobar la versión y generar release.json y las notas
+        run: python3 scripts/release.py "$TAG" plugin dist
+
+      - name: Crear el zip instalable
+        run: python3 scripts/package.py "$SLUG" plugin dist src webpack.config.js
+
+      - name: Publicar la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=()
+          if [[ "$TAG" == *-* ]]; then
+            flags+=(--prerelease --latest=false)
+          fi
+
+          gh release create "$TAG" \
+            "dist/$SLUG-$TAG.zip" \
+            dist/release.json \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$TAG" \
+            --notes-file dist/release-notes.md \
+            --verify-tag \
+            "${flags[@]}"

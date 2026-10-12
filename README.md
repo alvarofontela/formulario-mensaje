@@ -10,13 +10,13 @@ Nace de tres ideas:
 
 | | |
 | --- | --- |
-| Versión | 0.14.0 |
+| Versión | 1.0.0 |
 | WordPress | 7.0 o posterior |
 | PHP | 8.1 o posterior |
 | Licencia | GPL-2.0-or-later |
 | Idiomas | Inglés (EE. UU.) y español (España) |
 
-> **Estado.** El plugin está completo y pasa todas sus pruebas en el entorno local, pero es una versión 0.x: falta comprobarlo en webs reales (ver [Estado del proyecto](#estado-del-proyecto)). Está preparado para enviarse al directorio de WordPress.org.
+> **Estado.** El plugin está completo y pasa todas sus pruebas en el entorno local; falta comprobarlo en más webs reales (ver [Estado del proyecto](#estado-del-proyecto)). Se distribuye por las [releases de este repositorio](https://github.com/alvarofontela/formulario-mensaje/releases) y se actualiza desde el escritorio de WordPress.
 
 ## Qué hace
 
@@ -50,7 +50,7 @@ Nace de tres ideas:
 - Cada formulario decide si guarda sus mensajes, si guarda la IP completa, anonimizada o no la guarda, y a los cuántos días se borran.
 - Los ficheros subidos van a una carpeta privada y solo se descargan con sesión y permiso, o con un enlace firmado que caduca.
 - Las contraseñas y claves de API se guardan cifradas y no se vuelven a mostrar.
-- El plugin no se conecta a ningún servicio que el administrador no haya configurado.
+- Ningún dato del sitio sale hacia un servicio que el administrador no haya configurado. La única conexión que el plugin hace por su cuenta es a GitHub, para saber si hay una versión nueva, y no lleva datos del sitio.
 
 **Para quien desarrolla**
 
@@ -60,10 +60,11 @@ Nace de tres ideas:
 
 ## Instalación
 
-El código del plugin está en la carpeta [`plugin/`](plugin/), que es instalable tal cual.
+Descarga `formulario-mensaje-<versión>.zip` de la [última release](https://github.com/alvarofontela/formulario-mensaje/releases/latest) y súbelo desde *Plugins → Añadir plugin → Subir plugin*.
 
-- **Desde este repositorio**: copia `plugin/` a `wp-content/plugins/formulario-mensaje` y actívalo en la pantalla de plugins.
-- **Con un zip**: `./rt.sh package` crea `dist/formulario-mensaje-<versión>.zip`, que se sube desde *Plugins → Añadir nuevo → Subir plugin*.
+A partir de ahí las versiones nuevas llegan solas: aparecen en el listado de plugins y en *Escritorio → Actualizaciones*, como las de cualquier plugin del directorio, y se le pueden activar las actualizaciones automáticas. El plugin no está en WordPress.org; cuando WordPress busca actualizaciones, pregunta a GitHub por la última release.
+
+Para probar el código tal como está en el repositorio, la carpeta [`plugin/`](plugin/) es instalable tal cual: se copia a `wp-content/plugins/formulario-mensaje`, o se empaqueta con `./rt.sh package`.
 
 Después, en el menú **Formularios**, crea el primero a partir de una plantilla y ponlo en una página con el bloque «Formulario», con el widget de Elementor o con el código que da el paso «Publicar».
 
@@ -75,7 +76,7 @@ No se puede activar en toda una red multisitio: se activa en cada sitio.
 | --- | --- |
 | [`docs/hooks.md`](docs/hooks.md) | Acciones y filtros del plugin, con sus parámetros y ejemplos |
 | [`docs/extender.md`](docs/extender.md) | Añadir tipos de campo, acciones y captchas; traducciones, WP-CLI y abilities |
-| [`plugin/readme.txt`](plugin/readme.txt) | Ficha del plugin para el directorio de WordPress.org (en inglés), con los servicios externos |
+| [`plugin/readme.txt`](plugin/readme.txt) | Ficha del plugin (en inglés), con el formato de WordPress.org: servicios externos y registro de cambios |
 | [`PLAN.md`](PLAN.md) | Decisiones de producto y técnicas, y el porqué de cada una |
 | [`PRODUCT.md`](PRODUCT.md) | Para quién es el panel de administración |
 | [`CLAUDE.md`](CLAUDE.md) | Reglas de trabajo del proyecto y guía del entorno |
@@ -124,7 +125,8 @@ La lista completa y los detalles están en [`CLAUDE.md`](CLAUDE.md).
 | `plugin/languages/` | Traducciones: un `.po` por idioma y sus compilados |
 | `src/` | Fuentes en React del panel de administración y del bloque |
 | `tests/` | PHPUnit (`phpunit/`), Playwright (`e2e/`) y la matriz de combinaciones (`matriz/`) |
-| `scripts/` | El comando `rt` y sus herramientas |
+| `scripts/` | El comando `rt` y sus herramientas, y lo que usa la publicación de versiones |
+| `.github/workflows/` | El flujo que publica una release al subir un tag |
 | `docs/` | Documentación para quien extiende el plugin |
 | `design/` | Maquetas de las que salió el diseño del panel |
 
@@ -136,6 +138,16 @@ La lista completa y los detalles están en [`CLAUDE.md`](CLAUDE.md).
 - **Una tarea no está terminada** sin sus tests y sin pasar `rt lint`, `rt phpunit`, `rt e2e` y `rt check` con el log de WordPress limpio.
 
 El proyecto se desarrolla con [Claude Code](https://claude.com/claude-code); `CLAUDE.md` y la carpeta `.claude/` recogen las reglas y las herramientas con las que trabaja.
+
+### Publicar una versión
+
+Las versiones son tags [SemVer](https://semver.org/lang/es/) sin «v» delante (`1.0.0`, `1.2.3`). Al subir uno, GitHub Actions ([`release.yml`](.github/workflows/release.yml)) crea la release con el zip instalable y con `release.json`, que es lo que leen las webs para ofrecer la actualización.
+
+1. Sube la versión en los tres sitios: la cabecera `Version` y `FORMULARIO_MENSAJE_VERSION` en `plugin/formulario-mensaje.php`, y `Stable tag` en `plugin/readme.txt`. Añade su entrada (`= 1.2.3 =`) al principio de `== Changelog ==`: será el texto de la release y lo que se vea en «Ver detalles».
+2. Pasa `rt i18n`, `rt lint`, `rt phpunit`, `rt e2e` y `rt check`, y confirma el cambio en `main`.
+3. Crea y sube el tag: `git tag 1.2.3 && git push origin main 1.2.3`.
+
+Si el tag no coincide con la versión del plugin o falta la entrada del registro de cambios, el flujo falla y no se publica nada. Un tag con sufijo (`1.3.0-beta.1`) se publica como versión preliminar y las webs no lo reciben. Las webs ven la versión nueva la siguiente vez que WordPress busca actualizaciones (dos veces al día, o al pulsar «Comprobar de nuevo»).
 
 ### Traducciones
 

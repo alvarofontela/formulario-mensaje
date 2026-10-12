@@ -89,6 +89,7 @@ final class Plugin {
 			new Admin\Admin_Provider(),
 			new Abilities\Abilities_Provider(),
 			new Cli\Cli_Provider(),
+			new Updates\Updates_Provider(),
 		);
 	}
 }
