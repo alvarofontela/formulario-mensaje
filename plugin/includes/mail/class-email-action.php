@@ -145,18 +145,26 @@ final class Email_Action implements Action_Type {
 		$subject = $this->tags->to_text( is_string( $settings['subject'] ?? null ) ? $settings['subject'] : '', $submission, $form );
 		$html    = '';
 
+		$limit = $this->attachment_limit( $form );
+
+		list( $attachments, $left_out ) = $this->attachments( $submission, $form, $limit );
+
+		// El aviso se añade después de sustituir las etiquetas: lleva nombres de fichero, que escribe el visitante.
+		$note = $this->left_out_note( $left_out, $limit );
+
 		if ( self::FORMAT_TEXT !== ( $settings['format'] ?? self::FORMAT_HTML ) ) {
 			// La plantilla se escapa antes de sustituir las etiquetas: los datos del envío entran después, ya escapados.
-			$html = $this->template->render( $this->tags->to_email_html( nl2br( esc_html( $body ) ), $submission, $form ), $subject );
+			$content = $this->tags->to_email_html( nl2br( esc_html( $body ) ), $submission, $form );
+			$html    = $this->template->render( '' === $note ? $content : $content . '<p>' . esc_html( $note ) . '</p>', $subject );
 		}
 
 		$message = new Email_Message(
 			$recipients,
 			$subject,
-			$this->tags->to_text( $body, $submission, $form ),
+			$this->tags->to_text( $body, $submission, $form ) . ( '' === $note ? '' : "\n\n" . $note ),
 			$this->reply_to( $settings, $submission ),
 			$html,
-			$this->attachments( $submission, $form )
+			$attachments
 		);
 
 		/**
@@ -174,28 +182,74 @@ final class Email_Action implements Action_Type {
 	}
 
 	/**
-	 * Ficheros que se adjuntan, hasta el tope de tamaño de un correo. Los que no caben se quedan
-	 * fuera: siguen estando en el envío guardado, si el formulario los conserva.
+	 * Ficheros que se adjuntan, hasta el tope de tamaño de un correo, y nombres de los que no caben.
+	 *
+	 * Uno que no cabe se queda fuera él solo, no los que vienen detrás, y el correo lo dice (ver
+	 * left_out_note()): sigue estando en el envío guardado, si el formulario lo conserva.
 	 *
 	 * @param Submission $submission Envío.
 	 * @param Form       $form       Formulario.
-	 * @return array<int, array{path: string, name: string}>
+	 * @param int        $limit      Tamaño máximo, en bytes, de todos los adjuntos juntos.
+	 * @return array{0: array<int, array{path: string, name: string}>, 1: string[]}
 	 */
-	private function attachments( Submission $submission, Form $form ): array {
+	private function attachments( Submission $submission, Form $form, int $limit ): array {
 		$attachments = array();
+		$left_out    = array();
 		$total       = 0;
 
 		foreach ( $this->attachments->attachments( $submission, $form ) as $attachment ) {
-			$total += (int) filesize( $attachment['path'] );
+			$size = (int) filesize( $attachment['path'] );
 
-			if ( $total > self::MAX_ATTACHMENT_BYTES ) {
-				break;
+			if ( $total + $size > $limit ) {
+				$left_out[] = $attachment['name'];
+
+				continue;
 			}
 
+			$total        += $size;
 			$attachments[] = $attachment;
 		}
 
-		return $attachments;
+		return array( $attachments, $left_out );
+	}
+
+	/**
+	 * Tamaño máximo, en bytes, de los adjuntos de un correo de este formulario.
+	 *
+	 * @param Form $form Formulario.
+	 */
+	private function attachment_limit( Form $form ): int {
+		/**
+		 * Filtra el tamaño máximo, en bytes, de los adjuntos de un correo de notificación.
+		 *
+		 * Sirve para ajustarlo a lo que admite el servidor de correo del sitio.
+		 *
+		 * @since 0.14.0
+		 *
+		 * @param int  $bytes Tamaño máximo, en bytes.
+		 * @param Form $form  Formulario.
+		 */
+		return max( 0, (int) apply_filters( 'formulario_mensaje_max_attachment_bytes', self::MAX_ATTACHMENT_BYTES, $form ) );
+	}
+
+	/**
+	 * Aviso, para quien recibe el correo, de los ficheros que no se han podido adjuntar.
+	 *
+	 * @param string[] $left_out Nombres de los ficheros que no caben.
+	 * @param int      $limit    Tamaño máximo, en bytes, de los adjuntos de un correo.
+	 * @return string Texto sin formato, o cadena vacía si se ha adjuntado todo.
+	 */
+	private function left_out_note( array $left_out, int $limit ): string {
+		if ( array() === $left_out ) {
+			return '';
+		}
+
+		return sprintf(
+			/* translators: 1: maximum size of the attachments, such as "20 MB". 2: comma-separated list of file names. */
+			__( 'Not attached, because the attachments of one email cannot exceed %1$s: %2$s', 'formulario-mensaje' ),
+			(string) size_format( $limit ),
+			implode( ', ', array_map( array( Plain_Text::class, 'line' ), $left_out ) )
+		);
 	}
 
 	/**

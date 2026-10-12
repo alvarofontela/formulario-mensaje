@@ -61,6 +61,18 @@ class RenderTest extends Caso_Formulario {
 		$this->assertSame( count( $ids[1] ), count( array_unique( $ids[1] ) ) );
 	}
 
+	public function test_cada_formulario_numera_sus_apariciones_aunque_comparta_pagina_con_otros() {
+		$primero = $this->crear_formulario();
+		$segundo = $this->crear_formulario( array(), 'Presupuesto' );
+
+		$html = do_shortcode( "[formulario_mensaje id=\"$primero\"][formulario_mensaje id=\"$segundo\"][formulario_mensaje id=\"$segundo\"]" );
+
+		// La vuelta de un envío sin JavaScript apunta a la primera aparición de su formulario, vaya o no detrás de otros.
+		$this->assertStringContainsString( "id=\"formulario-mensaje-$primero-1\"", $html );
+		$this->assertStringContainsString( "id=\"formulario-mensaje-$segundo-1\"", $html );
+		$this->assertStringContainsString( "id=\"formulario-mensaje-$segundo-2\"", $html );
+	}
+
 	public function test_un_formulario_inexistente_o_en_la_papelera_no_pinta_nada_al_visitante() {
 		$formulario = $this->crear_formulario();
 		wp_trash_post( $formulario );

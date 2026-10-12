@@ -15,6 +15,7 @@ use Formulario_Mensaje\Lifecycle\Maintenance_Schedule;
 use Formulario_Mensaje\Service_Provider;
 use Formulario_Mensaje\Settings\Settings_Repository;
 use Formulario_Mensaje\Support\Clock;
+use Formulario_Mensaje\Uploads\Submission_Uploads;
 use wpdb;
 
 defined( 'ABSPATH' ) || exit;
@@ -70,7 +71,11 @@ final class Storage_Provider implements Service_Provider {
 
 		$container->set(
 			Delivery_Executor::class,
-			static fn ( Container $c ): Delivery_Executor => new Delivery_Executor( $c->get( Form_Repository::class ), $c->get( Action_Type_Registry::class ) )
+			static fn ( Container $c ): Delivery_Executor => new Delivery_Executor(
+				$c->get( Form_Repository::class ),
+				$c->get( Action_Type_Registry::class ),
+				$c->get( Submission_Uploads::class )
+			)
 		);
 
 		$container->set(

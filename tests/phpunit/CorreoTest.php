@@ -466,6 +466,23 @@ class CorreoTest extends Caso_Formulario {
 		$this->assertSame( 'formulario_mensaje_smtp_no_sender', $error->get_error_code() );
 	}
 
+	public function test_wp_mail_usa_el_nombre_del_remitente_aunque_no_haya_direccion_propia() {
+		$transporte = new Wp_Mail_Transport( new Ajustes_Correo_En_Memoria( new Mail_Settings( from_name: 'Mi Tienda' ) ) );
+
+		$transporte->send( new Email_Message( array( 'a@example.org' ), 'Asunto', 'Cuerpo' ) );
+		$cabeceras = tests_retrieve_phpmailer_instance()->get_sent()->header;
+
+		// Sin dirección propia va la del sitio, pero con el nombre de los ajustes y no «WordPress».
+		$this->assertMatchesRegularExpression( '/^From: Mi Tienda <[^>]+>/m', $cabeceras );
+		$this->assertFalse( has_filter( 'wp_mail_from_name' ), 'El filtro solo dura lo que el envío: el resto del correo del sitio no cambia.' );
+
+		// Sin nombre en los ajustes, el plugin no toca el remitente del sitio.
+		reset_phpmailer_instance();
+		( new Wp_Mail_Transport( new Ajustes_Correo_En_Memoria() ) )->send( new Email_Message( array( 'a@example.org' ), 'Asunto', 'Cuerpo' ) );
+
+		$this->assertMatchesRegularExpression( '/^From: WordPress </m', tests_retrieve_phpmailer_instance()->get_sent()->header );
+	}
+
 	public function test_wp_mail_no_admite_una_direccion_de_respuesta_que_no_sea_un_correo() {
 		$transporte = new Wp_Mail_Transport( new Ajustes_Correo_En_Memoria() );
 

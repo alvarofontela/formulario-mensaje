@@ -372,6 +372,39 @@ class WebhooksTest extends Caso_Formulario {
 		$this->assertStringContainsString( 'formulario_mensaje_action_disabled', $entrega['error'] );
 	}
 
+	public function test_una_entrega_cuyo_proceso_muere_una_y_otra_vez_no_se_reintenta_sin_fin() {
+		global $wpdb;
+
+		// Un reintento como mucho: dos intentos en total.
+		add_filter( 'formulario_mensaje_retry_delays', static fn (): array => array( 60 ) );
+
+		$formulario = $this->crear_formulario( array( 'actions' => array( $this->webhook() ) ) );
+		$tabla      = $this->esquema()->deliveries_table();
+
+		$this->enviar( $formulario, array( 'nombre' => 'Ana', 'correo' => 'ana@example.org' ) );
+
+		// El proceso del primer intento murió a medias: la entrega quedó reservada, con su intento contado y sin resultado.
+		$wpdb->query( $wpdb->prepare( 'UPDATE %i SET attempts = 1 WHERE form_id = %d', $tabla, $formulario ) );
+		$this->adelantar_cola();
+		$this->codigo = 500;
+		$this->procesar_cola();
+
+		$this->assertCount( 1, $this->peticiones, 'Vencida la reserva, se vuelve a intentar.' );
+		$this->assertSame( 'failed', $this->entregas()[0]['status'], 'Era el último intento que permite la política.' );
+
+		// Si también el último intento muere a medias, la entrega no puede volver a la cola indefinidamente.
+		$wpdb->query( $wpdb->prepare( 'UPDATE %i SET status = %s, attempts = 2, next_attempt_at = %s WHERE form_id = %d', $tabla, 'pending', '2000-01-01 00:00:00', $formulario ) );
+		$this->procesar_cola();
+
+		$entrega = $this->entregas()[0];
+
+		$this->assertCount( 1, $this->peticiones, 'No se ejecuta otra vez.' );
+		$this->assertSame( 'failed', $entrega['status'] );
+		$this->assertSame( 3, $entrega['attempts'] );
+		$this->assertStringContainsString( 'formulario_mensaje_delivery_interrupted', $entrega['error'] );
+		$this->assertTrue( $entrega['can_retry'], 'Queda como cualquier fallo: se puede reintentar a mano o descartar.' );
+	}
+
 	public function test_una_entrega_de_la_cola_solo_la_reserva_un_proceso() {
 		global $wpdb;
 

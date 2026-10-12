@@ -149,6 +149,11 @@ test('los envíos se buscan y se borran varios a la vez', async ({ page }) => {
   await page.getByPlaceholder('Buscar por nombre o por lo que escribieron').fill('');
   await expect(items).toHaveCount(2);
 
+  // Los dos están sin leer y cuentan en el filtro, junto a los que hayan dejado otros tests.
+  const unreadChip = page.locator('.fm-chips__item', { hasText: 'Sin leer' });
+  await expect(unreadChip).toHaveText(/^Sin leer · \d+$/);
+  const unreadBefore = Number((await unreadChip.innerText()).replace(/\D/g, ''));
+
   // No hay casilla para marcarlos todos: se marca cada mensaje con la suya.
   await page.getByLabel('Seleccionar el mensaje de Persona Uno').check();
   await page.getByLabel('Seleccionar el mensaje de Persona Dos').check();
@@ -160,6 +165,8 @@ test('los envíos se buscan y se borran varios a la vez', async ({ page }) => {
 
   await expect(page.locator('.components-notice')).toContainText('2 mensajes borrados.');
   await expect(page.locator('.fm-inbox__empty')).toContainText('Ningún mensaje coincide con estos filtros.');
+  // Borrados sin haberlos leído, dejan de contar como pendientes sin recargar la pantalla.
+  await expect(unreadChip).toHaveText(unreadBefore > 2 ? `Sin leer · ${unreadBefore - 2}` : 'Sin leer');
 });
 
 test('los envíos de un formulario se exportan a CSV con las fórmulas neutralizadas', async ({ page }) => {
@@ -244,6 +251,13 @@ test('el listado de formularios enlaza a sus envíos y al borrar uno se pueden b
   await row.getByRole('button', { name: `Borrar «${title}» definitivamente` }).click();
 
   const dialog = page.getByRole('dialog');
+
+  // Marcar la casilla y cancelar no deja la decisión tomada para la próxima vez que se abra el diálogo.
+  await dialog.getByLabel('Borrar también su mensaje guardado (1)').check();
+  await dialog.getByRole('button', { name: 'Cancelar' }).click();
+  await row.getByRole('button', { name: `Borrar «${title}» definitivamente` }).click();
+  await expect(dialog.getByLabel('Borrar también su mensaje guardado (1)')).not.toBeChecked();
+
   await dialog.getByLabel('Borrar también su mensaje guardado (1)').check();
   await dialog.getByRole('button', { name: 'Borrar definitivamente' }).click();
   await expect(page.locator('.components-notice')).toContainText('Formulario borrado.');

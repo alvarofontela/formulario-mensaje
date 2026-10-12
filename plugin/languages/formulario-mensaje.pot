@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-12T14:25:03+02:00\n"
+"POT-Creation-Date: 2026-10-12T15:32:32+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: formulario-mensaje\n"
@@ -158,41 +158,41 @@ msgstr ""
 msgid "Layout"
 msgstr ""
 
-#: includes/admin/class-admin-menu.php:71
-#: includes/admin/class-admin-menu.php:72
-#: includes/admin/class-admin-menu.php:125
-#: includes/admin/class-admin-menu.php:126
+#: includes/admin/class-admin-menu.php:73
+#: includes/admin/class-admin-menu.php:74
+#: includes/admin/class-admin-menu.php:128
+#: includes/admin/class-admin-menu.php:129
 #: build/admin/index.js:16
 #: build/admin/index.js:21
 msgid "Forms"
 msgstr ""
 
-#: includes/admin/class-admin-menu.php:118
-#: includes/admin/class-admin-menu.php:119
+#: includes/admin/class-admin-menu.php:121
+#: includes/admin/class-admin-menu.php:122
 #: build/admin/index.js:16
 #: build/admin/index.js:38
 msgid "Messages"
 msgstr ""
 
-#: includes/admin/class-admin-menu.php:132
+#: includes/admin/class-admin-menu.php:135
 #: build/admin/index.js:51
 msgid "Forms settings"
 msgstr ""
 
-#: includes/admin/class-admin-menu.php:133
+#: includes/admin/class-admin-menu.php:136
 #: build/admin/index.js:16
 msgid "Settings"
 msgstr ""
 
 #. translators: %s: number of unread messages.
-#: includes/admin/class-admin-menu.php:160
+#: includes/admin/class-admin-menu.php:163
 #, php-format
 msgid "%s unread message"
 msgid_plural "%s unread messages"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/admin/class-admin-menu.php:179
+#: includes/admin/class-admin-menu.php:182
 msgid "This screen needs JavaScript."
 msgstr ""
 
@@ -240,7 +240,7 @@ msgid "This form needs JavaScript to be sent. Enable it in your browser and try 
 msgstr ""
 
 #: includes/captcha/class-captcha-check.php:57
-#: includes/frontend/class-form-renderer.php:163
+#: includes/frontend/class-form-renderer.php:166
 msgid "Complete the security check before sending the form."
 msgstr ""
 
@@ -831,7 +831,7 @@ msgid "Enter a valid web address."
 msgstr ""
 
 #: includes/forms/class-form-definition-sanitizer.php:141
-#: includes/frontend/class-form-renderer.php:173
+#: includes/frontend/class-form-renderer.php:176
 msgid "Send"
 msgstr ""
 
@@ -954,39 +954,39 @@ msgstr ""
 msgid "This form does not exist or is in the trash."
 msgstr ""
 
-#: includes/frontend/class-form-renderer.php:144
+#: includes/frontend/class-form-renderer.php:147
 #: includes/submissions/class-submission-validator.php:91
 msgid "This field is required."
 msgstr ""
 
 #. translators: {current} and {total} are replaced by the number of the current step and the number of steps; keep them as they are.
-#: includes/frontend/class-form-renderer.php:147
+#: includes/frontend/class-form-renderer.php:150
 msgid "Step {current} of {total}"
 msgstr ""
 
-#: includes/frontend/class-form-renderer.php:154
+#: includes/frontend/class-form-renderer.php:157
 msgid "Your message could not be sent. Check your connection and try again."
 msgstr ""
 
-#: includes/frontend/class-form-renderer.php:212
+#: includes/frontend/class-form-renderer.php:215
 #: build/admin/index.js:30
 #: build/admin/index.js:41
 msgid "Previous"
 msgstr ""
 
-#: includes/frontend/class-form-renderer.php:213
+#: includes/frontend/class-form-renderer.php:216
 #: build/admin/index.js:31
 #: build/admin/index.js:42
 msgid "Next"
 msgstr ""
 
 #. translators: %s: the asterisk that marks required fields.
-#: includes/frontend/class-form-renderer.php:225
+#: includes/frontend/class-form-renderer.php:228
 #, php-format
 msgid "Fields marked with %s are required."
 msgstr ""
 
-#: includes/frontend/class-form-renderer.php:243
+#: includes/frontend/class-form-renderer.php:246
 msgid "Leave this field empty"
 msgstr ""
 
@@ -1020,6 +1020,12 @@ msgstr ""
 
 #: includes/mail/class-email-action.php:141
 msgid "The notification has no valid recipients."
+msgstr ""
+
+#. translators: 1: maximum size of the attachments, such as "20 MB". 2: comma-separated list of file names.
+#: includes/mail/class-email-action.php:249
+#, php-format
+msgid "Not attached, because the attachments of one email cannot exceed %1$s: %2$s"
 msgstr ""
 
 #. translators: %s: name of the site.
@@ -1072,13 +1078,17 @@ msgstr ""
 msgid "Set a sender address in the email settings: this site’s default address is not a valid email address."
 msgstr ""
 
-#: includes/mail/class-wp-mail-transport.php:85
+#: includes/mail/class-wp-mail-transport.php:98
 msgid "The email could not be sent."
 msgstr ""
 
-#: includes/queue/class-queue-processor.php:106
+#: includes/queue/class-queue-processor.php:110
+msgid "The delivery was interrupted too many times before it could finish."
+msgstr ""
+
+#: includes/queue/class-queue-processor.php:118
 #: includes/storage/class-action-retrier.php:56
-#: includes/storage/class-delivery-executor.php:52
+#: includes/storage/class-delivery-executor.php:58
 msgid "The submission or its form no longer exists."
 msgstr ""
 
@@ -1325,11 +1335,11 @@ msgstr ""
 msgid "Browser"
 msgstr ""
 
-#: includes/storage/class-delivery-executor.php:59
+#: includes/storage/class-delivery-executor.php:65
 msgid "The form no longer has this action."
 msgstr ""
 
-#: includes/storage/class-delivery-executor.php:64
+#: includes/storage/class-delivery-executor.php:70
 msgid "This action is turned off in the form. Turn it on to retry."
 msgstr ""
 

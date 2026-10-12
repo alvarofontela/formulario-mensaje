@@ -11,6 +11,7 @@ import {
 	retryDelivery,
 } from './api';
 import ConfirmModal from './confirm-modal';
+import { useLatest } from './hooks';
 
 const BADGES = { success: 'ok', pending: 'wait' };
 
@@ -87,9 +88,13 @@ export default function MessageReader( {
 	const [ busy, setBusy ] = useState( 0 );
 	const [ confirming, setConfirming ] = useState( false );
 
+	// Al pasar rápido de un mensaje a otro, la respuesta del anterior puede llegar la última: solo
+	// cuenta la de la petición más reciente, o se leería un mensaje y se borraría otro.
+	const latest = useLatest();
+
 	const load = useCallback(
 		() =>
-			getSubmission( messageId )
+			latest( getSubmission( messageId ) )
 				.then( ( loaded ) => {
 					setMessage( loaded );
 					onChange( loaded.id, {
@@ -99,7 +104,7 @@ export default function MessageReader( {
 					return loaded;
 				} )
 				.catch( ( failure ) => setError( failure.message ) ),
-		[ messageId, onChange ]
+		[ messageId, onChange, latest ]
 	);
 
 	useEffect( () => {

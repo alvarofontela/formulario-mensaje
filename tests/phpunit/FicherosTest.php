@@ -416,6 +416,45 @@ class FicherosTest extends Caso_Formulario {
 		$this->assertFileDoesNotExist( $this->directorio->base() . '/' . $fichero_segundo[0]->path );
 	}
 
+	public function test_la_notificacion_reintentada_lleva_el_enlace_de_descarga_como_la_original() {
+		$campos = array(
+			array( 'id' => 'nombre', 'type' => 'text', 'settings' => array( 'label' => 'Nombre', 'required' => true ) ),
+			array( 'id' => 'adjunto', 'type' => 'file', 'settings' => array( 'label' => 'Adjunto', 'attach' => false, 'keep' => true, 'signed_link' => true, 'link_days' => '7' ) ),
+		);
+		$rota   = $this->definicion()['actions'][0];
+
+		$rota['settings']['to'] = array();
+
+		$formulario = $this->crear_formulario( array( 'fields' => $campos, 'actions' => array( $rota ) ) );
+		$resultado  = $this->enviar_con_ficheros( $formulario, array( 'nombre' => 'Ana' ), array( 'adjunto' => array( array( 'informe.pdf', $this->pdf() ) ) ) );
+		$guardado   = $this->guardados( $formulario, $resultado->to_array()['reference'] )[0];
+
+		$this->assertSame( array(), $this->correos, 'La notificación ha fallado: no tiene destinatarios.' );
+
+		// Se corrige el formulario y se reintenta: el envío sale de la base de datos, donde el enlace no se guarda.
+		$this->como_administrador();
+
+		$buena = $this->definicion()['actions'][0];
+		$this->rest( 'PUT', "/forms/$formulario", array( 'definition' => array( 'fields' => $campos, 'actions' => array( $buena ) ) ) );
+
+		$fallida   = $this->rest( 'GET', '/deliveries' )->get_data()[0]['id'];
+		$reintento = $this->rest( 'POST', "/deliveries/$fallida/retry" );
+
+		$this->assertSame( 'success', $reintento->get_data()['status'] );
+		$this->assertCount( 1, $this->correos );
+		$this->assertSame( 1, preg_match( '#https?://\S+/wp-admin/admin-post\.php\?\S+#', $this->correos[0]->body, $encontrado ), 'El campo pide el enlace en las notificaciones: también en la reintentada.' );
+
+		parse_str( (string) wp_parse_url( $encontrado[0], PHP_URL_QUERY ), $parametros );
+
+		$this->assertSame( $guardado->token, $parametros['file'] );
+		$this->assertTrue( Plugin::service( Download_Links::class )->is_valid_signature( $parametros['file'], (int) $parametros['expires'], $parametros['sig'] ) );
+
+		// En el envío guardado sigue sin quedar el enlace.
+		$detalle = $this->rest( 'GET', '/submissions/' . $guardado->submission_id )->get_data();
+
+		$this->assertStringNotContainsString( 'sig=', wp_json_encode( $detalle['entries'] ) );
+	}
+
 	public function test_un_fichero_que_esperaba_al_reintento_se_borra_cuando_caduca_el_registro_de_entregas() {
 		global $wpdb;
 
@@ -725,6 +764,49 @@ class FicherosTest extends Caso_Formulario {
 		$this->assertCount( 3, $adjuntos, 'El fichero que no existe no se adjunta.' );
 		$this->assertStringNotContainsString( "\n", array_keys( $adjuntos )[2] );
 		$this->assertStringNotContainsString( ' ', array_keys( $adjuntos )[2] );
+	}
+
+	public function test_un_adjunto_que_no_cabe_en_el_correo_se_queda_fuera_el_solo_y_el_correo_lo_dice() {
+		$tope  = strlen( $this->pdf( 3000 ) ) + 200;
+		$aviso = 'Not attached, because the attachments of one email cannot exceed ' . size_format( $tope ) . ': Dossier';
+
+		// El tope se baja con su filtro para no mover megas: caben el primero y el tercero, pero no los tres.
+		add_filter( 'formulario_mensaje_max_attachment_bytes', static fn (): int => $tope );
+
+		$formulario = $this->crear_formulario(
+			array(
+				'fields' => array(
+					array( 'id' => 'nombre', 'type' => 'text', 'settings' => array( 'label' => 'Nombre', 'required' => true ) ),
+					array( 'id' => 'adjunto', 'type' => 'file', 'settings' => array( 'label' => 'Adjunto', 'max_files' => '3', 'keep' => false ) ),
+				),
+			)
+		);
+
+		$this->enviar_con_ficheros(
+			$formulario,
+			array( 'nombre' => 'Ana' ),
+			array( 'adjunto' => array( array( 'plano.pdf', $this->pdf( 3000 ) ), array( 'Dossier {all_fields} <b>.pdf', $this->pdf( 3000 ) ), array( 'nota.pdf', $this->pdf() ) ) )
+		);
+
+		$this->assertCount( 1, $this->correos );
+
+		$correo = $this->correos[0];
+
+		$this->assertSame( array( 'plano.pdf', 'nota.pdf' ), array_column( $correo->attachments, 'name' ), 'El que no cabe no arrastra al que viene detrás y sí cabe.' );
+		$this->assertStringContainsString( $aviso, $correo->body );
+		$this->assertStringContainsString( $aviso, $correo->html );
+		$this->assertStringNotContainsString( 'Ana', strstr( $correo->body, 'Not attached' ), 'El nombre del fichero no se trata como una etiqueta.' );
+		$this->assertStringNotContainsString( '<b>', strstr( $correo->html, 'Not attached' ), 'El nombre del fichero entra escapado en el HTML.' );
+	}
+
+	public function test_un_correo_con_todos_sus_adjuntos_no_lleva_ningun_aviso() {
+		$formulario = $this->formulario_con_fichero( array( 'keep' => false ) );
+
+		$this->enviar_con_ficheros( $formulario, array( 'nombre' => 'Ana' ), array( 'adjunto' => array( array( 'informe.pdf', $this->pdf() ) ) ) );
+
+		$this->assertCount( 1, $this->correos[0]->attachments );
+		$this->assertStringNotContainsString( 'Not attached', $this->correos[0]->body );
+		$this->assertStringNotContainsString( 'Not attached', $this->correos[0]->html );
 	}
 
 	public function test_resend_recibe_los_adjuntos_codificados() {

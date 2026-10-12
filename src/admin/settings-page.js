@@ -143,8 +143,13 @@ export default function SettingsPage() {
 		setSaving( true );
 		setNotice( null );
 
-		Promise.all( [
-			saveSettings( {
+		/*
+		 * De una en una y no a la vez: el correo y el captcha guardan sus credenciales en la misma
+		 * opción, y dos peticiones simultáneas se pisarían (la segunda escribiría sin lo que acaba de
+		 * guardar la primera, y una contraseña recién puesta se perdería sin aviso).
+		 */
+		const saveAll = async () => {
+			const general = await saveSettings( {
 				trusted_proxy_mode: settings.trusted_proxy_mode,
 				trusted_proxies: toList( proxies ),
 				allowed_redirect_hosts: toList( hosts ),
@@ -153,14 +158,22 @@ export default function SettingsPage() {
 				failure_alerts: settings.failure_alerts,
 				failure_alert_email: settings.failure_alert_email,
 				delivery_log_days: settings.delivery_log_days,
-			} ),
-			saveMailSettings( { settings: mail, secrets, clear: cleared } ),
-			saveCaptchaSettings( {
+			} );
+			const mailResponse = await saveMailSettings( {
+				settings: mail,
+				secrets,
+				clear: cleared,
+			} );
+			const captchaResponse = await saveCaptchaSettings( {
 				settings: captcha,
 				secret: captchaSecret,
 				clear_secret: captchaCleared,
-			} ),
-		] )
+			} );
+
+			return [ general, mailResponse, captchaResponse ];
+		};
+
+		saveAll()
 			.then( ( [ general, mailResponse, captchaResponse ] ) => {
 				apply( general );
 				applyMail( mailResponse );

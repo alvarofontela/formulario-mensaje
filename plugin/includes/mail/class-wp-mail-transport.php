@@ -58,10 +58,21 @@ final class Wp_Mail_Transport implements Mail_Transport {
 			$phpmailer->AltBody = $message->body;
 		};
 
+		// Con nombre de remitente pero sin dirección propia no hay cabecera «From» que lo lleve: se le da a
+		// wp_mail() por su filtro, para que acompañe a la dirección del sitio. El nombre sale de los ajustes
+		// del plugin, nunca del visitante, y sender_name() le quita los saltos de línea y los delimitadores.
+		$named       = '' === $settings->from_email && '' !== $settings->from_name;
+		$sender_name = static fn (): string => $settings->sender_name();
+
 		add_action( 'wp_mail_failed', $capture );
 
 		if ( $message->has_html() ) {
 			add_action( 'phpmailer_init', $alternative );
+		}
+
+		if ( $named ) {
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Filtro del núcleo.
+			add_filter( 'wp_mail_from_name', $sender_name );
 		}
 
 		$sent = wp_mail(
@@ -74,6 +85,8 @@ final class Wp_Mail_Transport implements Mail_Transport {
 
 		remove_action( 'wp_mail_failed', $capture );
 		remove_action( 'phpmailer_init', $alternative );
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Filtro del núcleo.
+		remove_filter( 'wp_mail_from_name', $sender_name );
 
 		if ( $sent ) {
 			return true;

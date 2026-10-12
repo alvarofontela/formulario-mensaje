@@ -10,6 +10,7 @@ namespace Formulario_Mensaje\Storage;
 use Formulario_Mensaje\Actions\Action_Type_Registry;
 use Formulario_Mensaje\Forms\Form_Repository;
 use Formulario_Mensaje\Submissions\Submission;
+use Formulario_Mensaje\Uploads\Submission_Uploads;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -19,6 +20,9 @@ defined( 'ABSPATH' ) || exit;
  *
  * Lo comparten el reintento manual y la cola: si el fallo se debía a la configuración (un destino
  * mal escrito, por ejemplo), basta corregirla para que el siguiente intento salga bien.
+ *
+ * La acción recibe lo mismo que habría recibido al llegar el envío: los enlaces de descarga de sus
+ * ficheros no se guardan con él, así que se vuelven a componer aquí.
  */
 final class Delivery_Executor {
 
@@ -32,10 +36,12 @@ final class Delivery_Executor {
 	 *
 	 * @param Form_Repository      $forms        Almacén de formularios.
 	 * @param Action_Type_Registry $action_types Tipos de acción.
+	 * @param Submission_Uploads   $uploads      Ficheros de los envíos.
 	 */
 	public function __construct(
 		private readonly Form_Repository $forms,
-		private readonly Action_Type_Registry $action_types
+		private readonly Action_Type_Registry $action_types,
+		private readonly Submission_Uploads $uploads
 	) {}
 
 	/**
@@ -64,7 +70,12 @@ final class Delivery_Executor {
 			return $this->permanent( 'formulario_mensaje_action_disabled', __( 'This action is turned off in the form. Turn it on to retry.', 'formulario-mensaje' ), 409 );
 		}
 
-		return $type->execute( $current['settings'], $submission, $form );
+		// Un envío leído de la base de datos no trae los enlaces de descarga: sin esto, la notificación reintentada saldría sin ellos.
+		$with_links = $submission->with_entries(
+			$this->uploads->with_links( $form, $submission->reference, $delivery->submission_id, $submission->entries )
+		);
+
+		return $type->execute( $current['settings'], $with_links, $form );
 	}
 
 	/**

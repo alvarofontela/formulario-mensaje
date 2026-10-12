@@ -157,41 +157,41 @@ msgstr "Campos avanzados"
 msgid "Layout"
 msgstr "Presentación"
 
-#: includes/admin/class-admin-menu.php:71
-#: includes/admin/class-admin-menu.php:72
-#: includes/admin/class-admin-menu.php:125
-#: includes/admin/class-admin-menu.php:126
+#: includes/admin/class-admin-menu.php:73
+#: includes/admin/class-admin-menu.php:74
+#: includes/admin/class-admin-menu.php:128
+#: includes/admin/class-admin-menu.php:129
 #: build/admin/index.js:16
 #: build/admin/index.js:21
 msgid "Forms"
 msgstr "Formularios"
 
-#: includes/admin/class-admin-menu.php:118
-#: includes/admin/class-admin-menu.php:119
+#: includes/admin/class-admin-menu.php:121
+#: includes/admin/class-admin-menu.php:122
 #: build/admin/index.js:16
 #: build/admin/index.js:38
 msgid "Messages"
 msgstr "Mensajes"
 
-#: includes/admin/class-admin-menu.php:132
+#: includes/admin/class-admin-menu.php:135
 #: build/admin/index.js:51
 msgid "Forms settings"
 msgstr "Ajustes de formularios"
 
-#: includes/admin/class-admin-menu.php:133
+#: includes/admin/class-admin-menu.php:136
 #: build/admin/index.js:16
 msgid "Settings"
 msgstr "Ajustes"
 
 #. translators: %s: number of unread messages.
-#: includes/admin/class-admin-menu.php:160
+#: includes/admin/class-admin-menu.php:163
 #, php-format
 msgid "%s unread message"
 msgid_plural "%s unread messages"
 msgstr[0] "%s mensaje sin leer"
 msgstr[1] "%s mensajes sin leer"
 
-#: includes/admin/class-admin-menu.php:179
+#: includes/admin/class-admin-menu.php:182
 msgid "This screen needs JavaScript."
 msgstr "Esta pantalla necesita JavaScript."
 
@@ -247,7 +247,7 @@ msgid "This form needs JavaScript to be sent. Enable it in your browser and try 
 msgstr "Este formulario necesita JavaScript para enviarse. Actívalo en tu navegador e inténtalo de nuevo."
 
 #: includes/captcha/class-captcha-check.php:57
-#: includes/frontend/class-form-renderer.php:163
+#: includes/frontend/class-form-renderer.php:166
 msgid "Complete the security check before sending the form."
 msgstr "Completa la comprobación de seguridad antes de enviar el formulario."
 
@@ -840,7 +840,7 @@ msgid "Enter a valid web address."
 msgstr "Escribe una dirección web válida."
 
 #: includes/forms/class-form-definition-sanitizer.php:141
-#: includes/frontend/class-form-renderer.php:173
+#: includes/frontend/class-form-renderer.php:176
 msgid "Send"
 msgstr "Enviar"
 
@@ -963,39 +963,39 @@ msgstr "No se ha podido enviar el formulario"
 msgid "This form does not exist or is in the trash."
 msgstr "Este formulario no existe o está en la papelera."
 
-#: includes/frontend/class-form-renderer.php:144
+#: includes/frontend/class-form-renderer.php:147
 #: includes/submissions/class-submission-validator.php:91
 msgid "This field is required."
 msgstr "Este campo es obligatorio."
 
 #. translators: {current} and {total} are replaced by the number of the current step and the number of steps; keep them as they are.
-#: includes/frontend/class-form-renderer.php:147
+#: includes/frontend/class-form-renderer.php:150
 msgid "Step {current} of {total}"
 msgstr "Paso {current} de {total}"
 
-#: includes/frontend/class-form-renderer.php:154
+#: includes/frontend/class-form-renderer.php:157
 msgid "Your message could not be sent. Check your connection and try again."
 msgstr "No se ha podido enviar tu mensaje. Comprueba tu conexión e inténtalo de nuevo."
 
-#: includes/frontend/class-form-renderer.php:212
+#: includes/frontend/class-form-renderer.php:215
 #: build/admin/index.js:30
 #: build/admin/index.js:41
 msgid "Previous"
 msgstr "Anterior"
 
-#: includes/frontend/class-form-renderer.php:213
+#: includes/frontend/class-form-renderer.php:216
 #: build/admin/index.js:31
 #: build/admin/index.js:42
 msgid "Next"
 msgstr "Siguiente"
 
 #. translators: %s: the asterisk that marks required fields.
-#: includes/frontend/class-form-renderer.php:225
+#: includes/frontend/class-form-renderer.php:228
 #, php-format
 msgid "Fields marked with %s are required."
 msgstr "Los campos marcados con %s son obligatorios."
 
-#: includes/frontend/class-form-renderer.php:243
+#: includes/frontend/class-form-renderer.php:246
 msgid "Leave this field empty"
 msgstr "Deja este campo vacío"
 
@@ -1087,13 +1087,13 @@ msgstr "El servidor SMTP no está configurado."
 msgid "Set a sender address in the email settings: this site’s default address is not a valid email address."
 msgstr "Indica una dirección de remitente en los ajustes de correo: la que este sitio usa por defecto no es una dirección de correo válida."
 
-#: includes/mail/class-wp-mail-transport.php:85
+#: includes/mail/class-wp-mail-transport.php:98
 msgid "The email could not be sent."
 msgstr "No se ha podido enviar el correo."
 
-#: includes/queue/class-queue-processor.php:106
+#: includes/queue/class-queue-processor.php:118
 #: includes/storage/class-action-retrier.php:56
-#: includes/storage/class-delivery-executor.php:52
+#: includes/storage/class-delivery-executor.php:58
 msgid "The submission or its form no longer exists."
 msgstr "El envío o su formulario ya no existen."
 
@@ -1340,11 +1340,11 @@ msgstr "Dirección IP"
 msgid "Browser"
 msgstr "Navegador"
 
-#: includes/storage/class-delivery-executor.php:59
+#: includes/storage/class-delivery-executor.php:65
 msgid "The form no longer has this action."
 msgstr "El formulario ya no tiene esta acción."
 
-#: includes/storage/class-delivery-executor.php:64
+#: includes/storage/class-delivery-executor.php:70
 msgid "This action is turned off in the form. Turn it on to retry."
 msgstr "Esta acción está desactivada en el formulario. Actívala para reintentar."
 
@@ -3240,3 +3240,13 @@ msgstr "contacto"
 msgctxt "block keyword"
 msgid "formulario"
 msgstr "formulario"
+
+#: includes/queue/class-queue-processor.php:110
+msgid "The delivery was interrupted too many times before it could finish."
+msgstr "La entrega se ha interrumpido demasiadas veces antes de poder terminar."
+
+#. translators: 1: maximum size of the attachments, such as "20 MB". 2: comma-separated list of file names.
+#: includes/mail/class-email-action.php:249
+#, php-format
+msgid "Not attached, because the attachments of one email cannot exceed %1$s: %2$s"
+msgstr "Sin adjuntar, porque los adjuntos de un correo no pueden pasar de %1$s: %2$s"

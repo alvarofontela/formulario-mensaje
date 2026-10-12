@@ -39,11 +39,14 @@ final class Form_Renderer {
 	public const FORM_ID_FIELD = 'fm_form_id';
 
 	/**
-	 * Veces que se ha pintado un formulario en esta petición, para que los `id` no se repitan.
+	 * Veces que se ha pintado cada formulario en esta petición, para que los `id` no se repitan.
 	 *
-	 * @var int
+	 * Se cuenta por formulario y no en total: la vuelta de un envío sin JavaScript apunta a la primera
+	 * aparición del suyo (ver Fallback_Controller), esté o no detrás de otros formularios en la página.
+	 *
+	 * @var array<int, int>
 	 */
-	private int $instances = 0;
+	private array $instances = array();
 
 	/**
 	 * Constructor.
@@ -72,9 +75,9 @@ final class Form_Renderer {
 	 * @param array<string, mixed> $embed_style Estilo del sitio donde se inserta (el bloque); tiene prioridad sobre el del formulario.
 	 */
 	public function render( Form $form, string $confirmation = '', bool $show_form = true, bool $interactive = true, array $embed_style = array() ): string {
-		++$this->instances;
+		$this->instances[ $form->id ] = ( $this->instances[ $form->id ] ?? 0 ) + 1;
 
-		$instance = $form->id . '-' . $this->instances;
+		$instance = $form->id . '-' . $this->instances[ $form->id ];
 
 		// El estilo son propiedades CSS con valores ya validados (colores hexadecimales y píxeles).
 		$css = $this->style->css( $form->definition->style, Form_Style::SCOPE_FORM ) . $this->style->css( $embed_style, Form_Style::SCOPE_EMBED );

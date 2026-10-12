@@ -76,6 +76,8 @@ export default function FormEditor( {
 	const [ peeking, setPeeking ] = useState( false );
 	const [ stepParam, setStepParam ] = useUrlParam( 'step' );
 	const noticeRef = useRef( null );
+	// Cambios hechos en el formulario: al terminar de guardar dice si se ha seguido editando mientras tanto.
+	const edits = useRef( 0 );
 
 	const stepIndex = Math.max(
 		0,
@@ -130,6 +132,7 @@ export default function FormEditor( {
 	}, [ dirty ] );
 
 	const change = useCallback( ( patch ) => {
+		edits.current += 1;
 		setDefinition( ( current ) => ( { ...current, ...patch } ) );
 		setDirty( true );
 	}, [] );
@@ -139,6 +142,7 @@ export default function FormEditor( {
 		setNotice( null );
 
 		const payload = { title, definition };
+		const editsAtSave = edits.current;
 
 		( id ? updateForm( id, payload ) : createForm( payload ) )
 			.then( ( form ) => {
@@ -147,9 +151,17 @@ export default function FormEditor( {
 					onCreated( form.id );
 				}
 
-				// El servidor devuelve la definición saneada: es la que queda en pantalla.
-				apply( form );
-				setDirty( false );
+				if ( edits.current === editsAtSave ) {
+					// El servidor devuelve la definición saneada: es la que queda en pantalla.
+					apply( form );
+					setDirty( false );
+				} else {
+					// Se ha seguido editando mientras se guardaba: lo que hay en pantalla es más nuevo que
+					// lo guardado. No se pisa con la respuesta, y sigue habiendo cambios por guardar.
+					setShortcode( form.shortcode );
+					setPlacements( form.placements || [] );
+				}
+
 				setNotice( {
 					status: 'success',
 					message: __( 'Form saved.', 'formulario-mensaje' ),
@@ -253,6 +265,7 @@ export default function FormEditor( {
 						placeholder={ __( 'Form name', 'formulario-mensaje' ) }
 						value={ title }
 						onChange={ ( value ) => {
+							edits.current += 1;
 							setTitle( value );
 							setDirty( true );
 						} }

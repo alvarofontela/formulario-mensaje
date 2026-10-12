@@ -100,11 +100,11 @@ final class Wpdb_Submission_Repository implements Submission_Repository {
 	public function search( Submission_Query $query ): array {
 		$wpdb = $this->wpdb;
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Solo se concatena una constante de la clase; los datos van por los marcadores.
-		$sql = $wpdb->prepare( 'SELECT * FROM %i WHERE ' . self::FILTERS . ' ORDER BY id DESC LIMIT %d OFFSET %d', ...array( ...$this->filter_args( $query ), $query->per_page, $query->offset() ) );
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Preparada en la línea anterior.
-		$rows = $wpdb->get_results( $sql, ARRAY_A );
+		$rows = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Solo se concatena una constante de la clase; los datos van por los marcadores.
+			$wpdb->prepare( 'SELECT * FROM %i WHERE ' . self::FILTERS . ' ORDER BY id DESC LIMIT %d OFFSET %d', ...array( ...$this->filter_args( $query ), $query->per_page, $query->offset() ) ),
+			ARRAY_A
+		);
 
 		return array_map( array( $this, 'to_submission' ), is_array( $rows ) ? $rows : array() );
 	}
@@ -117,11 +117,10 @@ final class Wpdb_Submission_Repository implements Submission_Repository {
 	public function count( Submission_Query $query ): int {
 		$wpdb = $this->wpdb;
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Solo se concatena una constante de la clase; los datos van por los marcadores.
-		$sql = $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE ' . self::FILTERS, ...$this->filter_args( $query ) );
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Preparada en la línea anterior.
-		return (int) $wpdb->get_var( $sql );
+		return (int) $wpdb->get_var(
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Solo se concatena una constante de la clase; los datos van por los marcadores.
+			$wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE ' . self::FILTERS, ...$this->filter_args( $query ) )
+		);
 	}
 
 	/**

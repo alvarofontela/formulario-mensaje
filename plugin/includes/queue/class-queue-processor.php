@@ -99,7 +99,19 @@ final class Queue_Processor {
 	 * @param Queue_Job $job Entrega reservada.
 	 */
 	private function run( Queue_Job $job ): void {
-		$delivery   = $job->delivery;
+		$delivery = $job->delivery;
+
+		/*
+		 * Una entrega cuyo proceso murió a medias (un error fatal, el tiempo agotado) vuelve a la cola al
+		 * vencer su reserva sin haber pasado por la política de reintentos. Se le aplica aquí, antes de
+		 * ejecutarla otra vez: si el intento anterior ya era el último, no hay más, o se repetiría sin fin.
+		 */
+		if ( $delivery->attempts > 1 && null === $this->policy->delay_after( $delivery->attempts - 1 ) ) {
+			$this->fail( $job, 'formulario_mensaje_delivery_interrupted: ' . __( 'The delivery was interrupted too many times before it could finish.', 'formulario-mensaje' ) );
+
+			return;
+		}
+
 		$submission = $this->submission( $job );
 
 		if ( null === $submission ) {

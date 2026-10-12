@@ -93,15 +93,22 @@ export default function Inbox( { initialFormId, openId, onOpen } ) {
 	const [ confirming, setConfirming ] = useState( false );
 	const [ exporting, setExporting ] = useState( false );
 
+	// Sin leer y entregas fallidas, tal como están en el servidor.
+	const refreshCounts = useCallback(
+		() =>
+			getSubmissionCounts()
+				.then( setCounts )
+				.catch( () => {} ),
+		[]
+	);
+
 	useEffect( () => {
 		// Sin la capability de gestionar formularios se reciben solo los nombres: basta para filtrar.
 		listForms( 'publish' )
 			.then( setForms )
 			.catch( () => setForms( [] ) );
-		getSubmissionCounts()
-			.then( setCounts )
-			.catch( () => {} );
-	}, [] );
+		refreshCounts();
+	}, [ refreshCounts ] );
 
 	// La búsqueda se lanza al dejar de escribir, no con cada tecla.
 	useEffect( () => {
@@ -129,7 +136,18 @@ export default function Inbox( { initialFormId, openId, onOpen } ) {
 				per_page: PER_PAGE,
 			} )
 		)
-			.then( setResult )
+			.then( ( response ) => {
+				// Si la página se ha quedado vacía (se ha borrado o leído todo lo que tenía), se vuelve a
+				// la última que tiene algo: sin esto se vería una bandeja vacía habiendo mensajes.
+				if ( page > 1 && response.items.length === 0 ) {
+					setPage(
+						Math.max( 1, Math.min( page - 1, response.pages ) )
+					);
+					return;
+				}
+
+				setResult( response );
+			} )
 			.catch( ( error ) => {
 				setResult( { items: [], total: 0, pages: 0 } );
 				setNotice( { status: 'error', message: error.message } );
@@ -174,8 +192,11 @@ export default function Inbox( { initialFormId, openId, onOpen } ) {
 
 		action()
 			.then( ( response ) => {
+				// Marcar como leído devuelve el recuento; borrar no, y también lo cambia.
 				if ( response?.unread !== undefined ) {
 					applyCounts( response );
+				} else {
+					refreshCounts();
 				}
 
 				setNotice( {
@@ -299,11 +320,7 @@ export default function Inbox( { initialFormId, openId, onOpen } ) {
 							setView( 'messages' );
 							onOpen( id );
 						} }
-						onChange={ () =>
-							getSubmissionCounts()
-								.then( setCounts )
-								.catch( () => {} )
-						}
+						onChange={ refreshCounts }
 					/>
 				</div>
 			) }
@@ -646,6 +663,8 @@ export default function Inbox( { initialFormId, openId, onOpen } ) {
 								onDeleted={ () => {
 									onOpen( null );
 									reload();
+									// Con el mensaje se van sus entregas fallidas.
+									refreshCounts();
 								} }
 							/>
 						) : (

@@ -684,7 +684,11 @@ export default function FormsList( { onOpen } ) {
 						'formulario-mensaje'
 					) }
 					confirm={ __( 'Delete permanently', 'formulario-mensaje' ) }
-					onCancel={ () => setPendingDelete( null ) }
+					onCancel={ () => {
+						setPendingDelete( null );
+						// La casilla de borrar los mensajes es de este diálogo: no se hereda en el siguiente.
+						setDeleteSubmissions( false );
+					} }
 					onConfirm={ () => {
 						const id = pendingDelete.id;
 						const withSubmissions = deleteSubmissions;

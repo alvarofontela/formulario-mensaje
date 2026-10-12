@@ -130,6 +130,15 @@ add_filter(
 );
 ```
 
+### `formulario_mensaje_max_attachment_bytes` (filtro)
+
+Filtra el tamaño máximo, en bytes, de los adjuntos de un correo de notificación (por defecto, 20 MB). Sirve para ajustarlo a lo que admite el servidor de correo del sitio. Un fichero que no cabe se queda fuera él solo, y el correo dice cuáles no se han adjuntado: siguen en el envío guardado si su campo los conserva.
+
+| Parámetro | Tipo | |
+| --- | --- | --- |
+| `$bytes` | `int` | Tamaño máximo de todos los adjuntos juntos |
+| `$form` | `Form` | Formulario |
+
 ### `formulario_mensaje_failure_alert_interval` (filtro)
 
 Filtra los segundos mínimos entre dos avisos de entregas fallidas al administrador (por defecto, doce horas).

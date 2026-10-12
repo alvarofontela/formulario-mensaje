@@ -53,9 +53,11 @@ final class Admin_Menu {
 	 * Registra el menú y sus pantallas.
 	 */
 	public function register(): void {
-		$pages = array_values(
+		// El globo de mensajes sin leer va en dos entradas del menú: se cuenta una sola vez.
+		$bubble = $this->unread_bubble();
+		$pages  = array_values(
 			array_filter(
-				$this->pages(),
+				$this->pages( $bubble ),
 				static fn ( array $page ): bool => current_user_can( $page['capability'] )
 			)
 		);
@@ -69,7 +71,7 @@ final class Admin_Menu {
 
 		add_menu_page(
 			__( 'Forms', 'formulario-mensaje' ),
-			__( 'Forms', 'formulario-mensaje' ) . $this->unread_bubble(),
+			__( 'Forms', 'formulario-mensaje' ) . $bubble,
 			$parent['capability'],
 			$parent['slug'],
 			'',
@@ -106,9 +108,10 @@ final class Admin_Menu {
 	/**
 	 * Pantallas del plugin, en el orden del menú.
 	 *
+	 * @param string $bubble Globo con los mensajes sin leer, ya escapado, o cadena vacía.
 	 * @return array<int, array{slug: string, view: string, capability: string, title: string, menu: string}>
 	 */
-	private function pages(): array {
+	private function pages( string $bubble ): array {
 		// Los mensajes van primero: es a lo que entra casi siempre quien usa el plugin en el día a día.
 		return array(
 			array(
@@ -116,7 +119,7 @@ final class Admin_Menu {
 				'view'       => 'submissions',
 				'capability' => Capabilities::VIEW_SUBMISSIONS,
 				'title'      => __( 'Messages', 'formulario-mensaje' ),
-				'menu'       => __( 'Messages', 'formulario-mensaje' ) . $this->unread_bubble(),
+				'menu'       => __( 'Messages', 'formulario-mensaje' ) . $bubble,
 			),
 			array(
 				'slug'       => self::FORMS_PAGE,
