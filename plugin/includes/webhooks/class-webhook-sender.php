@@ -12,6 +12,7 @@ use Formulario_Mensaje\Secrets\Secret_Cipher;
 use Formulario_Mensaje\Submissions\Submission;
 use Formulario_Mensaje\Support\Clock;
 use WP_Error;
+use WP_HTTP_Proxy;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -25,9 +26,10 @@ defined( 'ABSPATH' ) || exit;
  * Además, la conexión se obliga a ir a la dirección que se ha comprobado (ver Destination_Guard): el
  * núcleo valida resolviendo el nombre una vez y la conexión lo resuelve otra, y entre las dos un
  * DNS malintencionado podría cambiar la respuesta. Eso solo se puede hacer con cURL: sin él, la
- * petición a un destino con nombre no se envía. Y del cuerpo de la respuesta solo se devuelve algo
- * si la conexión ha llegado de verdad a esa dirección, que es lo que convertiría una petición a
- * ciegas en una lectura; detrás de un proxy de salida, por ejemplo, no se puede saber.
+ * petición a un destino con nombre no se envía, y si después no consta que la conexión fue a esa
+ * dirección, la respuesta se descarta con un error. La única salvedad es un proxy de salida, donde
+ * quien resuelve y se conecta es el proxy: la petición se hace, pero del destino solo se cuenta el
+ * código, nunca el cuerpo, que es lo que convertiría una petición a ciegas en una lectura.
  */
 final class Webhook_Sender {
 
@@ -123,13 +125,19 @@ final class Webhook_Sender {
 		$started = microtime( true );
 		$address = '';
 		$handle  = null;
+		$proxied = $this->goes_through_proxy( $url );
 
 		/*
 		 * Va el último de su filtro: si otro código ya ha respondido a la petición (una caché, un doble
 		 * de pruebas), no va a haber conexión que proteger. Si la va a haber, se decide aquí a qué
 		 * dirección, y una interna corta la petición con su error.
+		 *
+		 * Con un proxy de salida es el proxy quien resuelve el nombre y se conecta, no este servidor:
+		 * no hay conexión propia que obligar, y a qué redes llega es cosa de la configuración del proxy.
+		 * La dirección se comprueba igual desde aquí, y si pasa, la petición se hace, pero de la
+		 * respuesta solo se cuenta el código (ver más abajo).
 		 */
-		$guard = function ( mixed $preempt ) use ( $url, &$address ): mixed {
+		$guard = function ( mixed $preempt ) use ( $url, $proxied, &$address ): mixed {
 			if ( false !== $preempt ) {
 				return $preempt;
 			}
@@ -140,8 +148,13 @@ final class Webhook_Sender {
 				return $destination;
 			}
 
-			// Sin cURL la conexión volvería a resolver el nombre por su cuenta: no se envía.
-			if ( '' !== $destination && ! function_exists( 'curl_init' ) ) {
+			if ( $proxied ) {
+				return $preempt;
+			}
+
+			// Si la conexión no se puede obligar a ir a la dirección comprobada, volvería a resolver el
+			// nombre por su cuenta: la petición no se envía.
+			if ( '' !== $destination && ! $this->can_force_connection( $url ) ) {
 				return new WP_Error( 'formulario_mensaje_webhook_unpinned', __( 'This server cannot send webhooks safely: PHP has no cURL to keep the connection on the address that was checked.', 'formulario-mensaje' ) );
 			}
 
@@ -152,13 +165,21 @@ final class Webhook_Sender {
 
 		/*
 		 * La conexión va a la dirección comprobada sea cual sea el nombre de la petición: no depende de
-		 * que cURL lo escriba igual que aquí. El puerto es el de la dirección del webhook.
+		 * que cURL lo escriba igual que aquí. El puerto es el de la dirección del webhook. Si la opción
+		 * no se puede poner, la petición se deja sin dirección para que falle antes de conectarse.
 		 */
 		$connect = static function ( mixed $curl ) use ( &$address, &$handle ): void {
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt -- La petición la hace la HTTP API; aquí solo se la obliga a ir a la dirección ya comprobada, que no tiene otra vía.
-			if ( '' !== $address && curl_setopt( $curl, CURLOPT_CONNECT_TO, array( '::' . $address . ':' ) ) ) {
-				$handle = $curl;
+			if ( '' === $address ) {
+				return;
 			}
+
+			// phpcs:disable WordPress.WP.AlternativeFunctions.curl_curl_setopt -- La petición la hace la HTTP API; aquí solo se la obliga a ir a la dirección ya comprobada, que no tiene otra vía.
+			if ( curl_setopt( $curl, CURLOPT_CONNECT_TO, array( '::' . $address . ':' ) ) ) {
+				$handle = $curl;
+			} else {
+				curl_setopt( $curl, CURLOPT_URL, '' );
+			}
+			// phpcs:enable WordPress.WP.AlternativeFunctions.curl_curl_setopt
 		};
 
 		// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Hooks del núcleo.
@@ -188,18 +209,53 @@ final class Webhook_Sender {
 		}
 
 		/*
-		 * El cuerpo solo se cuenta si no había nombre que resolver o si la conexión ha llegado a la
-		 * dirección comprobada. Si no se puede asegurar (otro transporte, un proxy de salida), del
-		 * destino solo se dice el código con el que respondió.
+		 * Había una dirección a la que obligar la conexión: si no consta que la petición fue a ella
+		 * (no pasó por cURL, o se conectó a otra), no se da por buena ni se cuenta nada de la respuesta.
 		 */
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_getinfo -- Solo se lee a qué dirección se conectó la petición que ha hecho la HTTP API.
-		$verified = '' === $address || ( null !== $handle && curl_getinfo( $handle, CURLINFO_PRIMARY_IP ) === $address );
-		$body     = $verified ? wp_remote_retrieve_body( $response ) : '';
+		if ( '' !== $address && ( null === $handle || curl_getinfo( $handle, CURLINFO_PRIMARY_IP ) !== $address ) ) {
+			return new WP_Error( 'formulario_mensaje_webhook_unpinned', __( 'The webhook connection could not be kept on the address that was checked, so its response was discarded.', 'formulario-mensaje' ) );
+		}
+
+		// A través de un proxy no se sabe a qué dirección llegó la petición: solo se cuenta el código.
+		$body = $proxied ? '' : wp_remote_retrieve_body( $response );
 
 		return new Webhook_Response(
 			(int) wp_remote_retrieve_response_code( $response ),
 			mb_substr( wp_check_invalid_utf8( $body, true ), 0, self::BODY_EXCERPT ),
 			(int) round( ( microtime( true ) - $started ) * 1000 )
 		);
+	}
+
+	/**
+	 * Indica si la petición a una dirección saldrá por el proxy configurado en WordPress.
+	 *
+	 * @param string $url Dirección del webhook.
+	 */
+	private function goes_through_proxy( string $url ): bool {
+		$proxy = new WP_HTTP_Proxy();
+
+		return $proxy->is_enabled() && $proxy->send_through_proxy( $url );
+	}
+
+	/**
+	 * Indica si la petición se hará con cURL, que es lo único que deja obligar a la conexión a ir a
+	 * una dirección concreta. Es el mismo criterio con el que la HTTP API elige cURL.
+	 *
+	 * @param string $url Dirección del webhook.
+	 */
+	private function can_force_connection( string $url ): bool {
+		if ( ! function_exists( 'curl_init' ) || ! function_exists( 'curl_exec' ) || ! defined( 'CURLOPT_CONNECT_TO' ) ) {
+			return false;
+		}
+
+		if ( 'https' !== strtolower( (string) wp_parse_url( $url, PHP_URL_SCHEME ) ) ) {
+			return true;
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_version -- Solo se consulta si el cURL de PHP sabe hacer conexiones cifradas.
+		$version = curl_version();
+
+		return is_array( $version ) && 0 !== ( (int) $version['features'] & CURL_VERSION_SSL );
 	}
 }

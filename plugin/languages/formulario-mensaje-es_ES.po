@@ -1401,11 +1401,11 @@ msgstr "Webhook"
 msgid "The destination responded with HTTP status %d."
 msgstr "El destino ha respondido con el código HTTP %d."
 
-#: includes/webhooks/class-webhook-sender.php:84
+#: includes/webhooks/class-webhook-sender.php:86
 msgid "The webhook has no destination address."
 msgstr "El webhook no tiene dirección de destino."
 
-#: includes/webhooks/class-webhook-sender.php:90
+#: includes/webhooks/class-webhook-sender.php:92
 msgid "The submission data could not be converted to JSON."
 msgstr "Los datos del envío no se han podido convertir a JSON."
 
@@ -3282,6 +3282,10 @@ msgstr "Solo puede cambiarlo quien tiene permiso para borrar mensajes: los borra
 msgid "The SMTP connection has not been changed: the stored password could not be deleted first. Try again."
 msgstr "La conexión SMTP no se ha cambiado: antes no se ha podido borrar la contraseña guardada. Inténtalo de nuevo."
 
-#: includes/webhooks/class-webhook-sender.php:145
+#: includes/webhooks/class-webhook-sender.php:158
 msgid "This server cannot send webhooks safely: PHP has no cURL to keep the connection on the address that was checked."
 msgstr "Este servidor no puede enviar webhooks con seguridad: PHP no tiene cURL para mantener la conexión en la dirección que se ha comprobado."
+
+#: includes/webhooks/class-webhook-sender.php:217
+msgid "The webhook connection could not be kept on the address that was checked, so its response was discarded."
+msgstr "La conexión del webhook no se ha podido mantener en la dirección que se había comprobado, así que su respuesta se ha descartado."
