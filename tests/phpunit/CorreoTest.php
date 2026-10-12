@@ -274,35 +274,47 @@ class CorreoTest extends Caso_Formulario {
 	 * @runInSeparateProcess
 	 * @preserveGlobalState disabled
 	 */
-	public function test_con_la_contrasena_en_una_constante_el_servidor_smtp_no_se_cambia_desde_el_panel() {
+	public function test_con_la_contrasena_en_una_constante_el_destino_de_smtp_no_se_cambia_desde_el_panel() {
 		$this->como_administrador();
 
-		$ajustes = array( 'transport' => 'smtp', 'smtp_host' => 'smtp.example.org', 'smtp_username' => 'usuario' );
-
-		// Todavía sin constante: el servidor se configura con normalidad.
-		$this->rest( 'PUT', '/settings/mail', array( 'settings' => $ajustes ) );
+		$ajustes = array( 'transport' => 'smtp', 'smtp_host' => 'smtp.example.org', 'smtp_port' => 465, 'smtp_encryption' => 'ssl', 'smtp_username' => 'usuario' );
 
 		define( 'FORMULARIO_MENSAJE_SMTP_PASSWORD', 'solo-en-wp-config' );
 
-		// Apuntar a otro servidor le entregaría una contraseña que quien usa el panel no puede leer.
-		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'smtp.atacante.example', 'smtp_port' => 2525 ) + $ajustes ) )->get_data();
+		// Sin servidor todavía tampoco se deja escribir el primero: lo elegiría quien llegase antes.
+		$primero = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'transport' => 'smtp', 'smtp_host' => 'smtp.atacante.example' ) ) )->get_data();
 
-		$this->assertSame( array( 'smtp_host' ), $respuesta['locked'] );
+		$this->assertSame( array( 'smtp_host' ), $primero['locked'] );
+		$this->assertSame( '', $primero['settings']['smtp_host'] );
+
+		// Quien define la constante configura la conexión sin ella; aquí, directamente en el almacén.
+		update_option( Option_Mail_Settings_Repository::OPTION, ( new Mail_Settings( ...$ajustes ) )->to_array(), false );
+
+		// Apuntar a otro servidor le entregaría una contraseña que quien usa el panel no puede leer.
+		// Otro puerto del mismo servidor puede ser de otro, y sin cifrado viajaría en claro.
+		$respuesta = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'smtp.atacante.example', 'smtp_port' => 2525, 'smtp_encryption' => 'none', 'from_name' => 'Mi Tienda' ) + $ajustes ) )->get_data();
+
+		$this->assertSame( array( 'smtp_host', 'smtp_port', 'smtp_encryption' ), $respuesta['locked'] );
 		$this->assertSame( 'smtp.example.org', $respuesta['settings']['smtp_host'], 'La respuesta lleva lo que ha quedado guardado, no lo que se pidió.' );
-		$this->assertSame( 2525, $respuesta['settings']['smtp_port'], 'El resto de los ajustes sí se guarda.' );
-		$this->assertSame( 'smtp.example.org', $this->rest( 'GET', '/settings/mail' )->get_data()['settings']['smtp_host'] );
+		$this->assertSame( 465, $respuesta['settings']['smtp_port'] );
+		$this->assertSame( 'ssl', $respuesta['settings']['smtp_encryption'] );
+		$this->assertSame( 'Mi Tienda', $respuesta['settings']['from_name'], 'El resto de los ajustes sí se guarda.' );
 		$this->assertSame( array(), $respuesta['discarded'] );
 		$this->assertSame( 'constant', $respuesta['secrets']['smtp_password']['source'] );
 
+		$guardado = $this->rest( 'GET', '/settings/mail' )->get_data()['settings'];
+
+		$this->assertSame( array( 'smtp.example.org', 465, 'ssl' ), array( $guardado['smtp_host'], $guardado['smtp_port'], $guardado['smtp_encryption'] ) );
+
 		// Ni en dos pasos, vaciándolo primero; ni escribiendo otra contraseña, que la constante tapa.
-		$vaciado = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => '' ) + $ajustes ) )->get_data();
+		$vaciado  = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => '' ) + $ajustes ) )->get_data();
 		$con_otra = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'smtp.atacante.example' ) + $ajustes, 'secrets' => array( 'smtp_password' => 'otra' ) ) )->get_data();
 
 		$this->assertSame( 'smtp.example.org', $vaciado['settings']['smtp_host'] );
 		$this->assertSame( array( 'smtp_host' ), $con_otra['locked'] );
 		$this->assertSame( 'smtp.example.org', $con_otra['settings']['smtp_host'] );
 
-		// Guardar sin tocar el servidor no bloquea nada, aunque cambien las mayúsculas.
+		// Guardar sin tocar el destino no bloquea nada, aunque cambien las mayúsculas del servidor.
 		$igual = $this->rest( 'PUT', '/settings/mail', array( 'settings' => array( 'smtp_host' => 'SMTP.Example.org' ) + $ajustes ) )->get_data();
 
 		$this->assertSame( array(), $igual['locked'] );

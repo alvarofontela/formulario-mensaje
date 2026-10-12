@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-12T15:52:02+02:00\n"
+"POT-Creation-Date: 2026-10-12T16:00:08+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: formulario-mensaje\n"
@@ -2849,7 +2849,7 @@ msgstr ""
 #. translators: %s: name of a PHP constant.
 #: build/admin/index.js:45
 #, js-format
-msgid "The password is defined in wp-config.php, so the server it is sent to cannot be changed here. To use another server, remove the constant %s, change the server and define it again."
+msgid "The password is defined in wp-config.php, so the server, port and encryption it is sent with cannot be changed here. To change them, remove the constant %s, save the new connection and define it again."
 msgstr ""
 
 #: build/admin/index.js:45
@@ -3047,7 +3047,7 @@ msgid "The SMTP server has changed, so the stored password has been deleted: ent
 msgstr ""
 
 #: build/admin/index.js:52
-msgid "The SMTP server has not been changed: its password is defined in wp-config.php and is only sent to the server it was set up for."
+msgid "The SMTP connection has not been changed: its password is defined in wp-config.php and is only sent to the server it was set up for."
 msgstr ""
 
 #: build/admin/index.js:52

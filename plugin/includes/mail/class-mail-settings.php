@@ -91,13 +91,31 @@ final class Mail_Settings {
 	}
 
 	/**
-	 * Los mismos ajustes con otro servidor SMTP.
-	 *
-	 * @param string $smtp_host Servidor SMTP.
+	 * Ajustes que dicen adónde viaja la contraseña de SMTP: el servidor, el puerto y el cifrado.
 	 */
-	public function with_smtp_host( string $smtp_host ): self {
+	public const SMTP_DESTINATION = array( 'smtp_host', 'smtp_port', 'smtp_encryption' );
+
+	/**
+	 * Los mismos ajustes, con el destino de la conexión SMTP de otros.
+	 *
+	 * @param self $other Ajustes de los que se toma el destino.
+	 */
+	public function with_smtp_destination_of( self $other ): self {
 		// Las claves de to_array() son los nombres de los parámetros del constructor.
-		return new self( ...array_merge( $this->to_array(), array( 'smtp_host' => $smtp_host ) ) );
+		return new self( ...array_merge( $this->to_array(), array_intersect_key( $other->to_array(), array_flip( self::SMTP_DESTINATION ) ) ) );
+	}
+
+	/**
+	 * Ajustes del destino de la conexión SMTP que difieren de los de otros ajustes.
+	 *
+	 * @param self $other Ajustes con los que se compara.
+	 * @return string[] Nombres de los ajustes distintos. El servidor se compara sin distinguir mayúsculas.
+	 */
+	public function smtp_destination_changes( self $other ): array {
+		$mine   = array( strtolower( $this->smtp_host ), $this->smtp_port, $this->smtp_encryption );
+		$theirs = array( strtolower( $other->smtp_host ), $other->smtp_port, $other->smtp_encryption );
+
+		return array_values( array_intersect_key( self::SMTP_DESTINATION, array_diff_assoc( $mine, $theirs ) ) );
 	}
 
 	/**

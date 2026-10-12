@@ -186,9 +186,9 @@ export default function SettingsPage() {
 							'The SMTP server has changed, so the stored password has been deleted: enter the new server’s password.',
 							'formulario-mensaje'
 						),
-					mailResponse.locked?.includes( 'smtp_host' ) &&
+					mailResponse.locked?.length > 0 &&
 						__(
-							'The SMTP server has not been changed: its password is defined in wp-config.php and is only sent to the server it was set up for.',
+							'The SMTP connection has not been changed: its password is defined in wp-config.php and is only sent to the server it was set up for.',
 							'formulario-mensaje'
 						),
 					captchaResponse.discarded &&
@@ -318,10 +318,9 @@ export default function SettingsPage() {
 											cleared={ cleared }
 											onClearedChange={ setCleared }
 											dirty={ mailDirty }
-											hostLocked={
+											destinationLocked={
 												secretStatus.smtp_password
-													?.source === 'constant' &&
-												!! storedMail?.smtp_host
+													?.source === 'constant'
 											}
 										/>
 									) : (

@@ -19,10 +19,11 @@ defined( 'ABSPATH' ) || exit;
  * a otro servidor para que el plugin le entregase una contraseña que nadie puede leer.
  *
  * Una contraseña definida como constante en `wp-config.php` no se puede descartar, así que lo que
- * queda fijo es el servidor: mientras exista la constante, el servidor configurado no se cambia
- * desde aquí. Quien la define suele hacerlo justo para que no la vea quien administra el sitio
- * desde el panel (un cliente, el administrador de un sitio de una red), y el permiso de cambiar
- * estos ajustes lo recibe todo administrador al activar el plugin.
+ * queda fijo es su destino: mientras exista la constante, ni el servidor, ni el puerto ni el
+ * cifrado se cambian desde aquí, tampoco si aún no hay servidor. Quien la define suele hacerlo
+ * justo para que no la vea quien administra el sitio desde el panel (un cliente, el administrador
+ * de un sitio de una red), y el permiso de cambiar estos ajustes lo recibe todo administrador al
+ * activar el plugin. Para configurar o cambiar el destino hay que retirar antes la constante.
  */
 final class Mail_Settings_Service {
 
@@ -51,21 +52,21 @@ final class Mail_Settings_Service {
 	 * @return Mail_Settings_Update Lo que ha quedado guardado, lo descartado y lo que no se ha podido cambiar.
 	 */
 	public function update( Mail_Settings $settings, array $secrets, array $clear ): Mail_Settings_Update {
-		$previous     = $this->settings->get();
-		$discarded    = array();
-		$locked       = array();
-		$host_changed = strtolower( $previous->smtp_host ) !== strtolower( $settings->smtp_host );
+		$previous  = $this->settings->get();
+		$discarded = array();
+		$locked    = array();
 
 		/*
-		 * Con la contraseña en una constante, el servidor ya configurado se queda como está: vaciarlo
-		 * también es cambiarlo, o bastaría hacerlo en dos pasos. Si todavía no hay servidor, se puede
-		 * escribir el primero.
+		 * Con la contraseña en una constante, el destino de la conexión se queda como está, sea cual
+		 * sea: otro puerto del mismo servidor puede ser de otro, y sin cifrado la contraseña viaja en
+		 * claro. Tampoco se deja escribir el primer servidor, o quien llegase antes elegiría el destino.
 		 */
-		if ( $host_changed && '' !== $previous->smtp_host && Secret_Vault::SOURCE_CONSTANT === $this->secrets->source( Mail_Settings::SECRET_SMTP_PASSWORD ) ) {
-			$settings     = $settings->with_smtp_host( $previous->smtp_host );
-			$locked[]     = 'smtp_host';
-			$host_changed = false;
+		if ( Secret_Vault::SOURCE_CONSTANT === $this->secrets->source( Mail_Settings::SECRET_SMTP_PASSWORD ) ) {
+			$locked   = $settings->smtp_destination_changes( $previous );
+			$settings = $settings->with_smtp_destination_of( $previous );
 		}
+
+		$host_changed = strtolower( $previous->smtp_host ) !== strtolower( $settings->smtp_host );
 
 		$this->settings->save( $settings );
 

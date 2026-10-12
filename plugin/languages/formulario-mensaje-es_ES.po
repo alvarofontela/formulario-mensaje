@@ -3255,9 +3255,9 @@ msgstr "Sin adjuntar, porque los adjuntos de un correo no pueden pasar de %1$s: 
 #. translators: %s: name of a PHP constant.
 #: build/admin/index.js:45
 #, js-format
-msgid "The password is defined in wp-config.php, so the server it is sent to cannot be changed here. To use another server, remove the constant %s, change the server and define it again."
-msgstr "La contraseña está definida en wp-config.php, así que el servidor al que se envía no se puede cambiar aquí. Para usar otro servidor, quita la constante %s, cambia el servidor y vuelve a definirla."
+msgid "The password is defined in wp-config.php, so the server, port and encryption it is sent with cannot be changed here. To change them, remove the constant %s, save the new connection and define it again."
+msgstr "La contraseña está definida en wp-config.php, así que el servidor, el puerto y el cifrado con los que se envía no se pueden cambiar aquí. Para cambiarlos, quita la constante %s, guarda la conexión nueva y vuelve a definirla."
 
 #: build/admin/index.js:52
-msgid "The SMTP server has not been changed: its password is defined in wp-config.php and is only sent to the server it was set up for."
-msgstr "El servidor SMTP no se ha cambiado: su contraseña está definida en wp-config.php y solo se envía al servidor para el que se configuró."
+msgid "The SMTP connection has not been changed: its password is defined in wp-config.php and is only sent to the server it was set up for."
+msgstr "La conexión SMTP no se ha cambiado: su contraseña está definida en wp-config.php y solo se envía al servidor para el que se configuró."
